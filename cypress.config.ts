@@ -23,7 +23,7 @@ export default defineConfig({
       reportingSubject.subscribe(new GithubActionsSummaryObserver(process.env.GITHUB_STEP_SUMMARY));
 
       on('after:spec', (spec, results) => {
-        const sliceMatch = spec.relative.match(/cypress\/e2e\/([^/]+)\//);
+        const sliceMatch = spec.relative.match(/[\\/]e2e[\\/]([^\\/]+)[\\/]/);
         const slice = sliceMatch ? sliceMatch[1] : 'unknown';
         const testResults = (results?.tests ?? []).map((t) => ({
           specPath: spec.relative,
