@@ -3,3 +3,4 @@ cypress/reports/
 cypress/videos/
 cypress/screenshots/
 dist/
+docs/
