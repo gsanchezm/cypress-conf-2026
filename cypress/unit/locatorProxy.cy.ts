@@ -16,8 +16,22 @@ describe('LocatorProxy', () => {
   });
 
   it('caches a resolved key so repeated lookups do not re-walk the tree', () => {
-    const first = proxy.get('login.usernameInput');
-    const second = proxy.get('login.usernameInput');
-    expect(first).to.equal(second);
+    let readCount = 0;
+    const trackedTree = new Proxy(
+      { login: { usernameInput: '[data-testid="login-username"]' } },
+      {
+        get(target, prop, receiver) {
+          readCount += 1;
+          return Reflect.get(target, prop, receiver);
+        },
+      },
+    );
+    const trackedProxy = new LocatorProxy(trackedTree);
+
+    trackedProxy.get('login.usernameInput');
+    const readsAfterFirstCall = readCount;
+    trackedProxy.get('login.usernameInput');
+
+    expect(readCount).to.equal(readsAfterFirstCall);
   });
 });
