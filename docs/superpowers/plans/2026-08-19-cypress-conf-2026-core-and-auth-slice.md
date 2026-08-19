@@ -72,6 +72,21 @@ spec §12b) and CI/README/`cy.prompt` (spec §11, §13, §14).
   this plan's own code (`TS2835`) — confirmed by actually running it. `bundler` resolution compiles
   the same code cleanly, and is the architecturally correct choice regardless, since esbuild (not
   Node's native ESM loader) is what actually resolves these imports for Cypress.
+- **Known sandbox limitation (2026-08-19): `cypress run` cannot reach the live OmniPizza hosts from
+  this specific execution environment**, for both `cy.request()` and `cy.visit()` — both fail with
+  `ECONNRESET` at the TLS layer (`TLSWrap.onStreamRead`). This is **not** a code defect and **not**
+  "no internet access": plain Node `https.get()` and `curl --ssl-no-revoke` both reach the same hosts
+  successfully from the same shell. Reproduced identically from both a dispatched subagent's session
+  and the controller's own session — it's specific to Cypress/Electron's network path in this
+  sandbox, not a per-subagent fluke. Working theory (unconfirmed): a TLS-fingerprint-based block at
+  Cloudflare (which fronts the Render-hosted API/frontend) reacting to Electron's handshake
+  differently than curl/Node's. **If a task's `cy.request`/`cy.visit`-based test fails this way**:
+  the code is not automatically wrong — verify what's independently verifiable (`tsc --noEmit`, the
+  request/response shape via `curl`/plain Node against the same URL, the logic by inspection) and
+  commit if those hold up, rather than re-diagnosing this same wall from scratch. This is near-certain
+  to behave normally on a real developer machine or in GitHub Actions CI, neither of which shares
+  this sandbox's specific network path — the code should be written and reviewed as if it will run
+  green there, not contorted to work around a limitation local to this one sandbox.
 
 ---
 
@@ -660,7 +675,10 @@ npx tsc --noEmit
 ```
 
 Expected: cypress run PASS — 2 tests. `tsc --noEmit` exits 0 (this task's code must be
-`tsc`-clean, per the established convention from Tasks 1 and 3 — not just esbuild-bundle-clean).
+`tsc`-clean, per the established convention from Tasks 1 and 3 — not just esbuild-bundle-clean). **If
+`cypress run` fails with `ECONNRESET` reaching `omnipizza-backend.onrender.com`**, see the "Known
+sandbox limitation" entry in Global Constraints — verify the endpoints independently (`curl`/plain
+Node `https.get()` against the same URLs) and confirm `tsc --noEmit` passes; commit if both hold up.
 
 - [ ] **Step 5: Commit**
 
@@ -735,7 +753,10 @@ npx cypress run --spec cypress/unit/baseUiComponent.cy.ts
 ```
 
 Expected: PASS — 1 test. (This hits the real Render-hosted frontend; allow for a slow first run if
-the service is cold.)
+the service is cold.) **If it fails with `ECONNRESET`**, see the "Known sandbox limitation" entry in
+Global Constraints before treating this as a code defect — verify with `curl`/plain Node
+`https.get()` against the same URL, confirm `tsc --noEmit` passes, and commit if the code is
+otherwise correct.
 
 - [ ] **Step 5: Commit**
 
@@ -1423,7 +1444,10 @@ npx cypress run --spec cypress/e2e/auth/auth.feature
 
 Expected: PASS — 2 scenarios. If either selector/route is wrong, fix it in `auth.locators.json` (not
 in the step definitions or Facade) — the whole point of the Proxy pattern is that selector drift is a
-one-line JSON fix, not a code change.
+one-line JSON fix, not a code change. **If it fails with `ECONNRESET`**, see the "Known sandbox
+limitation" entry in Global Constraints — verify the API calls independently and confirm `tsc
+--noEmit` passes; commit if the code is otherwise correct rather than re-diagnosing network access
+from scratch.
 
 - [ ] **Step 8: Run the full suite once, confirm nothing regressed**
 
