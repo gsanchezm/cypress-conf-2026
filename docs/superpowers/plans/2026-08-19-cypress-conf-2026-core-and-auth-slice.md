@@ -1175,6 +1175,7 @@ Post-login landing route: <real route found in Step 3>"
 ### Task 10: Auth slice — API client, Factory, Facade, Gherkin, green run (milestone)
 
 **Files:**
+- Modify: `cypress.config.ts` — add `viewportWidth`/`viewportHeight` (Step 0)
 - Create: `src/features/auth/api/AuthApiClient.ts`
 - Create: `src/features/auth/data/UserFactory.ts`
 - Create: `src/features/auth/facade/AuthFacade.ts`
@@ -1185,6 +1186,28 @@ Post-login landing route: <real route found in Step 3>"
 **Interfaces:**
 - Consumes: `BaseApiClient` (Task 5), `LocatorProxy` (Task 4), `AtomicScenario` (Task 7), `AuthSession` type (Task 3), `AUTH_TOKEN_STORAGE_KEY` + `auth.locators.json` (Task 9).
 - Produces: `createAuthFacade(): AuthFacade` (exported from `cypress/support/e2e.ts`) — this is the pattern later slices (Catalog/Checkout/Orders, in the follow-up plan) repeat: one `create<Slice>Facade()` export per slice from the same composition root file.
+
+- [ ] **Step 0: Pin an explicit desktop viewport**
+
+Task 9's harvested selectors are `-desktop`-suffixed (`username-desktop`, `password-desktop`,
+`login-button-desktop`), meaning the app has responsive, breakpoint-conditional rendering — no
+`-mobile` counterpart exists in the DOM at the widths checked, and no CSS class hides the desktop
+variant, which points to a JS-level (`useMediaQuery`-style) breakpoint rather than a pure-CSS one.
+Cypress's *default* viewport (`1000×660`) sits ambiguously between common breakpoints (768px/1024px)
+— relying on the default risks the app rendering its mobile variant instead, silently breaking every
+`-desktop` selector. `cypress.config.ts` (Task 2) doesn't set `viewportWidth`/`viewportHeight`
+currently. Fix: pin an explicit, safely-desktop size before writing anything that depends on these
+selectors.
+
+Modify `cypress.config.ts` — add to the top-level config object (sibling to `e2e`, `env`, `reporter`):
+
+```typescript
+  viewportWidth: 1280,
+  viewportHeight: 800,
+```
+
+Run `npx tsc --noEmit` to confirm this doesn't break anything, then continue to Step 1. Commit this
+alongside Step 9's commit (don't create a separate commit for a two-line config addition).
 
 - [ ] **Step 1: Write AuthApiClient**
 
@@ -1307,8 +1330,15 @@ export class AuthFacade {
     cy.get(this.locators.get('landing.readyMarker')).should('be.visible');
   }
 
+  // Asserts on the message text, not just visibility: the harvested
+  // selector (login-error) is a generic login-failure element, not
+  // locked-out-specific - it likely renders for other failures too (wrong
+  // password, etc.), so visibility alone wouldn't prove this scenario
+  // specifically hit the locked-out path rather than some other failure.
   assertLockedOutMessageVisible(): void {
-    cy.get(this.locators.get('login.lockedOutError')).should('be.visible');
+    cy.get(this.locators.get('login.lockedOutError'))
+      .should('be.visible')
+      .and('contain.text', 'locked out');
   }
 }
 ```
@@ -1350,8 +1380,8 @@ Feature: Authentication
 
 - [ ] **Step 6: Write the step definitions**
 
-`src/features/auth/steps/auth.steps.ts` — replace `<LOGIN_ROUTE>` and `<POST_LOGIN_ROUTE>` with the
-real routes recorded in Task 9's commit message. Two design points worth calling out:
+`src/features/auth/steps/auth.steps.ts` — `<LOGIN_ROUTE>` = `/` and `<POST_LOGIN_ROUTE>` = `/catalog`
+(harvested in Task 9, commit `835e7d7`). Two design points worth calling out:
 
 1. **The `When` steps are intentionally empty.** `AtomicScenario`'s whole thesis is that
    `arrangeViaApi`/`hydrateUi`/`assertUi` fire together as one atomic unit (spec §7) — splitting the
@@ -1403,7 +1433,7 @@ Then('they should land on the catalog page as an authenticated customer', () => 
       // POST_LOGIN_ROUTE as an unauthenticated visitor, getting redirected
       // to the login page, setting the token too late, and reloading the
       // login page instead of the catalog.
-      cy.visit('<POST_LOGIN_ROUTE>', {
+      cy.visit('/catalog', {
         onBeforeLoad: (win) => win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken),
       });
     },
@@ -1423,7 +1453,7 @@ Then('they should see a locked-out account message', () => {
       });
     },
     hydrateUi: () => {
-      cy.visit('<LOGIN_ROUTE>');
+      cy.visit('/');
       facade.submitLoginFormAs(userKey);
     },
     assertUi: () => {
@@ -1462,7 +1492,7 @@ Expected: `typecheck` exits 0. `cypress run` runs all specs under `cypress/unit/
 - [ ] **Step 9: Commit**
 
 ```bash
-git add src/features/auth cypress/e2e/auth cypress/support/e2e.ts
+git add cypress.config.ts src/features/auth cypress/e2e/auth cypress/support/e2e.ts
 git commit -m "Implement Auth slice end to end (API client, Factory, Facade, Gherkin) - milestone: architecture proven green"
 ```
 
@@ -1486,10 +1516,11 @@ passing, demoable suite. Catalog, Checkout, and Orders (the follow-up plan) repe
 - §11 CI/CD, §13 Repo, §14 Open items: explicitly deferred — no task here creates `.github/workflows/`.
 - §12 Implementation approach: Task 9 is the "locator harvest before fan-out" step, scoped to what Auth needs; Task 10 is the "auth green first" milestone. The 4-way parallel fan-out itself starts in the follow-up plan.
 
-**2. Placeholder scan:** The only literal `REPLACE-WITH-*` strings are in Task 9 (a live discovery
-task, not a step whose content should be pre-known) and Task 10's `<LOGIN_ROUTE>`/`<POST_LOGIN_ROUTE>`
-placeholders, which Task 9's commit message resolves before Task 10 runs — both are flagged inline
-as "replace with your Task 9 findings," not left as unexplained TODOs.
+**2. Placeholder scan:** Task 9's `REPLACE-WITH-*` strings existed only in the original draft, as a
+live-discovery task's necessarily-unknown-in-advance values — Task 9 has since run (commit `835e7d7`)
+and the real harvested values are substituted throughout, including Task 10's former
+`<LOGIN_ROUTE>`/`<POST_LOGIN_ROUTE>` placeholders (now `/` and `/catalog`). No placeholder strings
+remain anywhere in this plan.
 
 **3. Type consistency:** `AuthSession`, `DeterministicUserKey`, `TestResult`, `Observer`,
 `ApiRequestOptions`, `LocatorTree`, `AtomicScenarioSteps` are each defined exactly once (Tasks 3, 4,
