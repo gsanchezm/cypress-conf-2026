@@ -42,8 +42,12 @@ const MARKET_SCENARIOS: Record<string, MarketScenario> = {
     countryCode: 'CH',
     isoCurrency: 'CHF',
     currencyName: 'Swiss francs',
-    expectedPriceText: 'CHF 10.16',
-    pricePattern: /^CHF \d+\.\d{2}$/,
+    // The separator between "CHF" and the amount is a no-break space
+    // (U+00A0), not a regular space - confirmed via codePointAt() against
+    // the live DOM. Written as an explicit escape, not a literal character,
+    // since the two are visually indistinguishable in an editor.
+    expectedPriceText: 'CHF 10.16',
+    pricePattern: /^CHF \d+\.\d{2}$/,
   },
   Japan: {
     countryCode: 'JP',
