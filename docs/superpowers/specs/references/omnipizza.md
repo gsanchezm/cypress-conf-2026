@@ -34,24 +34,23 @@ Password `pizza123` for all.
 
 ## Markets
 
-Six markets referenced in the project overview (Mexico, US, Switzerland, Japan, Saudi Arabia — one
-more not yet identified); market selection at login drives pricing, tax, required checkout fields,
-and localization for the rest of the session (no mid-session cart clearing).
+**Resolved 2026-08-19**: exactly **5 markets**, confirmed via a live `GET /api/countries` call —
+`MX`, `US`, `CH`, `JP`, `SA`. The project overview page's "six markets" phrasing is marketing copy
+that doesn't match the live API; treat 5 as authoritative (the spec's §2/§3 already say 5). Market
+selection at login drives pricing, tax, required checkout fields, and localization for the rest of
+the session (no mid-session cart clearing).
 
-Country codes seen in the API: `MX`, `US`, `CH`, `JP`, `SA`.
+Checkout required fields per country (verified live via `GET /api/countries`, 2026-08-19):
 
-Checkout required fields per country:
+| Country | Currency | Required field | Tip field | Tax rate | Delivery fee |
+|---|---|---|---|---|---|
+| MX | MXN | `colonia` | `propina` | 16% | 35.10 |
+| US | USD | `zip_code` | `tip` | 8% | 2.00 |
+| CH | CHF | `plz` | `trinkgeld` | 8.1% | 1.56 |
+| JP | JPY | `prefectura` | `chip` | 10% | 316.00 (0 decimal places) |
+| SA | SAR | `district` | `baksheesh` | 15% | 7.50 |
 
-| Country | Required field | Notes |
-|---|---|---|
-| MX | `colonia` | neighborhood |
-| US | `zip_code` | 5 digits |
-| CH | `plz` | postal code |
-| JP | `prefectura` | prefecture |
-| SA | `district` | |
-
-Tip field is named differently per market: `propina`, `tip`, `trinkgeld`, `chip`, `baksheesh`
-(0–100 percentage range).
+All 5 markets expose `tip_percentages: [0, 5, 10, 15]` and `tip_mode: "percentage"`.
 
 ## API endpoints (from `/api/openapi.json`)
 
@@ -80,8 +79,39 @@ Tip field is named differently per market: `propina`, `tip`, `trinkgeld`, `chip`
 **Pizzas**: each item — `id`, `name`, `description`, `price`, `base_price`, `currency`,
 `currency_symbol`, `image`, `category`.
 
-**Checkout response (`OrderSummary`)**: `order_id`, `status`, `subtotal`, `delivery_fee`, `tax`,
-`tip`, `total`, `currency`, `items[]`, `timestamp`.
+**Exact request/response schemas (verified against the live `/api/openapi.json`, 2026-08-19 — this
+supersedes the earlier field lists in this doc, which were transcribed from a summarized fetch and
+missed/mis-stated several fields):**
+
+`CartItem` (request shape, e.g. body of `POST /api/cart`, embedded in `CheckoutRequest.items`):
+required `pizza_id` (string), `quantity` (integer, 1–10). Optional: `size` (string, defaults to
+`"small"`), `toppings` (string array), `item_id` (string, nullable). **Do not require `item_id`,
+`size`, or `toppings`** — only `pizza_id`/`quantity` are mandatory.
+
+`EnrichedCartItem` (response shape, inside `GET /api/cart`'s `cart_items[]`) — this is a *different,
+fully-populated* schema from `CartItem`, not the same type reused: `pizza_id`, `item_id`, `name`,
+`size`, `quantity`, `price`, `base_price`, `currency`, `currency_symbol`, `image` — all required.
+
+`CheckoutRequest` (body of `POST /api/checkout`): required `country_code`, `items` (`CartItem[]`),
+`name` (2–100 chars), `address` (5–200 chars), `phone` (8–20 chars). Optional: `payment_method`
+(`"card"|"cash"|"paypal"`, default `"card"`), plus **all five** per-country required/tip fields as
+nullable optional properties on the same schema (`colonia`, `zip_code`, `plz`, `prefectura`,
+`district`, `propina`, `tip`, `trinkgeld`, `chip`, `baksheesh`, each 0–100 for the tip ones) — the
+API accepts one request shape for every country rather than a discriminated union; only the field
+matching the caller's country is expected to be populated.
+
+`OrderSummary` (response of `POST /api/checkout`, `GET /api/orders/{id}`): required `order_id`,
+`status`, `subtotal`, `delivery_fee`, **`tax_rate`**, **`tip_percentage`**, `tax`, `tip`, `total`,
+`currency`, **`currency_symbol`**, `items[]` (untyped objects in the schema), `timestamp`. The three
+bolded fields were missing from this doc's earlier summary — `tax_rate`/`tip_percentage` are
+required, not derived client-side.
+
+`OrderStatusUpdate` (body of `PATCH /api/orders/{id}`): `{ status: "cancelled" }` — a const, the only
+supported transition, matching the "409 otherwise" behavior already noted above.
+
+`TestCartSetupRequest` (actual body schema of `POST /api/cart`): `{ items: CartItem[] }`
+(`minItems: 1`), **replaces the entire cart** rather than appending. Its OpenAPI description
+resolves the cart/market quirk noted below.
 
 ## Architecture note (from project overview)
 
@@ -101,18 +131,22 @@ state is shared by username or isolated by session:
   token — **no cross-session leakage observed**.
 - **Implication for CI**: a parallel test matrix can safely reuse the same deterministic username
   (e.g. `standard_user`) across concurrent jobs — each job's own login produces an isolated session.
-- **Open quirk, not yet explained**: `POST /api/cart` echoed the added item back in its own response,
-  but an immediate `GET /api/cart` (same token, same `X-Country-Code`) showed an empty cart. Possibly
-  cart is scoped by an active "market" that must be set via `POST /api/store/market` first, rather
-  than purely by the `X-Country-Code` header — re-verify this during the Cart & Checkout slice
-  implementation before writing assertions against cart contents.
+- **Cart/market quirk — resolved 2026-08-19**, via the live OpenAPI's `TestCartSetupRequest`
+  description: *"Cart is scoped to the login session, not the market — this request body has no
+  `country_code` field and `X-Country-Code` is ignored by `POST /api/cart`. Use `POST
+  /api/store/market` to switch markets."* This is exactly what the earlier probe hit: the item was
+  written under whatever market the session already had active (apparently defaulting to MX), and
+  the `X-Country-Code: US` header on the follow-up `GET` had no effect on which market's cart was
+  read. **Implication for the Checkout slice**: any test that seeds a cart and then checks out under
+  a specific country must call `POST /api/store/market` first — sending `X-Country-Code` alone is
+  not sufficient.
 
 ## Not yet verified (confirm during implementation)
 
-- Exact 6th market beyond MX/US/CH/JP/SA.
 - Whether `cy.prompt()` can reliably navigate the SPA's client-side routing without extra hints —
-  worth an early spike once `AiPromptCheckoutUiStrategy` implementation starts.
-- Actual DOM structure/`data-testid` values — the frontend is a client-rendered SPA, so this needs a
-  real browser session (Cypress `cypress open`), not `WebFetch`, to inspect. This is the "locator
-  harvest" step in the implementation plan (spec §12).
-- The cart/market-scoping quirk above.
+  worth an early spike once `CyPromptCheckoutUiStrategy` implementation starts.
+- Actual DOM structure/`data-testid` values, and the real `localStorage` key used for the auth token
+  — the frontend is a client-rendered SPA, so this needs a real browser session, not `WebFetch`, to
+  inspect. Confirmed 2026-08-19 that `claude-in-chrome` browser automation works in this environment
+  (navigated to the live frontend successfully) — that's the harvest mechanism used, not
+  `cypress open` (unreliable in a sandboxed background session with no confirmed attached display).

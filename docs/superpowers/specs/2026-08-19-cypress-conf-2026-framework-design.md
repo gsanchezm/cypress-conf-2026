@@ -70,7 +70,7 @@ Four vertical slices, each fully implementing the atomic flow (API → hydrate �
 | **Strategy** | (a) `CheckoutValidationStrategy` per country, keyed by `X-Country-Code`. (b) One small `XxxUiStrategy` interface **per business action per slice** (e.g. `CheckoutUiStrategy.completeCheckout(order)`), each with a `Deterministic...` and a `CyPrompt...` implementation (see §8). | (a) 5 genuinely different required-field/tip rules. (b) Lets a step definition invoke the same business action via hardcoded locators or `cy.prompt()` without knowing which — scoped at business-action granularity, not per click/assert, so the interface stays typed and neither implementation needs `any` or a throw-on-unsupported branch. |
 | **Factory** | `UserFactory` (deterministic roster + ad-hoc via faker), `PizzaOrderFactory`, `CountryDataFactory` | Centralizes how valid-but-varied test data is built per slice. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have many optional/country-conditional fields — reads better than a Factory with 10 optional args. |
-| **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec`/`after:run` in `cypress.config.ts` | Decouples "a spec finished" from "who cares." 3 observers (§9). |
+| **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` in `cypress.config.ts` | Decouples "a spec finished" from "who cares." 2 custom observers + mochawesome as native reporter config (§9). |
 | **Adapter** *(minor, named for honesty)* | Cucumber step-definition layer | Thin adapter between Cucumber's step-matching interface and our Facade interface — not a new subsystem, just an honest name for what step defs already do. |
 
 ## 6. Deliberately not built (YAGNI/KISS)
@@ -161,8 +161,13 @@ interface CheckoutUiStrategy {
 before the demo:
 - 100 prompts/hour on free accounts, 600/hour on paid.
 - Max 50 steps per single `cy.prompt()` call.
-- The no-overage-charge grace period **ended 2026-07-31** — already past as of this spec's date, so
-  overage billing may apply. Check your Cypress Cloud plan/quota before relying on this live on stage.
+- The no-overage-charge grace period **ended 2026-07-31** — already past as of this spec's date.
+  Verified exact overage behavior against the current Cypress Cloud FAQ, 2026-08-19: on a **free**
+  plan, exceeding the limit turns off AI self-healing and new prompt creation for the rest of the
+  billing cycle (not a charge). On a **paid** plan, tests and `cy.prompt` keep running normally and
+  you are *not* automatically charged for executions over the plan's limit. Either way there's no
+  surprise bill risk — the free-tier risk is the suite silently losing AI capability mid-cycle, which
+  matters if `cy-prompt-suite.yml` gets triggered more than expected before the demo.
 - Selector-cache persistence (disk vs. Cloud-only) is not documented; treat every CI run of
   `cy-prompt-suite.yml` as a potentially cold/full-cost run, not a cached one.
 
@@ -198,7 +203,7 @@ cypress-conf-2026/
 │   │   ├── locators/        (LocatorProxy)
 │   │   ├── types/           (shared contracts: PizzaCatalogItem, CountryConfig, OrderSummary — used
 │   │   │                     by 2+ slices; behavior stays slice-owned, only shapes live here)
-│   │   └── reporting/       (Observer, ReportingSubject, the 3 observers)
+│   │   └── reporting/       (Observer, ReportingSubject, the 2 custom observers)
 │   └── features/
 │       ├── auth/           {api, ui, data, facade, steps, locators/*.json}
 │       ├── catalog/        {api, ui, data, facade, steps, strategies, locators/*.json}
