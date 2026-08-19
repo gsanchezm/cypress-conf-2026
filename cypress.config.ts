@@ -8,6 +8,8 @@ import { GithubActionsSummaryObserver } from './src/core/reporting/GithubActions
 import type { TestResult } from './src/core/reporting/Observer';
 
 export default defineConfig({
+  viewportWidth: 1280,
+  viewportHeight: 800,
   e2e: {
     baseUrl: 'https://omnipizza-frontend.onrender.com',
     specPattern: ['cypress/e2e/**/*.feature', 'cypress/unit/**/*.cy.ts'],
