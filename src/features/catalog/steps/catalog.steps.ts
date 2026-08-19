@@ -27,7 +27,7 @@ function runCatalogScenario(countryCode: CountryCode, currencySymbol: string): v
       cy.then(() => catalogFacade.setMarketAndFetchPizzas(accessToken, countryCode));
     },
     hydrateUi: () => {
-      cy.then(() => catalogFacade.openCatalogAuthenticated(accessToken));
+      cy.then(() => catalogFacade.openCatalogAuthenticated(accessToken, countryCode));
     },
     assertUi: () => {
       catalogFacade.assertCatalogShowsCurrency(currencySymbol);

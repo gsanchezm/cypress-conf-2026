@@ -20,9 +20,21 @@ export class CatalogFacade {
   // the token before the catalog page ever loads authenticated. See the
   // completed Auth slice's AuthFacade for the original discovery of why
   // this must be two visits, not one with onBeforeLoad.
-  openCatalogAuthenticated(accessToken: string): void {
+  //
+  // Also writes localStorage's `countryCode` key: confirmed via live
+  // browser verification that the rendered catalog page's market/currency
+  // is driven entirely by this client-side key, NOT by the backend session
+  // state that setMarketAndFetchPizzas's POST /api/store/market updates -
+  // calling that endpoint alone and reloading /catalog left the price
+  // unchanged. The app's own boot logic re-derives its full
+  // `omnipizza-country` Zustand-persist blob from this plain string on its
+  // own; writing that blob ourselves is unnecessary.
+  openCatalogAuthenticated(accessToken: string, countryCode: CountryCode): void {
     cy.visit('/');
-    cy.window().then((win) => win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken));
+    cy.window().then((win) => {
+      win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken);
+      win.localStorage.setItem('countryCode', countryCode);
+    });
     cy.visit('/catalog');
   }
 
