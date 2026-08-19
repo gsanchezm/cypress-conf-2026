@@ -1,9 +1,13 @@
 Feature: Catalog
 
-  Scenario: A standard customer sees pizza prices in US dollars
-    When a standard customer browses the catalog in the United States market
-    Then the prices should show in US dollars
+  Scenario Outline: A standard customer sees pizza prices localized for their market
+    When a standard customer browses the catalog in the <market> market
+    Then the prices should show in <currency>
 
-  Scenario: A standard customer sees pizza prices in Japanese yen
-    When a standard customer browses the catalog in the Japan market
-    Then the prices should show in Japanese yen
+    Examples:
+      | market        | currency      |
+      | United States | US dollars    |
+      | Mexico        | Mexican pesos |
+      | Switzerland   | Swiss francs  |
+      | Japan         | Japanese yen  |
+      | Saudi Arabia  | Saudi riyals  |

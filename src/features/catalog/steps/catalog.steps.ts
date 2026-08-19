@@ -1,35 +1,87 @@
-import { When, Then } from '@badeball/cypress-cucumber-preprocessor';
+import { Before, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { createAuthFacade, createCatalogFacade } from '../../../../cypress/support/e2e';
 import { AtomicScenario } from '../../../core/ui/AtomicScenario';
 import type { CountryCode } from '../../../core/types';
 
-interface CatalogScenarioParams {
+interface MarketScenario {
   countryCode: CountryCode;
-  currency: string; // ISO code asserted against the API response, e.g. 'USD' / 'JPY'.
-  pricePattern: RegExp; // Full rendered-price format asserted against the UI.
+  isoCurrency: string; // Asserted against the API response's `currency` field.
+  currencyName: string; // Must match the Then step's captured text - a
+  // mismatch here (e.g. a typo'd Examples row pairing the wrong market with
+  // the wrong currency name) throws instead of silently passing, so the
+  // Then step text is a real constraint, not decoration.
+  expectedPriceText: string; // Exact rendered text of pizza p01's price -
+  // proves the specific market's pricing, not just "some currency showed
+  // up". A format-only check can't distinguish Mexico from the United
+  // States (both render "$" + 2 decimals), so this must be an exact match.
+  pricePattern: RegExp; // Format check applied to every visible price (not
+  // just p01), proving the whole catalog is consistently localized.
 }
 
-let scenarioParams: CatalogScenarioParams | undefined;
+// Prices are for pizza p01 (Margherita, base_price 12.99), live-harvested
+// against the real deployed app for all 5 markets - not derived from the
+// API's raw currency_symbol field, which doesn't always match what the UI
+// actually renders (confirmed divergence for Japan: the API returns the
+// ordinary-width yen sign U+00A5, the DOM renders the fullwidth U+FFE5).
+const MARKET_SCENARIOS: Record<string, MarketScenario> = {
+  'United States': {
+    countryCode: 'US',
+    isoCurrency: 'USD',
+    currencyName: 'US dollars',
+    expectedPriceText: '$12.99',
+    pricePattern: /^\$\d+\.\d{2}$/,
+  },
+  Mexico: {
+    countryCode: 'MX',
+    isoCurrency: 'MXN',
+    currencyName: 'Mexican pesos',
+    expectedPriceText: '$227.97',
+    pricePattern: /^\$\d+\.\d{2}$/,
+  },
+  Switzerland: {
+    countryCode: 'CH',
+    isoCurrency: 'CHF',
+    currencyName: 'Swiss francs',
+    expectedPriceText: 'CHF 10.16',
+    pricePattern: /^CHF \d+\.\d{2}$/,
+  },
+  Japan: {
+    countryCode: 'JP',
+    isoCurrency: 'JPY',
+    currencyName: 'Japanese yen',
+    expectedPriceText: '￥2,051',
+    pricePattern: /^￥[\d,]+$/,
+  },
+  'Saudi Arabia': {
+    countryCode: 'SA',
+    isoCurrency: 'SAR',
+    currencyName: 'Saudi riyals',
+    expectedPriceText: '‏٤٨٫٧١ ر.س.‏',
+    pricePattern: /^‏[٠-٩٫]+ ر\.س\.‏$/,
+  },
+};
 
-function requireScenarioParams(): CatalogScenarioParams {
-  if (!scenarioParams) {
-    throw new Error('Catalog scenario params not set - a When step must run before this Then step');
+let activeScenario: MarketScenario | undefined;
+
+function requireActiveScenario(): MarketScenario {
+  if (!activeScenario) {
+    throw new Error('Catalog scenario not set - a When step must run before this Then step');
   }
-  return scenarioParams;
+  return activeScenario;
 }
+
+// Resets state before every scenario in the suite (not just this slice's
+// own) so a scenario can never silently reuse a market left over from the
+// previous one if its own When step is ever skipped - the guard above only
+// catches "never set", not "stale from last time".
+Before(() => {
+  activeScenario = undefined;
+});
 
 // AtomicScenario.run() fires here, in Then, not in When - matching the
 // convention auth.steps.ts documents in its own comment ("Given/When only
-// record intent ... the full atomic run happens in the Then step"). When
-// only records which market this scenario is about; Then is what actually
-// proves it. Params are stashed in module-level state (not a When-handler
-// closure) because the run now happens in a different step callback than
-// the one that knows the params - Cucumber's guaranteed per-scenario
-// sequential step order (each scenario's own When always completes before
-// its own Then starts, before the next scenario begins) makes this exactly
-// as safe as the identical pattern already shipped in auth.steps.ts's
-// userKey/requireUserKey().
-function runCatalogScenario(params: CatalogScenarioParams): void {
+// record intent ... the full atomic run happens in the Then step").
+function runCatalogScenario(scenario: MarketScenario): void {
   const authFacade = createAuthFacade();
   const catalogFacade = createCatalogFacade();
   let accessToken: string;
@@ -39,47 +91,37 @@ function runCatalogScenario(params: CatalogScenarioParams): void {
       authFacade.loginAs('standard').then((session) => {
         accessToken = session.accessToken;
       });
-      // Assert on the fetched pizzas' `currency` field, not just fetch and
-      // discard them - US is the app's default market, so without this the
-      // US scenario would pass green even if setMarket, the countryCode
-      // localStorage hydration, and the X-Country-Code header were all
-      // completely broken; only the JP scenario would prove anything works.
-      // Asserting `currency` (ISO code, e.g. 'USD'/'JPY') rather than
-      // `currencySymbol` deliberately avoids the API's ordinary-width ¥
-      // (U+00A5) vs the DOM's fullwidth ￥ (U+FFE5) - reusing the same
-      // symbol constant for both the API and UI assertions would silently
-      // reintroduce that exact codepoint bug.
-      cy.then(() => catalogFacade.setMarketAndFetchPizzas(accessToken, params.countryCode)).then((pizzas) => {
-        expect(pizzas.length).to.be.greaterThan(0);
-        expect(pizzas.every((pizza) => pizza.currency === params.currency)).to.be.true;
-      });
+      cy.then(() => catalogFacade.setMarketAndFetchPizzas(accessToken, scenario.countryCode)).then(
+        (response) => {
+          expect(response.countryCode).to.equal(scenario.countryCode);
+          expect(response.currency).to.equal(scenario.isoCurrency);
+          expect(response.pizzas.length).to.be.greaterThan(0);
+        },
+      );
     },
     hydrateUi: () => {
-      cy.then(() => catalogFacade.openCatalogAuthenticated(accessToken, params.countryCode));
+      cy.then(() => catalogFacade.openCatalogAuthenticated(accessToken, scenario.countryCode));
     },
     assertUi: () => {
-      catalogFacade.assertCatalogShowsCurrency(params.pricePattern);
+      catalogFacade.assertCatalogShowsCurrency(scenario);
     },
   });
 }
 
-When('a standard customer browses the catalog in the United States market', () => {
-  scenarioParams = { countryCode: 'US', currency: 'USD', pricePattern: /^\$\d+\.\d{2}$/ };
+When(/^a standard customer browses the catalog in the (.+) market$/, (market: string) => {
+  const scenario = MARKET_SCENARIOS[market];
+  if (!scenario) {
+    throw new Error(`No catalog scenario data registered for market "${market}"`);
+  }
+  activeScenario = scenario;
 });
 
-// The JP market renders the fullwidth yen sign (U+FFE5, "￥"), not the
-// ordinary yen sign (U+00A5) - confirmed against the live catalog page's
-// rendered DOM during Task 2's locator harvest. The live API's /pizzas
-// response uses the ordinary-width ¥ for currencySymbol, which is why the
-// arrangeViaApi assertion above checks `currency` ('JPY') instead.
-When('a standard customer browses the catalog in the Japan market', () => {
-  scenarioParams = { countryCode: 'JP', currency: 'JPY', pricePattern: /^￥[\d,]+$/ };
-});
-
-Then('the prices should show in US dollars', () => {
-  runCatalogScenario(requireScenarioParams());
-});
-
-Then('the prices should show in Japanese yen', () => {
-  runCatalogScenario(requireScenarioParams());
+Then(/^the prices should show in (.+)$/, (currencyName: string) => {
+  const scenario = requireActiveScenario();
+  if (scenario.currencyName !== currencyName) {
+    throw new Error(
+      `Then step expected currency "${currencyName}" but the active scenario (market "${scenario.countryCode}") expects "${scenario.currencyName}" - check the Examples table for a mismatched row`,
+    );
+  }
+  runCatalogScenario(scenario);
 });

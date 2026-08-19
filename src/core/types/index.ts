@@ -32,3 +32,9 @@ export interface PizzaCatalogItem {
   image: string;
   category: string;
 }
+
+export interface PizzaCatalogResponse {
+  countryCode: string;
+  currency: string;
+  pizzas: PizzaCatalogItem[];
+}

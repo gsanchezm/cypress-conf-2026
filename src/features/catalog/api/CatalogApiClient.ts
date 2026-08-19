@@ -1,5 +1,5 @@
 import { BaseApiClient } from '../../../core/http/BaseApiClient';
-import type { CountryConfig, PizzaCatalogItem, CountryCode } from '../../../core/types';
+import type { CountryConfig, PizzaCatalogItem, PizzaCatalogResponse, CountryCode } from '../../../core/types';
 
 interface CountryInfoBody {
   code: CountryCode;
@@ -74,7 +74,7 @@ export class CatalogApiClient extends BaseApiClient {
   }
 
   // Requires auth + X-Country-Code (400 if missing, confirmed against the live API).
-  getPizzas(accessToken: string, countryCode: CountryCode): Cypress.Chainable<PizzaCatalogItem[]> {
+  getPizzas(accessToken: string, countryCode: CountryCode): Cypress.Chainable<PizzaCatalogResponse> {
     return this.request<PizzaResponseBody>({
       method: 'GET',
       path: '/pizzas',
@@ -82,7 +82,11 @@ export class CatalogApiClient extends BaseApiClient {
         Authorization: `Bearer ${accessToken}`,
         'X-Country-Code': countryCode,
       },
-    }).then((body) => body.pizzas.map(toPizza));
+    }).then((body) => ({
+      countryCode: body.country_code,
+      currency: body.currency,
+      pizzas: body.pizzas.map(toPizza),
+    }));
   }
 
   setMarket(accessToken: string, countryCode: CountryCode): Cypress.Chainable<void> {
