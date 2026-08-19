@@ -38,14 +38,17 @@ export class CatalogFacade {
     cy.visit('/catalog');
   }
 
-  // Checks for the currency symbol in the price element's text. This is
-  // sufficient to distinguish the two markets this slice currently tests
-  // (US "$" vs JP "￥") but NOT sufficient if a future scenario adds MX,
-  // which also uses "$" (confirmed via /api/countries) - if MX is ever
-  // added, switch this to assert on a full price string or another
-  // distinguishing signal, not just the symbol.
-  assertCatalogShowsCurrency(currencySymbol: string): void {
+  // Matches the full rendered price format (symbol + digit grouping/decimals),
+  // not just a bare currency-symbol substring: a substring check on "$" alone
+  // would make the US scenario tautological (US is the app's default market,
+  // so "$" would appear even if setMarket/countryCode hydration/the
+  // X-Country-Code header were all broken). A format regex per market (see
+  // the pricePattern values in catalog.steps.ts) forces the assertion to
+  // actually depend on the market having been switched correctly.
+  assertCatalogShowsCurrency(pricePattern: RegExp): void {
     cy.get(this.locators.get('catalog.readyMarker')).should('be.visible');
-    cy.get(this.locators.get('catalog.firstPizzaPrice')).should('contain.text', currencySymbol);
+    cy.get(this.locators.get('catalog.firstPizzaPrice'))
+      .invoke('text')
+      .should('match', pricePattern);
   }
 }
