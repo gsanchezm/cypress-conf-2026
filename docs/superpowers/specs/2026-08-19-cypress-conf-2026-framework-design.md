@@ -54,7 +54,7 @@ Four vertical slices, each fully implementing the atomic flow (API → hydrate �
 | **OCP** | New country → new `ValidationStrategy` + one registry line, zero edits elsewhere. New report sink → new `Observer`, zero edits to specs. |
 | **LSP** | All `ApiClient` subclasses substitutable via the `BaseApiClient` contract; all strategies substitutable via their shared interface. |
 | **ISP** | Small, focused interfaces (`Observer`, `ValidationStrategy`, one `UiStrategy` per business action per slice, `DataFactory<T>`) — no god interface, and explicitly no single app-wide "UI interaction" interface (see §8 — that was tried and rejected). |
-| **DIP** | High-level Facades depend on abstractions, not concretions. Concrete wiring happens in one composition root (`cypress/support/e2e.ts`). |
+| **DIP** | High-level Facades depend on abstractions, not concretions. Concrete wiring happens in one composition root **per process boundary**: browser-side collaborators (Facades, `LocatorProxy`, UI strategies) in `cypress/support/e2e.ts`; Node-only collaborators (e.g. observers that touch `node:fs`) in `cypress.config.ts`'s `setupNodeEvents` — a browser bundle cannot import `node:fs`, so this isn't a style choice (see §9). |
 | **DRY** | Shared plumbing centralized in `core/`; rule-of-three applied before extracting anything new. |
 | **KISS / YAGNI** | See §6 "Deliberately not built." |
 | **LoD** | Specs (step definitions) talk only to a Facade. Never `facade.api.client.http...` chains. |
@@ -168,11 +168,18 @@ before the demo:
 
 ## 9. Reporting — Observer
 
-Three observers on one `ReportingSubject`, addable/removable with zero spec changes:
+Two genuine custom `Observer` implementations, both subscribed to one `ReportingSubject` from
+`cypress.config.ts`'s `setupNodeEvents`, driven by Cypress's `after:spec` event (fires Node-side,
+with results already aggregated) — **not** from `cypress/support/e2e.ts`, since `GithubActionsSummaryObserver`
+needs `node:fs`, which is unavailable in a browser bundle:
 
-- **HtmlReportObserver** — mochawesome, visual report for the room.
-- **GithubActionsSummaryObserver** — writes a markdown table to `$GITHUB_STEP_SUMMARY`.
-- **ConsoleObserver** — enriched colored console output tagged per pattern/slice executed.
+- **ConsoleObserver** — enriched colored console output tagged per slice executed. Node-side (its
+  `console.log` still shows in the `cypress run` terminal output), addable/removable with zero spec changes.
+- **GithubActionsSummaryObserver** — writes a markdown table to `$GITHUB_STEP_SUMMARY` via `node:fs`.
+
+**HTML reporting is mochawesome, wired as Cypress's native `reporter` config** (`cypress.config.ts`
+`reporter`/`reporterOptions`) — this is a config integration, not a third `Observer` class; mochawesome
+hooks Mocha's reporter API directly, not our `after:spec` subject.
 
 ## 10. Folder Structure (Vertical Slicing)
 
