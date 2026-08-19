@@ -61,8 +61,17 @@ spec §12b) and CI/README/`cy.prompt` (spec §11, §13, §14).
   `LocatorProxy` or API client directly.
 - Versions: `cypress@^15.21.0`, `@badeball/cypress-cucumber-preprocessor@^26.0.0` — verified
   peer-compatible 2026-08-19 (spec §14). Re-run the `npm view` checks in Task 1 Step 1 before
-  installing, in case newer versions shipped since.
-- `package.json` uses `"type": "module"`.
+  installing, in case newer versions shipped since. **`typescript@^5.9.3`** — deliberately *not*
+  latest (`7.0.2`, a very recent native-rewrite major version as of 2026-08-19): pinning to the last
+  stable 5.x line avoids unknown tooling-compatibility risk with Cypress/esbuild this close to a live
+  demo. `5.9.3` was confirmed to actually exist on the registry (an earlier draft of this plan cited
+  `5.7.0`, which doesn't).
+- `package.json` uses `"type": "module"`. **TypeScript module resolution is `"module": "ESNext"` +
+  `"moduleResolution": "bundler"`, not `"NodeNext"`/`"NodeNext"`.** Verified directly: with
+  `"type": "module"` + `NodeNext` resolution, `tsc` rejects every extensionless relative import in
+  this plan's own code (`TS2835`) — confirmed by actually running it. `bundler` resolution compiles
+  the same code cleanly, and is the architecturally correct choice regardless, since esbuild (not
+  Node's native ESM loader) is what actually resolves these imports for Cypress.
 
 ---
 
@@ -119,7 +128,7 @@ Edit `package.json` — set `"type": "module"` and replace `"scripts"` with:
 Using the versions resolved in Step 1:
 
 ```bash
-npm install --save-dev cypress@^15.21.0 typescript@^5.7.0 @badeball/cypress-cucumber-preprocessor@^26.0.0 @bahmutov/cypress-esbuild-preprocessor esbuild mochawesome tsx @types/node
+npm install --save-dev cypress@^15.21.0 typescript@^5.9.3 @badeball/cypress-cucumber-preprocessor@^26.0.0 @bahmutov/cypress-esbuild-preprocessor esbuild mochawesome tsx @types/node
 ```
 
 (`@bahmutov/cypress-esbuild-preprocessor` is a separate package from the preprocessor itself — both
@@ -131,8 +140,8 @@ are required; the preprocessor emits Gherkin-derived specs, the bundler compiles
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -142,6 +151,12 @@ are required; the preprocessor emits Gherkin-derived specs, the bundler compiles
   "include": ["src", "cypress"]
 }
 ```
+
+(`moduleResolution: "bundler"` — not `"NodeNext"` — is required here: with `"type": "module"` in
+`package.json`, `NodeNext` resolution rejects every extensionless relative import
+(`import { X } from '../foo'`, without a `.js` suffix) with `TS2835`, and this plan's code uses
+extensionless imports throughout, matching what esbuild — the actual bundler resolving these for
+Cypress — expects.)
 
 - [ ] **Step 5: .gitignore**
 
@@ -255,12 +270,18 @@ export default defineConfig({
 - [ ] **Step 4: Configure the cucumber preprocessor's step-definition glob**
 
 Add to `package.json` (top level, per the preprocessor's documented config key — confirm this key
-name against the Step 1 README too):
+name against the Step 1 README too). **Do not use the `[filepath]` token** — for a feature at
+`cypress/e2e/auth/auth.feature` it resolves to `auth/auth` (project root and the `cypress/e2e`
+integration folder are stripped, giving the full remaining path, not just the leaf folder name), so
+`src/features/[filepath]/steps/*.steps.ts` would look for
+`src/features/auth/auth/steps/*.steps.ts` — never matching this plan's actual
+`src/features/<slice>/steps/*.steps.ts` layout. A static glob avoids the token entirely and matches
+every slice's step folder directly:
 
 ```json
 {
   "cypress-cucumber-preprocessor": {
-    "stepDefinitions": ["cypress/e2e/[filepath]/*.steps.ts", "src/features/[filepath]/steps/*.steps.ts"]
+    "stepDefinitions": ["src/features/**/steps/*.steps.ts"]
   }
 }
 ```
@@ -315,65 +336,30 @@ git commit -m "Wire Cucumber preprocessor, esbuild bundler, and mochawesome repo
 - Create: `src/core/types/index.ts`
 
 **Interfaces:**
-- Produces: `CountryCode`, `AuthSession`, `PizzaCatalogItem`, `CartItem`, `CheckoutOrderData`, `OrderSummary` — exact shapes below, consumed by every later task.
+- Produces: `AuthSession` — the only shared type Tasks 1–10 actually consume.
 
-- [ ] **Step 1: Write the types**
+Earlier drafts of this plan also defined `CountryCode`, `PizzaCatalogItem`, `CartItem`,
+`CheckoutOrderData`, and `OrderSummary` here — speculatively, for the Catalog/Checkout/Orders slices
+this plan explicitly defers (see "Scope Cut"). Nothing in Tasks 1–10 imports them, and cross-checking
+them against the live `/api/openapi.json` surfaced real mismatches (`CartItem` only requires
+`pizza_id`/`quantity`, not `itemId`/`size`/`toppings`; `OrderSummary` also requires `tax_rate`,
+`tip_percentage`, `currency_symbol`). Rather than ship types nothing here uses and that don't match
+the real API, they're cut from this plan — the follow-up plan defines them fresh against the verified
+schemas now recorded in `docs/superpowers/specs/references/omnipizza.md`.
 
-Field names below are taken directly from the OpenAPI survey in
-`docs/superpowers/specs/references/omnipizza.md` (not guessed):
+- [ ] **Step 1: Write the type**
 
 ```typescript
-export type CountryCode = 'MX' | 'US' | 'CH' | 'JP' | 'SA';
-
 export interface AuthSession {
   accessToken: string;
   tokenType: 'bearer';
   username: string;
   behavior: string;
 }
-
-export interface PizzaCatalogItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  basePrice: number;
-  currency: string;
-  currencySymbol: string;
-  image: string;
-  category: string;
-}
-
-export interface CartItem {
-  itemId: string;
-  pizzaId: string;
-  quantity: number;
-  size: string;
-  toppings: string[];
-}
-
-export interface CheckoutOrderData {
-  countryCode: CountryCode;
-  requiredFieldValue: string; // colonia (MX) / zip_code (US) / plz (CH) / prefectura (JP) / district (SA)
-  tipPercentage: number;
-}
-
-export interface OrderSummary {
-  orderId: string;
-  status: string;
-  subtotal: number;
-  deliveryFee: number;
-  tax: number;
-  tip: number;
-  total: number;
-  currency: string;
-  items: CartItem[];
-  timestamp: string;
-}
 ```
 
 This file has no runtime logic, so there is no `.cy.ts`/`.node.test.ts` for it — its correctness is
-checked by every later task that imports and uses these types compiling under `strict: true`.
+checked by every later task that imports and uses it, compiling under `strict: true`.
 
 - [ ] **Step 2: Verify it type-checks**
 
@@ -619,8 +605,11 @@ export abstract class BaseApiClient {
       headers: options.headers,
       failOnStatusCode: false,
       // Render free-tier services can cold-start; give the first request
-      // room instead of a fast, misleading timeout failure.
+      // room. retryOnNetworkFailure defaults to true in Cypress already -
+      // stated explicitly here so the cold-start handling this spec
+      // promises is visible in the code, not an unstated default.
       timeout: 30000,
+      retryOnNetworkFailure: true,
     });
   }
 
@@ -1317,7 +1306,16 @@ Feature: Authentication
 - [ ] **Step 6: Write the step definitions**
 
 `src/features/auth/steps/auth.steps.ts` — replace `<LOGIN_ROUTE>` and `<POST_LOGIN_ROUTE>` with the
-real routes recorded in Task 9's commit message:
+real routes recorded in Task 9's commit message. Two design points worth calling out:
+
+1. **The `When` steps are intentionally empty.** `AtomicScenario`'s whole thesis is that
+   `arrangeViaApi`/`hydrateUi`/`assertUi` fire together as one atomic unit (spec §7) — splitting the
+   assertion into a separate `Then` step outside `AtomicScenario.run()` would defeat that, so the
+   full `run()` call (all three phases, including the real assertion in `assertUi`) happens in the
+   `Then` step below. `Given`/`When` only record intent (which user, which action) into shared
+   module-level state; nothing Cypress-visible happens until `Then` runs the atomic flow.
+2. **`locked_out_user` returns HTTP `403`, not `401`** — verified directly against the live API
+   (`curl` returned `403 Forbidden`), not assumed.
 
 ```typescript
 import { Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
@@ -1336,55 +1334,62 @@ Given('a locked-out customer', () => {
   userKey = 'lockedOut';
 });
 
-When('they log in', () => {
+// Intentionally empty - see the note above Step 6. Cucumber requires a step
+// definition to exist for every line, but the actual work happens as one
+// atomic run() call in the corresponding Then step below.
+When('they log in', () => {});
+
+When('they attempt to log in', () => {});
+
+Then('they should land on the catalog page as an authenticated customer', () => {
   const facade = createAuthFacade();
+  let accessToken: string;
+
   AtomicScenario.for('auth').run({
     arrangeViaApi: () => {
-      facade.loginAs(userKey).then((session) => cy.wrap(session.accessToken).as('accessToken'));
+      facade.loginAs(userKey).then((session) => {
+        accessToken = session.accessToken;
+      });
     },
     hydrateUi: () => {
-      cy.visit('<POST_LOGIN_ROUTE>');
-      cy.get('@accessToken').then((token) => {
-        cy.window().then((win) => win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, String(token)));
+      // onBeforeLoad sets the token before the app's own JS boots, so there
+      // is no race with a client-side auth-guard redirect: a plain
+      // visit-then-set-localStorage-then-reload sequence risks landing on
+      // POST_LOGIN_ROUTE as an unauthenticated visitor, getting redirected
+      // to the login page, setting the token too late, and reloading the
+      // login page instead of the catalog.
+      cy.visit('<POST_LOGIN_ROUTE>', {
+        onBeforeLoad: (win) => win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken),
       });
-      cy.reload();
     },
-    assertUi: () => {},
+    assertUi: () => {
+      facade.assertLandedOnCatalog();
+    },
   });
 });
 
-When('they attempt to log in', () => {
+Then('they should see a locked-out account message', () => {
   const facade = createAuthFacade();
+
   AtomicScenario.for('auth').run({
     arrangeViaApi: () => {
       facade.attemptLoginAs(userKey).then((response) => {
-        expect(response.status).to.equal(401);
+        expect(response.status).to.equal(403);
       });
     },
     hydrateUi: () => {
       cy.visit('<LOGIN_ROUTE>');
       facade.submitLoginFormAs(userKey);
     },
-    assertUi: () => {},
+    assertUi: () => {
+      facade.assertLockedOutMessageVisible();
+    },
   });
-});
-
-Then('they should land on the catalog page as an authenticated customer', () => {
-  createAuthFacade().assertLandedOnCatalog();
-});
-
-Then('they should see a locked-out account message', () => {
-  createAuthFacade().assertLockedOutMessageVisible();
 });
 ```
 
 Note on `expect` inside `arrangeViaApi`: Cypress's global `expect` (Chai) is available in step files
 without an import, same as in `.cy.ts` specs.
-
-If Task 9 found that `locked_out_user`'s login attempt does **not** actually return HTTP 401 (e.g. it
-returns 200 with an error flag in the body instead), adjust the assertion in `attemptLoginAs`'s
-`.then()` to match what you actually observed — don't leave a `.status).to.equal(401)` assertion that
-you know is wrong.
 
 - [ ] **Step 7: Run the auth suite, confirm both scenarios pass**
 
@@ -1443,6 +1448,22 @@ as "replace with your Task 9 findings," not left as unexplained TODOs.
 5, 7, 8, 10's `UserFactory`) and referenced with matching names/shapes in every later task that uses
 them. `requestRaw`/`request` signatures in Task 5 match their exact usage in Task 10's
 `AuthApiClient`.
+
+**4. External audit pass (2026-08-19):** this plan was independently audited after the first draft.
+Every finding was verified against real systems before being acted on (live API responses, live
+OpenAPI schema, an isolated `tsc` run, the cucumber preprocessor's actual `[filepath]` behavior, and
+an actual `claude-in-chrome` call) rather than applied on trust. Confirmed and fixed: the
+`NodeNext`+extensionless-import conflict (→ `bundler` resolution), the `stepDefinitions` glob
+mismatch (→ static glob), `AtomicScenario`'s `assertUi` being left empty with real assertions
+stranded in separate `Then` steps (→ moved inside `assertUi`, `When` steps now intentionally empty),
+the localStorage hydration race (→ `onBeforeLoad`), `locked_out_user` returning `403` not `401`
+(verified live), Task 3's speculative types not matching the real OpenAPI and not even being used by
+Tasks 1–10 (→ cut down to just `AuthSession`), and `typescript@^5.7.0` being both a nonexistent
+version and inconsistent with this plan's own "resolve current versions" instruction (→ `^5.9.3`,
+with the reasoning for not using the newer `7.x` major stated inline). One finding in the audit was
+checked and found **incorrect**: `claude-in-chrome` was claimed to be unavailable in this
+environment; it was tested live (real tab context, successful navigation to the live frontend) and
+works fine — Task 9's approach is unchanged.
 
 ---
 
