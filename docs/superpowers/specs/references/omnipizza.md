@@ -89,10 +89,30 @@ Frontend is feature-organized (auth, catalog, checkout, country, profile, orderS
 repository/use-case/UI layers — i.e., OmniPizza's own frontend already uses a layering broadly
 compatible with this framework's vertical-slice approach.
 
+## Verified via live API probe (2026-08-19)
+
+Logged in twice as `standard_user` (curl, via `POST /api/auth/login`) to check whether cart/session
+state is shared by username or isolated by session:
+
+- Each login returns a JWT with a distinct `sid` claim (session id), even for the same username.
+- `GET /api/cart` under each token returned different `updated_at` timestamps — the two sessions are
+  backed by distinct state objects, not a shared per-username record.
+- A cart item added under one token's session was not visible when reading the cart with the other
+  token — **no cross-session leakage observed**.
+- **Implication for CI**: a parallel test matrix can safely reuse the same deterministic username
+  (e.g. `standard_user`) across concurrent jobs — each job's own login produces an isolated session.
+- **Open quirk, not yet explained**: `POST /api/cart` echoed the added item back in its own response,
+  but an immediate `GET /api/cart` (same token, same `X-Country-Code`) showed an empty cart. Possibly
+  cart is scoped by an active "market" that must be set via `POST /api/store/market` first, rather
+  than purely by the `X-Country-Code` header — re-verify this during the Cart & Checkout slice
+  implementation before writing assertions against cart contents.
+
 ## Not yet verified (confirm during implementation)
 
 - Exact 6th market beyond MX/US/CH/JP/SA.
 - Whether `cy.prompt()` can reliably navigate the SPA's client-side routing without extra hints —
-  worth an early spike once `AiPromptStrategy` implementation starts.
+  worth an early spike once `AiPromptCheckoutUiStrategy` implementation starts.
 - Actual DOM structure/`data-testid` values — the frontend is a client-rendered SPA, so this needs a
-  real browser session (Cypress `cypress open`), not `WebFetch`, to inspect.
+  real browser session (Cypress `cypress open`), not `WebFetch`, to inspect. This is the "locator
+  harvest" step in the implementation plan (spec §12).
+- The cart/market-scoping quirk above.
