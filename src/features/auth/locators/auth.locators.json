@@ -1,0 +1,11 @@
+{
+  "login": {
+    "usernameInput": "[data-testid=\"username-desktop\"]",
+    "passwordInput": "[data-testid=\"password-desktop\"]",
+    "submitButton": "[data-testid=\"login-button-desktop\"]",
+    "lockedOutError": "[data-testid=\"login-error\"]"
+  },
+  "landing": {
+    "readyMarker": "[data-testid=\"logout-btn\"]"
+  }
+}
