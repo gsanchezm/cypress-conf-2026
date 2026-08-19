@@ -53,7 +53,7 @@ Four vertical slices, each fully implementing the atomic flow (API → hydrate �
 | **SRP** | `ApiClient`, `UiComponent`, `Factory`, `Strategy`, `Observer` each have exactly one reason to change. |
 | **OCP** | New country → new `ValidationStrategy` + one registry line, zero edits elsewhere. New report sink → new `Observer`, zero edits to specs. |
 | **LSP** | All `ApiClient` subclasses substitutable via the `BaseApiClient` contract; all strategies substitutable via their shared interface. |
-| **ISP** | Small, focused interfaces (`Observer`, `ValidationStrategy`, `UiInteractionStrategy`, `DataFactory<T>`) — no god interface. |
+| **ISP** | Small, focused interfaces (`Observer`, `ValidationStrategy`, one `UiStrategy` per business action per slice, `DataFactory<T>`) — no god interface, and explicitly no single app-wide "UI interaction" interface (see §8 — that was tried and rejected). |
 | **DIP** | High-level Facades depend on abstractions, not concretions. Concrete wiring happens in one composition root (`cypress/support/e2e.ts`). |
 | **DRY** | Shared plumbing centralized in `core/`; rule-of-three applied before extracting anything new. |
 | **KISS / YAGNI** | See §6 "Deliberately not built." |
@@ -67,7 +67,7 @@ Four vertical slices, each fully implementing the atomic flow (API → hydrate �
 | **Proxy** | `LocatorProxy` wraps `locators/*.json` | Controlled access to selectors: dot-path lookup, caching, throws a clear error on a missing key instead of a silent `undefined` selector. Replaces classic POM. |
 | **Template Method** | `BaseApiClient.request()`, `BaseUiComponent.load()`, and **`AtomicScenario`** (the centerpiece — see §7) | Fixes the algorithm skeleton (headers/error-handling; visit/ready-wait; arrange→hydrate→assert order); slices fill in only the specific steps. |
 | **Facade** | `AuthFacade`, `CatalogFacade`, `CheckoutFacade`, `OrdersFacade` | One narrow entrypoint per slice (`loginAs()`, `seedCart()`, `placeOrder()`), hides API+data+locator+strategy wiring from step definitions. |
-| **Strategy** | (a) `CheckoutValidationStrategy` per country, keyed by `X-Country-Code`. (b) `UiInteractionStrategy` — `DeterministicStrategy` vs `AiPromptStrategy` (see §8). | (a) 5 genuinely different required-field/tip rules. (b) Lets the same business-language step run via hardcoded locators or `cy.prompt()` without either the step definition or the Facade knowing which. |
+| **Strategy** | (a) `CheckoutValidationStrategy` per country, keyed by `X-Country-Code`. (b) One small `XxxUiStrategy` interface **per business action per slice** (e.g. `CheckoutUiStrategy.completeCheckout(order)`), each with a `Deterministic...` and an `AiPrompt...` implementation (see §8). | (a) 5 genuinely different required-field/tip rules. (b) Lets a step definition invoke the same business action via hardcoded locators or `cy.prompt()` without knowing which — scoped at business-action granularity, not per click/assert, so the interface stays typed and neither implementation needs `any` or a throw-on-unsupported branch. |
 | **Factory** | `UserFactory` (deterministic roster + ad-hoc via faker), `PizzaOrderFactory`, `CountryDataFactory` | Centralizes how valid-but-varied test data is built per slice. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have many optional/country-conditional fields — reads better than a Factory with 10 optional args. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec`/`after:run` in `cypress.config.ts` | Decouples "a spec finished" from "who cares." 3 observers (§9). |
@@ -88,10 +88,10 @@ Four vertical slices, each fully implementing the atomic flow (API → hydrate �
                        (status, schema, business rule). Always deterministic — cy.prompt
                        cannot do API testing.
 2. hydrateUi()       → injects that API-produced state into the browser (token/session,
-                       cy.visit), OR performs a business UI action, via the active
-                       UiInteractionStrategy.
-3. assertUi()        → asserts the rendered DOM reflects that state, via the active
-                       UiInteractionStrategy.
+                       cy.visit), OR performs a business UI action via the slice's active
+                       XxxUiStrategy (see §8).
+3. assertUi()        → asserts the rendered DOM reflects that state, via the same
+                       XxxUiStrategy.
 ```
 
 Called as `AtomicScenario.for('checkout').run({ arrangeViaApi, hydrateUi, assertUi })`. The order
@@ -122,20 +122,54 @@ calls — never into raw Cypress commands directly. `.cy.ts` files are **not use
 they're reserved for internal framework unit tests (e.g., asserting `LocatorProxy` throws on a
 missing key).
 
-**`cy.prompt()` placement** (verified against Cypress docs — beta since 15.13.0, Cypress Cloud +
-record key required, Chromium-only, no API testing support):
+**`cy.prompt()` placement** (verified against Cypress docs, 2026-08-19 — beta since 15.13.0/current
+15.21.0, Cypress Cloud + record key required, Chromium-only, no API testing support, **confirmed to
+run in headless `cypress run`**, not just `cypress open`):
 
-- Implemented as `AiPromptStrategy`, one of two `UiInteractionStrategy` implementations selected via
-  `Cypress.env('UI_STRATEGY')` (`deterministic` default, `ai` opt-in), resolved once in the
-  composition root and injected into Facades (DIP).
-- **Local**: works in `cypress open` once logged into Cypress Cloud; developers flip `UI_STRATEGY=ai`
-  to see the same `.feature` files execute via natural-language prompts instead of `LocatorProxy`.
-- **CI**: separate `ai-assisted` job in the GitHub Actions workflow, **manual (`workflow_dispatch`)
-  only** — not on every push/PR — to avoid burning Cypress Cloud AI quota on every commit. Requires
-  `CYPRESS_RECORD_KEY` (GitHub secret, provided by you via `gh secret set`, never pasted in chat) and
-  `--browser chrome` (Chromium-only constraint).
+**Design correction from the first draft**: a single app-wide `UiInteractionStrategy` interface
+doesn't survive contact with both implementations. `DeterministicStrategy` is naturally locator-keyed
+(`click('checkout.submit')`); `cy.prompt()` is naturally intent-keyed and takes an *array* of
+natural-language steps, batched into one call. Forcing one interface over both means either
+`AiPromptStrategy` can't interpret a locator key, or `DeterministicStrategy` needs a second,
+parallel intent→locator registry — exactly the kind of interface that only "works" with an `any` or
+a branch that throws. The fix: scope the Strategy interface at **business-action granularity**,
+matching one Gherkin step, not one click:
+
+```typescript
+interface CheckoutUiStrategy {
+  completeCheckout(order: CheckoutOrderData): void;
+  assertOrderConfirmation(expected: OrderSummary): void;
+}
+```
+
+- `DeterministicCheckoutUiStrategy` implements this via `LocatorProxy` keys and a `cy.get/type/click`
+  sequence internally.
+- `AiPromptCheckoutUiStrategy` implements this via **one** batched `cy.prompt([...], { placeholders })`
+  call per method, templated from the typed `order`/`expected` data — this also preserves the
+  multi-step batching `cy.prompt`'s own docs are built around, which a per-click interface would have
+  thrown away.
+- Each slice that needs this defines its own small interface (`CheckoutUiStrategy`,
+  `CatalogUiStrategy`); there is no forced shared base — consistent with ISP (§4).
+- Selected via `Cypress.env('UI_STRATEGY')` (`deterministic` default, `ai` opt-in), resolved once in
+  the composition root and injected into Facades (DIP).
+- **Local**: works in `cypress open` or headless `cypress run` once logged into Cypress Cloud;
+  developers flip `UI_STRATEGY=ai` to see the same `.feature` files execute via natural-language
+  prompts instead of `LocatorProxy`.
+- **CI**: separate `ai-suite.yml` job, **manual (`workflow_dispatch`) only** — not on every push/PR —
+  to avoid burning Cypress Cloud AI quota on every commit. Requires `CYPRESS_RECORD_KEY` (GitHub
+  secret, provided by you via `gh secret set`, never pasted in chat) and `--browser chrome`
+  (Chromium-only constraint).
 - The deterministic suite is what must be green for the talk; the AI suite is an explicit, opt-in
   demonstration layered on top — it never gates the core pipeline.
+
+**Operational limits (verified via Cypress Cloud FAQ, 2026-08-19)** — confirm against your plan
+before the demo:
+- 100 prompts/hour on free accounts, 600/hour on paid.
+- Max 50 steps per single `cy.prompt()` call.
+- The no-overage-charge grace period **ended 2026-07-31** — already past as of this spec's date, so
+  overage billing may apply. Check your Cypress Cloud plan/quota before relying on this live on stage.
+- Selector-cache persistence (disk vs. Cloud-only) is not documented; treat every CI run of
+  `ai-suite.yml` as a potentially cold/full-cost AI run, not a cached one.
 
 ## 9. Reporting — Observer
 
@@ -160,11 +194,12 @@ cypress-conf-2026/
 │   │   ├── http/           (BaseApiClient, ApiError)
 │   │   ├── ui/              (BaseUiComponent, AtomicScenario)
 │   │   ├── locators/        (LocatorProxy)
-│   │   ├── strategies/      (UiInteractionStrategy, DeterministicStrategy, AiPromptStrategy)
+│   │   ├── types/           (shared contracts: PizzaCatalogItem, CountryConfig, OrderSummary — used
+│   │   │                     by 2+ slices; behavior stays slice-owned, only shapes live here)
 │   │   └── reporting/       (Observer, ReportingSubject, the 3 observers)
 │   └── features/
 │       ├── auth/           {api, ui, data, facade, steps, locators/*.json}
-│       ├── catalog/        {api, ui, data, facade, steps, locators/*.json}
+│       ├── catalog/        {api, ui, data, facade, steps, strategies, locators/*.json}
 │       ├── checkout/       {api, ui, data, facade, steps, strategies, locators/*.json}
 │       └── orders/         {api, ui, data, facade, steps, locators/*.json}
 ├── cypress.config.ts / tsconfig.json / package.json
@@ -189,12 +224,27 @@ build/host.
 
 Two different kinds of parallelism, both requested:
 
-1. **Build-time**: `src/core/` (BaseApiClient, BaseUiComponent, AtomicScenario, LocatorProxy,
-   Observer infra, `UiInteractionStrategy` + `DeterministicStrategy`) is built first, sequentially —
-   every slice depends on it. Once core is in place, the 4 vertical slices are implemented **in
-   parallel**, each in its own git worktree/subagent, since they don't depend on each other. CI
-   workflow, README, and `AiPromptStrategy` wiring are integration steps done last, sequentially.
+1. **Build-time**, three phases:
+   a. **Core** (sequential, single worktree): `src/core/` — `BaseApiClient`, `BaseUiComponent`,
+      `AtomicScenario`, `LocatorProxy`, shared `types/`, Observer infra. Every slice depends on this.
+   b. **Locator harvest** (sequential, before fan-out): the frontend is a client-rendered SPA — its
+      `data-testid` values can only be read from a live browser session, not from a static fetch (see
+      `references/omnipizza.md`). One pass through the real app (via `cypress open` or browser
+      automation) records the actual selectors into each slice's `locators/*.json` and commits them
+      *before* slices fork into parallel work — otherwise all 4 parallel agents independently block on
+      the same browser-access step, serializing anyway.
+   c. **Slices in parallel** (4 worktrees/subagents): auth, catalog, checkout, orders — each depends
+      only on core + its own already-harvested locators, not on each other. Any type/shape needed by
+      more than one slice (e.g. the pizza/catalog item shape checkout also needs) is added to
+      `src/core/types/` *before* the fan-out, not duplicated per-slice or reached-into across slice
+      folders. CI workflow, README, and `AiPromptStrategy` wiring are integration steps done last,
+      sequentially, after all 4 slices merge.
 2. **Run-time**: the `tests.yml` matrix (§11) runs the 4 slices' `.feature` suites in parallel in CI.
+   **Verified safe** (2026-08-19, live probe against the API): logging in twice as `standard_user`
+   produces two JWTs with distinct `sid` claims and distinct, non-overlapping cart/session state — no
+   cross-contamination observed between sessions sharing a username. The 4-way matrix can reuse
+   deterministic usernames across parallel jobs without flaking from shared state, since each job
+   authenticates its own session.
 
 This section is elaborated into a concrete task breakdown by the implementation plan (next step,
 via the `writing-plans` skill).
@@ -213,3 +263,8 @@ via the `writing-plans` skill).
   in chat), or tell me to leave `ai-suite.yml` with a placeholder secret name for you to fill in later.
 - `CYPRESS_CLOUD_PROJECT_ID` (not secret) — needed in `cypress.config.ts`; please share the project ID
   when ready.
+- Confirm your Cypress Cloud plan covers current `cy.prompt` usage — the no-overage-charge grace
+  period ended 2026-07-31 (§8); if you're still on the free tier's 100 prompts/hour, that's tight for
+  a live, possibly-retried demo run.
+- Pinned versions for implementation: `cypress@^15.21.0` (or newer, re-check before implementation
+  starts), `@badeball/cypress-cucumber-preprocessor@^26.0.0` — verified compatible 2026-08-19.
