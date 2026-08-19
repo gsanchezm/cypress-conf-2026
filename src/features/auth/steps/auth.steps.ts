@@ -1,4 +1,4 @@
-import { Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
+import { Before, Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { createAuthFacade } from '../../../../cypress/support/e2e';
 import { AtomicScenario } from '../../../core/ui/AtomicScenario';
 import type { DeterministicUserKey } from '../data/UserFactory';
@@ -11,6 +11,10 @@ function requireUserKey(): DeterministicUserKey {
   }
   return userKey;
 }
+
+Before(() => {
+  userKey = undefined;
+});
 
 Given('a standard customer', () => {
   userKey = 'standard';

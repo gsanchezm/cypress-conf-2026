@@ -1,7 +1,7 @@
 import { CatalogApiClient } from '../api/CatalogApiClient';
 import { LocatorProxy } from '../../../core/locators/LocatorProxy';
 import { AUTH_TOKEN_STORAGE_KEY } from '../../../core/config/storageKeys';
-import type { CountryCode, PizzaCatalogItem } from '../../../core/types';
+import type { CountryCode, PizzaCatalogResponse } from '../../../core/types';
 
 export class CatalogFacade {
   constructor(
@@ -9,7 +9,7 @@ export class CatalogFacade {
     private readonly locators: LocatorProxy,
   ) {}
 
-  setMarketAndFetchPizzas(accessToken: string, countryCode: CountryCode): Cypress.Chainable<PizzaCatalogItem[]> {
+  setMarketAndFetchPizzas(accessToken: string, countryCode: CountryCode): Cypress.Chainable<PizzaCatalogResponse> {
     return this.catalogApi
       .setMarket(accessToken, countryCode)
       .then(() => this.catalogApi.getPizzas(accessToken, countryCode));
@@ -38,17 +38,20 @@ export class CatalogFacade {
     cy.visit('/catalog');
   }
 
-  // Matches the full rendered price format (symbol + digit grouping/decimals),
-  // not just a bare currency-symbol substring: a substring check on "$" alone
-  // would make the US scenario tautological (US is the app's default market,
-  // so "$" would appear even if setMarket/countryCode hydration/the
-  // X-Country-Code header were all broken). A format regex per market (see
-  // the pricePattern values in catalog.steps.ts) forces the assertion to
-  // actually depend on the market having been switched correctly.
-  assertCatalogShowsCurrency(pricePattern: RegExp): void {
+  // Two layers of proof: an exact-match on p01's price (proves this specific
+  // market rendered - a format-only check can't distinguish Mexico from the
+  // United States, since both render "$" + 2 decimals), plus a format-match
+  // across every visible price (proves the whole catalog is consistently
+  // localized, not just the one pizza we happen to assert exactly).
+  assertCatalogShowsCurrency(scenario: { expectedPriceText: string; pricePattern: RegExp }): void {
     cy.get(this.locators.get('catalog.readyMarker')).should('be.visible');
     cy.get(this.locators.get('catalog.firstPizzaPrice'))
       .invoke('text')
-      .should('match', pricePattern);
+      .should('eq', scenario.expectedPriceText);
+    cy.get(this.locators.get('catalog.allPizzaPrices'))
+      .should('have.length.greaterThan', 1)
+      .each(($price) => {
+        expect($price.text()).to.match(scenario.pricePattern);
+      });
   }
 }
