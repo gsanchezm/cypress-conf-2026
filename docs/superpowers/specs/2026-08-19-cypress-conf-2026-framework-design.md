@@ -1,6 +1,6 @@
 # cypress-conf-2026 — Atomic Testing Framework Design
 
-**Status:** Approved for implementation
+**Status:** Approved for implementation (spec reviewed and approved 2026-08-19; Gherkin/README language confirmed as English)
 **Date:** 2026-08-19
 **Author:** Gilberto (gsanchezm) + Claude (design session)
 
@@ -105,16 +105,16 @@ run, since both OmniPizza services are live Render free-tier instances — real 
 ## 8. Business Layer — Gherkin/Cucumber + AI (`cy.prompt`)
 
 **Gherkin is the primary business-spec layer** for all 4 vertical slices (`@badeball/cypress-cucumber-preprocessor`,
-esbuild bundler). `.feature` files are written in **Spanish, pure business language** — no "click,"
+esbuild bundler). `.feature` files are written in **English, pure business language** — no "click,"
 "response," "selector," or any technical term. Example:
 
 ```gherkin
-Característica: Checkout multi-país
-  Escenario: Jane completa un pedido en México con los datos requeridos
-    Dado que Jane inició sesión como cliente estándar en México
-    Y su carrito contiene dos pizzas grandes
-    Cuando Jane completa el pedido con su colonia
-    Entonces el pedido debe reflejar el total con impuestos de México
+Feature: Multi-country checkout
+  Scenario: Jane completes an order in Mexico with the required details
+    Given Jane is logged in as a standard customer in Mexico
+    And her cart contains two large pizzas
+    When Jane completes the order with her neighborhood (colonia)
+    Then the order should reflect the total with Mexico's taxes
 ```
 
 Step definitions (`src/features/<slice>/steps/*.steps.ts`) translate business language into Facade
