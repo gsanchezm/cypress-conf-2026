@@ -82,7 +82,12 @@ spec §12b) and CI/README/`cy.prompt` (spec §11, §13, §14).
 - Create: empty directories `cypress/e2e`, `cypress/unit`, `cypress/support`, `src/core`, `src/features`
 
 **Interfaces:**
-- Produces: a working `npm install`, `npx tsc --noEmit` (passes on an empty `src/`), `npx cypress version` (prints installed version) — these are the task's pass/fail checks, since there's no application code yet to unit-test.
+- Produces: a working `npm install` and `npx cypress version` (prints installed version) — these are
+  the task's pass/fail checks, since there's no application code yet to unit-test. `npx tsc --noEmit`
+  is **expected to fail with `TS18003` ("No inputs were found")** at this point, not exit 0 — with
+  `include: ["src", "cypress"]` and zero tracked `.ts` files, `tsc` has nothing to check. This is
+  correct: `TS18003` is proof the config itself parsed successfully (a broken config produces a
+  different, config-level error) — it becomes a real check once Task 3 commits the first `.ts` file.
 
 - [ ] **Step 1: Resolve current package versions**
 
@@ -181,8 +186,10 @@ npx tsc --noEmit
 npx cypress version
 ```
 
-Expected: `tsc` exits 0 (nothing to check yet, but confirms the config parses). `cypress version`
-prints Cypress `15.21.0` (or whatever Step 1 resolved) plus Electron/Node versions.
+Expected: `tsc` fails with `TS18003: No inputs were found` (see "Interfaces" above — this is the
+correct outcome with zero tracked `.ts` files, not a bug; do not add a placeholder `.ts` file just to
+force exit 0). `cypress version` prints Cypress `15.21.0` (or whatever Step 1 resolved) plus
+Electron/Node versions.
 
 - [ ] **Step 8: Commit**
 
