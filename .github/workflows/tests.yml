@@ -1,0 +1,64 @@
+name: Deterministic suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  cypress:
+    name: ${{ matrix.slice }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # One entry per vertical slice with a live spec under cypress/e2e/<slice>/**.
+        # Add a slice here the same commit its .feature file is added - zero other CI edits needed.
+        slice: [auth, catalog]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run ${{ matrix.slice }} slice
+        run: npx cypress run --spec "cypress/e2e/${{ matrix.slice }}/**"
+
+      - name: Upload mochawesome report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-${{ matrix.slice }}
+          path: cypress/reports/mochawesome
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload screenshots (failures only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.slice }}
+          path: cypress/screenshots
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-${{ matrix.slice }}
+          path: cypress/videos
+          retention-days: 7
+          if-no-files-found: ignore
