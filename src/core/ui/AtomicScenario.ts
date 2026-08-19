@@ -12,6 +12,7 @@ export class AtomicScenario {
   }
 
   run(steps: AtomicScenarioSteps): void {
+    cy.log(`[${this.slice}] atomic scenario`);
     steps.arrangeViaApi();
     steps.hydrateUi();
     steps.assertUi();

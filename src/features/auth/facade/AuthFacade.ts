@@ -2,6 +2,7 @@ import { AuthApiClient } from '../api/AuthApiClient';
 import { LocatorProxy } from '../../../core/locators/LocatorProxy';
 import { UserFactory, type DeterministicUserKey } from '../data/UserFactory';
 import type { AuthSession } from '../../../core/types';
+import { AUTH_TOKEN_STORAGE_KEY } from '../../../core/config/storageKeys';
 
 export class AuthFacade {
   constructor(
@@ -12,7 +13,8 @@ export class AuthFacade {
   // API-only: returns the session, never touches localStorage. Cypress can
   // only safely write localStorage for the app's origin AFTER cy.visit() has
   // navigated there - doing it here (before any visit) would write to the
-  // wrong window/origin. Hydration is the step definition's job, after visiting.
+  // wrong window/origin. Hydration happens via hydrateSessionAndOpenCatalog
+  // below, not here.
   loginAs(userKey: DeterministicUserKey): Cypress.Chainable<AuthSession> {
     const user = UserFactory.deterministic(userKey);
     return this.authApi.login(user.username, user.password);
@@ -23,10 +25,22 @@ export class AuthFacade {
     return this.authApi.attemptLogin(user.username, user.password);
   }
 
+  // Two-phase visit: the app wipes the auth token on any boot where
+  // localStorage's omnipizza-release key doesn't match the current build
+  // hash, and testIsolation clears localStorage between tests - so a
+  // single visit-with-onBeforeLoad always loses that race. Visiting once
+  // first lets the app stamp omnipizza-release for real; only then does
+  // setting the token before a second visit survive the boot sequence.
+  hydrateSessionAndOpenCatalog(accessToken: string): void {
+    cy.visit('/');
+    cy.window().then((win) => win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken));
+    cy.visit('/catalog');
+  }
+
   submitLoginFormAs(userKey: DeterministicUserKey): void {
     const user = UserFactory.deterministic(userKey);
-    cy.get(this.locators.get('login.usernameInput')).type(user.username);
-    cy.get(this.locators.get('login.passwordInput')).type(user.password);
+    cy.get(this.locators.get('login.usernameInput')).clear().type(user.username);
+    cy.get(this.locators.get('login.passwordInput')).clear().type(user.password);
     cy.get(this.locators.get('login.submitButton')).click();
   }
 
