@@ -1,10 +1,16 @@
 import { Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { createAuthFacade } from '../../../../cypress/support/e2e';
 import { AtomicScenario } from '../../../core/ui/AtomicScenario';
-import { AUTH_TOKEN_STORAGE_KEY } from '../../../core/config/storageKeys';
 import type { DeterministicUserKey } from '../data/UserFactory';
 
-let userKey: DeterministicUserKey;
+let userKey: DeterministicUserKey | undefined;
+
+function requireUserKey(): DeterministicUserKey {
+  if (!userKey) {
+    throw new Error('No customer selected - a Given step must run before this step');
+  }
+  return userKey;
+}
 
 Given('a standard customer', () => {
   userKey = 'standard';
@@ -14,9 +20,11 @@ Given('a locked-out customer', () => {
   userKey = 'lockedOut';
 });
 
-// Intentionally empty - see the note above Step 6. Cucumber requires a step
-// definition to exist for every line, but the actual work happens as one
-// atomic run() call in the corresponding Then step below.
+// Intentionally empty. AtomicScenario's whole thesis is that arrange,
+// hydrate, and assert fire together as one atomic unit - splitting the
+// assertion into a separate Then step outside AtomicScenario.run() would
+// defeat that. Given/When only record intent (which customer, which
+// action); the full atomic run happens in the Then step below.
 When('they log in', () => {});
 
 When('they attempt to log in', () => {});
@@ -27,20 +35,12 @@ Then('they should land on the catalog page as an authenticated customer', () => 
 
   AtomicScenario.for('auth').run({
     arrangeViaApi: () => {
-      facade.loginAs(userKey).then((session) => {
+      facade.loginAs(requireUserKey()).then((session) => {
         accessToken = session.accessToken;
       });
     },
     hydrateUi: () => {
-      // onBeforeLoad sets the token before the app's own JS boots, so there
-      // is no race with a client-side auth-guard redirect: a plain
-      // visit-then-set-localStorage-then-reload sequence risks landing on
-      // POST_LOGIN_ROUTE as an unauthenticated visitor, getting redirected
-      // to the login page, setting the token too late, and reloading the
-      // login page instead of the catalog.
-      cy.visit('/catalog', {
-        onBeforeLoad: (win) => win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken),
-      });
+      facade.hydrateSessionAndOpenCatalog(accessToken);
     },
     assertUi: () => {
       facade.assertLandedOnCatalog();
@@ -53,13 +53,13 @@ Then('they should see a locked-out account message', () => {
 
   AtomicScenario.for('auth').run({
     arrangeViaApi: () => {
-      facade.attemptLoginAs(userKey).then((response) => {
+      facade.attemptLoginAs(requireUserKey()).then((response) => {
         expect(response.status).to.equal(403);
       });
     },
     hydrateUi: () => {
       cy.visit('/');
-      facade.submitLoginFormAs(userKey);
+      facade.submitLoginFormAs(requireUserKey());
     },
     assertUi: () => {
       facade.assertLockedOutMessageVisible();
