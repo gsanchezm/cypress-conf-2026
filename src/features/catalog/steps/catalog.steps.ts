@@ -97,9 +97,16 @@ function runCatalogScenario(scenario: MarketScenario): void {
       });
       cy.then(() => catalogFacade.setMarketAndFetchPizzas(accessToken, scenario.countryCode)).then(
         (response) => {
+          // Top-level metadata proves the response envelope reflects the
+          // requested market; the per-pizza check proves every mapped item
+          // actually carries that market's currency too - a response could
+          // pass the envelope check while individual items still carried
+          // stale data from a different market, and top-level alone
+          // wouldn't catch it.
           expect(response.countryCode).to.equal(scenario.countryCode);
           expect(response.currency).to.equal(scenario.isoCurrency);
           expect(response.pizzas.length).to.be.greaterThan(0);
+          expect(response.pizzas.every((pizza) => pizza.currency === scenario.isoCurrency)).to.be.true;
         },
       );
     },
