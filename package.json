@@ -1,0 +1,37 @@
+{
+  "name": "cypress-conf-2026",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "test:unit:node": "node --import tsx --test \"src/core/**/*.node.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsanchezm/cypress-conf-2026.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/gsanchezm/cypress-conf-2026/issues"
+  },
+  "homepage": "https://github.com/gsanchezm/cypress-conf-2026#readme",
+  "devDependencies": {
+    "@badeball/cypress-cucumber-preprocessor": "^26.0.0",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
+    "@types/node": "^26.2.0",
+    "cypress": "^15.21.0",
+    "esbuild": "^0.28.2",
+    "mochawesome": "^8.0.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
+  }
+}
