@@ -67,7 +67,7 @@ Four vertical slices, each fully implementing the atomic flow (API → hydrate �
 | **Proxy** | `LocatorProxy` wraps `locators/*.json` | Controlled access to selectors: dot-path lookup, caching, throws a clear error on a missing key instead of a silent `undefined` selector. Replaces classic POM. |
 | **Template Method** | `BaseApiClient.request()`, `BaseUiComponent.load()`, and **`AtomicScenario`** (the centerpiece — see §7) | Fixes the algorithm skeleton (headers/error-handling; visit/ready-wait; arrange→hydrate→assert order); slices fill in only the specific steps. |
 | **Facade** | `AuthFacade`, `CatalogFacade`, `CheckoutFacade`, `OrdersFacade` | One narrow entrypoint per slice (`loginAs()`, `seedCart()`, `placeOrder()`), hides API+data+locator+strategy wiring from step definitions. |
-| **Strategy** | (a) `CheckoutValidationStrategy` per country, keyed by `X-Country-Code`. (b) One small `XxxUiStrategy` interface **per business action per slice** (e.g. `CheckoutUiStrategy.completeCheckout(order)`), each with a `Deterministic...` and an `AiPrompt...` implementation (see §8). | (a) 5 genuinely different required-field/tip rules. (b) Lets a step definition invoke the same business action via hardcoded locators or `cy.prompt()` without knowing which — scoped at business-action granularity, not per click/assert, so the interface stays typed and neither implementation needs `any` or a throw-on-unsupported branch. |
+| **Strategy** | (a) `CheckoutValidationStrategy` per country, keyed by `X-Country-Code`. (b) One small `XxxUiStrategy` interface **per business action per slice** (e.g. `CheckoutUiStrategy.completeCheckout(order)`), each with a `Deterministic...` and a `CyPrompt...` implementation (see §8). | (a) 5 genuinely different required-field/tip rules. (b) Lets a step definition invoke the same business action via hardcoded locators or `cy.prompt()` without knowing which — scoped at business-action granularity, not per click/assert, so the interface stays typed and neither implementation needs `any` or a throw-on-unsupported branch. |
 | **Factory** | `UserFactory` (deterministic roster + ad-hoc via faker), `PizzaOrderFactory`, `CountryDataFactory` | Centralizes how valid-but-varied test data is built per slice. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have many optional/country-conditional fields — reads better than a Factory with 10 optional args. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec`/`after:run` in `cypress.config.ts` | Decouples "a spec finished" from "who cares." 3 observers (§9). |
@@ -102,7 +102,7 @@ run.
 **Resilience**: `BaseApiClient` includes a cold-start-aware retry/timeout on the first request of a
 run, since both OmniPizza services are live Render free-tier instances — real infra, not mocks.
 
-## 8. Business Layer — Gherkin/Cucumber + AI (`cy.prompt`)
+## 8. Business Layer — Gherkin/Cucumber + `cy.prompt`
 
 **Gherkin is the primary business-spec layer** for all 4 vertical slices (`@badeball/cypress-cucumber-preprocessor`,
 esbuild bundler). `.feature` files are written in **English, pure business language** — no "click,"
@@ -123,17 +123,13 @@ they're reserved for internal framework unit tests (e.g., asserting `LocatorProx
 missing key).
 
 **`cy.prompt()` placement** (verified against Cypress docs, 2026-08-19 — beta since 15.13.0/current
-15.21.0, Cypress Cloud + record key required, Chromium-only, no API testing support, **confirmed to
-run in headless `cypress run`**, not just `cypress open`):
+15.21.0, Cypress Cloud + record key required, Chromium-only, no API testing support, confirmed to
+run in headless `cypress run`, not just `cypress open`):
 
-**Design correction from the first draft**: a single app-wide `UiInteractionStrategy` interface
-doesn't survive contact with both implementations. `DeterministicStrategy` is naturally locator-keyed
-(`click('checkout.submit')`); `cy.prompt()` is naturally intent-keyed and takes an *array* of
-natural-language steps, batched into one call. Forcing one interface over both means either
-`AiPromptStrategy` can't interpret a locator key, or `DeterministicStrategy` needs a second,
-parallel intent→locator registry — exactly the kind of interface that only "works" with an `any` or
-a branch that throws. The fix: scope the Strategy interface at **business-action granularity**,
-matching one Gherkin step, not one click:
+A single app-wide interface for "how the UI gets driven" doesn't survive contact with both a
+locator-keyed implementation and `cy.prompt`'s intent-keyed, batched-array-of-steps shape — see §5
+for why. The fix: scope the Strategy interface at **business-action granularity**, matching one
+Gherkin step, not one click:
 
 ```typescript
 interface CheckoutUiStrategy {
@@ -144,23 +140,22 @@ interface CheckoutUiStrategy {
 
 - `DeterministicCheckoutUiStrategy` implements this via `LocatorProxy` keys and a `cy.get/type/click`
   sequence internally.
-- `AiPromptCheckoutUiStrategy` implements this via **one** batched `cy.prompt([...], { placeholders })`
-  call per method, templated from the typed `order`/`expected` data — this also preserves the
-  multi-step batching `cy.prompt`'s own docs are built around, which a per-click interface would have
-  thrown away.
+- `CyPromptCheckoutUiStrategy` implements this via **one** batched `cy.prompt([...], { placeholders })`
+  call per method, templated from the typed `order`/`expected` data — preserving the multi-step
+  batching `cy.prompt`'s own docs are built around, which a per-click interface would have thrown away.
 - Each slice that needs this defines its own small interface (`CheckoutUiStrategy`,
   `CatalogUiStrategy`); there is no forced shared base — consistent with ISP (§4).
-- Selected via `Cypress.env('UI_STRATEGY')` (`deterministic` default, `ai` opt-in), resolved once in
-  the composition root and injected into Facades (DIP).
+- Selected via `Cypress.env('UI_STRATEGY')` (`deterministic` default, `cyPrompt` opt-in), resolved
+  once in the composition root and injected into Facades (DIP).
 - **Local**: works in `cypress open` or headless `cypress run` once logged into Cypress Cloud;
-  developers flip `UI_STRATEGY=ai` to see the same `.feature` files execute via natural-language
-  prompts instead of `LocatorProxy`.
-- **CI**: separate `ai-suite.yml` job, **manual (`workflow_dispatch`) only** — not on every push/PR —
-  to avoid burning Cypress Cloud AI quota on every commit. Requires `CYPRESS_RECORD_KEY` (GitHub
-  secret, provided by you via `gh secret set`, never pasted in chat) and `--browser chrome`
+  developers flip `UI_STRATEGY=cyPrompt` to see the same `.feature` files execute via `cy.prompt`
+  instead of `LocatorProxy`.
+- **CI**: separate `cy-prompt-suite.yml` job, **manual (`workflow_dispatch`) only** — not on every
+  push/PR — to avoid burning Cypress Cloud quota on every commit. Requires `CYPRESS_RECORD_KEY`
+  (GitHub secret, provided by you via `gh secret set`, never pasted in chat) and `--browser chrome`
   (Chromium-only constraint).
-- The deterministic suite is what must be green for the talk; the AI suite is an explicit, opt-in
-  demonstration layered on top — it never gates the core pipeline.
+- The deterministic suite is what must be green for the talk; the `cy.prompt` suite is an explicit,
+  opt-in demonstration layered on top — it never gates the core pipeline.
 
 **Operational limits (verified via Cypress Cloud FAQ, 2026-08-19)** — confirm against your plan
 before the demo:
@@ -169,7 +164,7 @@ before the demo:
 - The no-overage-charge grace period **ended 2026-07-31** — already past as of this spec's date, so
   overage billing may apply. Check your Cypress Cloud plan/quota before relying on this live on stage.
 - Selector-cache persistence (disk vs. Cloud-only) is not documented; treat every CI run of
-  `ai-suite.yml` as a potentially cold/full-cost AI run, not a cached one.
+  `cy-prompt-suite.yml` as a potentially cold/full-cost run, not a cached one.
 
 ## 9. Reporting — Observer
 
@@ -185,7 +180,7 @@ Three observers on one `ReportingSubject`, addable/removable with zero spec chan
 cypress-conf-2026/
 ├── .github/workflows/
 │   ├── tests.yml              # deterministic suite: push/PR/workflow_dispatch, matrix per slice
-│   └── ai-suite.yml            # cy.prompt suite: workflow_dispatch only
+│   └── cy-prompt-suite.yml     # cy.prompt suite: workflow_dispatch only
 ├── cypress/
 │   ├── e2e/{auth,catalog,checkout,orders}/*.feature
 │   └── support/{e2e.ts, commands.ts}     # composition root (DIP wiring)
@@ -217,7 +212,7 @@ build/host.
   Cloud parallel-run billing needed. Steps: checkout → setup-node (LTS, npm cache) → `npm ci` →
   `cypress run --spec cypress/e2e/<slice>/**` → upload mochawesome + screenshots/videos as artifacts
   on failure → step summary via `GithubActionsSummaryObserver`.
-- **`ai-suite.yml`** (AI-assisted suite): `workflow_dispatch` only, `--browser chrome`, needs
+- **`cy-prompt-suite.yml`** (`cy.prompt` suite): `workflow_dispatch` only, `--browser chrome`, needs
   `CYPRESS_RECORD_KEY` secret.
 
 ## 12. Implementation Approach (parallelism)
@@ -237,8 +232,8 @@ Two different kinds of parallelism, both requested:
       only on core + its own already-harvested locators, not on each other. Any type/shape needed by
       more than one slice (e.g. the pizza/catalog item shape checkout also needs) is added to
       `src/core/types/` *before* the fan-out, not duplicated per-slice or reached-into across slice
-      folders. CI workflow, README, and `AiPromptStrategy` wiring are integration steps done last,
-      sequentially, after all 4 slices merge.
+      folders. CI workflow, README, and `CyPromptCheckoutUiStrategy` wiring are integration steps
+      done last, sequentially, after all 4 slices merge.
 2. **Run-time**: the `tests.yml` matrix (§11) runs the 4 slices' `.feature` suites in parallel in CI.
    **Verified safe** (2026-08-19, live probe against the API): logging in twice as `standard_user`
    produces two JWTs with distinct `sid` claims and distinct, non-overlapping cart/session state — no
@@ -254,13 +249,14 @@ via the `writing-plans` skill).
 - Public repo `gsanchezm/cypress-conf-2026`, created via `gh repo create` immediately after this
   spec is approved.
 - README as detailed as this spec — architecture, pattern map, how to run locally, how to run in CI,
-  how to flip `UI_STRATEGY=ai`.
+  how to flip `UI_STRATEGY=cyPrompt`.
 - This spec committed at `docs/superpowers/specs/2026-08-19-cypress-conf-2026-framework-design.md`.
 
 ## 14. Open items requiring your input before/at implementation time
 
 - `CYPRESS_RECORD_KEY` — please provide via `gh secret set CYPRESS_RECORD_KEY` yourself (not pasted
-  in chat), or tell me to leave `ai-suite.yml` with a placeholder secret name for you to fill in later.
+  in chat), or tell me to leave `cy-prompt-suite.yml` with a placeholder secret name for you to fill
+  in later.
 - `CYPRESS_CLOUD_PROJECT_ID` (not secret) — needed in `cypress.config.ts`; please share the project ID
   when ready.
 - Confirm your Cypress Cloud plan covers current `cy.prompt` usage — the no-overage-charge grace
