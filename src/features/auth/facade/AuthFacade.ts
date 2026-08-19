@@ -30,7 +30,14 @@ export class AuthFacade {
     cy.get(this.locators.get('login.submitButton')).click();
   }
 
+  // Asserts on the route, not just the generic authenticated-shell marker:
+  // landing.readyMarker (the logout button) proves "we're logged in
+  // somewhere," not "we landed on /catalog specifically" - if the app's
+  // auth guard ever bounced /catalog to some other authenticated route,
+  // checking the marker alone would pass green while proving nothing about
+  // the catalog page itself.
   assertLandedOnCatalog(): void {
+    cy.location('pathname').should('eq', '/catalog');
     cy.get(this.locators.get('landing.readyMarker')).should('be.visible');
   }
 
@@ -39,9 +46,15 @@ export class AuthFacade {
   // locked-out-specific - it likely renders for other failures too (wrong
   // password, etc.), so visibility alone wouldn't prove this scenario
   // specifically hit the locked-out path rather than some other failure.
+  // Matched case-insensitively via regex rather than contain.text: this
+  // exact copy has not been observed against the real rendered DOM yet
+  // (only against the API's JSON error string), so we guard against a
+  // plausible casing difference between the API's error text and however
+  // the frontend renders it.
   assertLockedOutMessageVisible(): void {
     cy.get(this.locators.get('login.lockedOutError'))
       .should('be.visible')
-      .and('contain.text', 'locked out');
+      .invoke('text')
+      .should('match', /locked out/i);
   }
 }
