@@ -493,14 +493,43 @@ git commit -m "Add LocatorProxy (Proxy pattern for JSON-backed locators)"
 - Produces:
   - `class ApiError extends Error { status: number; body: unknown }`
   - `abstract class BaseApiClient { protected abstract readonly basePath: string; protected requestRaw(options): Cypress.Chainable<Cypress.Response<unknown>>; protected request<T>(options): Cypress.Chainable<T> }`
-  - `interface ApiRequestOptions { method: 'GET'|'POST'|'PUT'|'PATCH'|'DELETE'; path: string; body?: unknown; headers?: Record<string,string> }`
+  - `interface ApiRequestOptions { method: 'GET'|'POST'|'PUT'|'PATCH'|'DELETE'; path: string; body?: Cypress.RequestBody; headers?: Record<string,string> }`
 - Consumes: `Cypress.env('apiUrl')` (set in Task 2's `cypress.config.ts`).
+
+**Revision note (2026-08-19):** the first attempt at this task (following the code originally here)
+came back BLOCKED with three verified, real defects — not implementer error. Corrected below, with
+the reasoning kept so the mistake isn't repeated:
+
+1. **`cy.intercept()` cannot stub `cy.request()`.** They're unrelated mechanisms: `cy.intercept()`
+   patches the browser's `fetch`/`XHR` layer; `cy.request()` is a Node-process HTTP call that never
+   touches that layer. This is a documented Cypress limitation, not a config mistake. Fix: test
+   against the **real** OmniPizza API instead of a mocked one — verified directly (`curl`, 2026-08-19):
+   `GET /health` → `200 {"status":"healthy",...}`; `GET /api/definitely-not-a-real-route` → `404
+   {"detail":"Not Found"}`. Both are stable, deterministic, real endpoints — this is also a better
+   fit for the project's stated "real infra, not mocks" philosophy than the mock ever was.
+2. **`Cypress.Chainable.then(onFulfilled, onRejected)` — the two-argument rejection-handler form
+   doesn't exist.** `Chainable` is not a native `Promise`; `.then()` has no overload that accepts a
+   second callback as a rejection handler (confirmed against `node_modules/cypress/types/cypress.d.ts`).
+   A synchronous `throw` inside an earlier `.then()` callback fails the *test*, it does not route to
+   a second argument. Fix: use Cypress's actual documented pattern for asserting a command chain
+   fails — `cy.on('fail', (err) => { ...; done(); return false; })` — **verified directly** (isolated
+   scratch spec, 2026-08-19): a custom `Error` subclass's identity and properties (`instanceof`, extra
+   fields) survive intact through to the `fail` handler.
+3. **`BaseApiClient.ts` itself failed `tsc --noEmit` in strict mode**, independent of the two runtime
+   defects above (confirmed via `node_modules/cypress/types/cypress.d.ts`):
+   - `ApiRequestOptions.body?: unknown` doesn't satisfy `cy.request()`'s options type, which wants
+     `body?: RequestBody | undefined` where `Cypress.RequestBody = string | object | boolean | null`.
+     Fixed by typing `body?: Cypress.RequestBody` instead of `unknown`.
+   - `this.requestRaw(options).then((response) => {...})` inside `request<T>()` returns a
+     `ThenReturn<Response<unknown>, T>` that TypeScript cannot prove equals the declared
+     `Chainable<T>` when `T` is an unconstrained generic — a known TS/Cypress generic-inference
+     limit, not a real type mismatch (the runtime value is already correctly cast via `as T` above
+     it). Fixed with an explicit `as Cypress.Chainable<T>` at the return.
 
 - [ ] **Step 1: Write the failing test**
 
-Uses a minimal concrete subclass and `cy.intercept` so this test has no dependency on the real
-OmniPizza API — it only proves `BaseApiClient`'s own skeleton (URL building, success passthrough,
-error throwing).
+Tests against the **real, live** OmniPizza API (see revision note above) rather than a mock — no
+`cy.intercept` needed, and this sidesteps Defect 1 entirely rather than working around it.
 
 `cypress/unit/baseApiClient.cy.ts`:
 
@@ -509,54 +538,36 @@ import { BaseApiClient } from '../../src/core/http/BaseApiClient';
 import { ApiError } from '../../src/core/http/ApiError';
 
 class TestApiClient extends BaseApiClient {
-  protected readonly basePath = '/api/test';
+  protected readonly basePath = '';
 
-  fetchThing(): Cypress.Chainable<{ ok: true }> {
-    return this.request<{ ok: true }>({ method: 'GET', path: '/thing' });
+  fetchHealth(): Cypress.Chainable<{ status: string }> {
+    return this.request<{ status: string }>({ method: 'GET', path: '/health' });
   }
 
-  fetchFailingThing(): Cypress.Chainable<unknown> {
-    return this.request({ method: 'GET', path: '/failing' });
+  fetchNonexistentRoute(): Cypress.Chainable<unknown> {
+    return this.request({ method: 'GET', path: '/api/definitely-not-a-real-route' });
   }
 }
 
 describe('BaseApiClient', () => {
   it('builds the URL from apiUrl + basePath + path and returns the parsed body on success', () => {
-    cy.intercept('GET', 'https://omnipizza-backend.onrender.com/api/test/thing', {
-      statusCode: 200,
-      body: { ok: true },
-    }).as('thing');
-
     const client = new TestApiClient();
-    client.fetchThing().then((body) => {
-      expect(body).to.deep.equal({ ok: true });
+    client.fetchHealth().then((body) => {
+      expect(body.status).to.equal('healthy');
     });
-    cy.wait('@thing');
   });
 
-  it('throws ApiError with the response status and body on a 4xx/5xx response', () => {
-    cy.intercept('GET', 'https://omnipizza-backend.onrender.com/api/test/failing', {
-      statusCode: 401,
-      body: { detail: 'nope' },
-    }).as('failing');
+  it('throws ApiError with the response status and body on a 4xx/5xx response', (done) => {
+    cy.on('fail', (err) => {
+      expect(err).to.be.instanceOf(ApiError);
+      expect((err as ApiError).status).to.equal(404);
+      expect((err as ApiError).body).to.deep.equal({ detail: 'Not Found' });
+      done();
+      return false;
+    });
 
     const client = new TestApiClient();
-    let caught: ApiError | undefined;
-    cy.wrap(null).then(() =>
-      client.fetchFailingThing().then(
-        () => {
-          throw new Error('expected fetchFailingThing to throw');
-        },
-        (err) => {
-          caught = err as ApiError;
-        },
-      ),
-    );
-    cy.wrap(null).then(() => {
-      expect(caught).to.be.instanceOf(ApiError);
-      expect(caught?.status).to.equal(401);
-      expect(caught?.body).to.deep.equal({ detail: 'nope' });
-    });
+    client.fetchNonexistentRoute();
   });
 });
 ```
@@ -594,7 +605,7 @@ import { ApiError } from './ApiError';
 export interface ApiRequestOptions {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: string;
-  body?: unknown;
+  body?: Cypress.RequestBody;
   headers?: Record<string, string>;
 }
 
@@ -603,7 +614,7 @@ export abstract class BaseApiClient {
 
   // Returns the raw response (never throws on 4xx/5xx) - for the rare case
   // where a test needs to assert on an expected failure response itself
-  // (e.g. asserting a 401 body), rather than treating failure as exceptional.
+  // (e.g. asserting a 404 body), rather than treating failure as exceptional.
   protected requestRaw(options: ApiRequestOptions): Cypress.Chainable<Cypress.Response<unknown>> {
     return cy.request({
       method: options.method,
@@ -632,7 +643,11 @@ export abstract class BaseApiClient {
         );
       }
       return response.body as T;
-    });
+      // The cast below bridges a known TS/Cypress generic-inference limit:
+      // ThenReturn<Response<unknown>, T> can't be proven to equal
+      // Chainable<T> for an unconstrained T, even though the runtime value
+      // is already correctly T-shaped from the `as T` cast above.
+    }) as Cypress.Chainable<T>;
   }
 }
 ```
@@ -641,9 +656,11 @@ export abstract class BaseApiClient {
 
 ```bash
 npx cypress run --spec cypress/unit/baseApiClient.cy.ts
+npx tsc --noEmit
 ```
 
-Expected: PASS — 2 tests.
+Expected: cypress run PASS — 2 tests. `tsc --noEmit` exits 0 (this task's code must be
+`tsc`-clean, per the established convention from Tasks 1 and 3 — not just esbuild-bundle-clean).
 
 - [ ] **Step 5: Commit**
 
