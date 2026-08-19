@@ -1,0 +1,6 @@
+{
+  "catalog": {
+    "readyMarker": "[data-testid=\"screen-catalog\"]",
+    "firstPizzaPrice": "[data-testid=\"pizza-price-p01\"]"
+  }
+}
