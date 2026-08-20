@@ -1,0 +1,24 @@
+{
+  "catalog": {
+    "addToCart": "[data-testid=\"add-to-cart-{pizzaId}-desktop\"]",
+    "confirmAddToCart": "[data-testid=\"confirm-add-to-cart\"]"
+  },
+  "checkout": {
+    "readyMarker": "[data-testid=\"screen-checkout\"]",
+    "address": "[data-testid=\"address-desktop\"]",
+    "fullName": "[data-testid=\"full-name-desktop\"]",
+    "phone": "[data-testid=\"phone-desktop\"]",
+    "paymentMethodCash": "[data-testid=\"payment-method-cash\"]",
+    "requiredFieldZipCode": "[data-testid=\"zip-code\"]",
+    "requiredFieldColonia": "[data-testid=\"colonia\"]",
+    "requiredFieldDistrict": "[data-testid=\"district\"]",
+    "placeOrderButton": "[data-testid=\"place-order-btn-desktop\"]",
+    "confirmOrderYes": "[data-testid=\"confirm-order-yes\"]",
+    "orderTotal": "[data-testid=\"order-total\"]"
+  },
+  "orderSuccess": {
+    "readyMarker": "[data-testid=\"screen-order-success\"]",
+    "orderId": "[data-testid=\"order-id\"]",
+    "orderTotal": "[data-testid=\"order-total\"]"
+  }
+}
