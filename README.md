@@ -17,7 +17,7 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Market & Catalog i18n (5 markets: MX/US/CH/JP/SA) | ✅ Done |
 | Cart & Checkout (multi-country, 5 markets: US/MX/CH/JP/SA) | ✅ Done |
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
-| `cy.prompt` suite (`UI_STRATEGY=cyPrompt`) | ⏳ Not started — depends on Checkout being fully built out |
+| `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
 
 The description above is the framework's design contract, not a live status claim — Auth, Catalog, and
 Checkout (all 5 markets) have all been verified live against the real app (Checkout via direct browser
@@ -44,6 +44,32 @@ orders against the live backend (one via `arrangeViaApi`, one via the UI in `hyd
 deterministic user — 10 orders per full Checkout run. Fine for a demo/free-tier deploy; worth knowing
 before scaling the matrix further.
 
+**The `cy.prompt` suite covers Checkout only** (spec §10 names only `CyPromptCheckoutUiStrategy` — no
+cy.prompt work for Auth/Catalog, to keep the free-tier prompt budget small). Every `checkout.feature`
+scenario can run through `DeterministicCheckoutUiStrategy` (the default — `LocatorProxy` + `cy.get()`)
+or `CyPromptCheckoutUiStrategy` (Cypress's AI-native `cy.prompt()`, one batched call per business
+action), selected via `Cypress.env('UI_STRATEGY')`:
+
+```bash
+npx cypress run --spec cypress/e2e/checkout/checkout.feature --env UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
+```
+
+Locally this needs `cypress open`/`cypress run` while logged into Cypress Cloud; in CI it's
+`.github/workflows/cy-prompt-suite.yml` (`workflow_dispatch` only, never on push/PR, to avoid burning
+Cloud quota on every commit). Free-tier budget: 100 prompts/hour, and this suite costs exactly 10
+prompts per full run (5 scenarios × 2 batched calls each — `completeCheckout` and
+`assertOrderConfirmation`).
+
+This sandbox could not log into Cypress Cloud to exercise `cy.prompt`'s actual AI resolution against the
+live app. What was verified here: `tsc` is clean, and a throwaway diagnostic spec (since deleted) proved
+`CyPromptCheckoutUiStrategy`'s calls genuinely reach Cypress's real `cy.prompt()` command and attempt
+Cloud initialization — failing with `CypressError: Failed to download cy.prompt Cloud code: ECONNRESET:
+request to https://api.cypress.io/cy-prompt/session failed`, the same category of live-network limitation
+this sandbox hits on every other host, not a code defect. Whether the AI correctly resolves prompts like
+"enter the required delivery-detail field for this country" against the real DOM for all 5 markets needs
+one live run — triggered by you, either locally or via `cy-prompt-suite.yml` — before relying on this
+suite for the talk.
+
 ## Architecture
 
 Vertical slicing, not layered folders — each slice under `src/features/<slice>/` is independently
@@ -51,9 +77,9 @@ readable, demoable, and deletable:
 
 ```
 cypress/
-├── e2e/{auth,catalog}/*.feature      # Gherkin - pure business language, no "click"/"selector"/"API"
-├── unit/*.cy.ts                       # internal framework tests, not business specs
-└── support/e2e.ts                     # composition root (browser-side DIP wiring)
+├── e2e/{auth,catalog,checkout}/*.feature   # Gherkin - pure business language, no "click"/"selector"/"API"
+├── unit/*.cy.ts                             # internal framework tests, not business specs
+└── support/e2e.ts                           # composition root (browser-side DIP wiring)
 src/
 ├── core/
 │   ├── http/        BaseApiClient, ApiError
@@ -64,7 +90,8 @@ src/
 │   └── reporting/      Observer, ReportingSubject, ConsoleObserver, GithubActionsSummaryObserver
 └── features/
     ├── auth/      {api, facade, data, steps, locators/*.json}
-    └── catalog/   {api, facade, steps, locators/*.json}
+    ├── catalog/   {api, facade, steps, locators/*.json}
+    └── checkout/  {api, facade, data, steps, strategies, locators/*.json}
 ```
 
 ### The atomic flow — `AtomicScenario`
@@ -88,15 +115,17 @@ AtomicScenario.for('catalog').run({ arrangeViaApi, hydrateUi, assertUi });
 |---|---|---|
 | **Proxy** | `LocatorProxy` wraps `locators/*.json` | Dot-path selector lookup with caching; throws a clear error on a missing key instead of a silent `undefined`. Replaces classic POM. |
 | **Template Method** | `BaseApiClient.request()`, `BaseUiComponent.load()`, `AtomicScenario` | Fixes the algorithm skeleton; slices fill in only the specific steps. |
-| **Facade** | `AuthFacade`, `CatalogFacade` | One narrow entrypoint per slice, hides API+data+locator wiring from step definitions. |
+| **Facade** | `AuthFacade`, `CatalogFacade`, `CheckoutFacade` | One narrow entrypoint per slice, hides API+data+locator/strategy wiring from step definitions. |
+| **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.env('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
+| **Builder** | `CheckoutRequestBuilder` | Checkout payloads have several country-conditional fields (computed property names for the required-field/tip keys) — reads better as a fluent construction than a function with many optional args. |
 | **Factory** | `UserFactory` (deterministic roster, loaded from `deterministicUsers.json`) | Centralizes how test data is built per slice. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. |
 | **Adapter** *(minor)* | Cucumber step-definition layer | Thin adapter between Cucumber's step matching and our Facade interface. |
 
 **Deliberately not built** (YAGNI/KISS): a Repository layer (`ApiClient` + `Facade` already cover it),
 Singleton (`Cypress.env()` is already a single config source), Command (no undo/replay requirement),
-and Chain of Responsibility for checkout validation (folds into per-country `Strategy` classes once
-Checkout exists).
+and Chain of Responsibility for checkout validation (folded into `CheckoutCountryStrategy` instead —
+each country strategy composes its own required-field/tip rule, no chain needed).
 
 ## Running locally
 
@@ -108,6 +137,7 @@ npm run cy:open            # interactive runner
 npm run cy:run              # headless, all specs
 npx cypress run --spec cypress/e2e/auth/**       # one slice
 npx cypress run --spec cypress/e2e/catalog/**
+npx cypress run --spec cypress/e2e/checkout/**
 ```
 
 Both `omnipizza-frontend`/`omnipizza-backend` are live Render free-tier deploys — no local server to
@@ -122,8 +152,11 @@ a one-line matrix edit, no other CI changes. Mochawesome reports, screenshots, a
 artifacts; a per-slice results table is appended to the run's job summary automatically via
 `GithubActionsSummaryObserver`.
 
-The `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, `workflow_dispatch`-only, needs a `CYPRESS_RECORD_KEY`
-secret) will be added once the Checkout slice's `CyPromptCheckoutUiStrategy` exists — see Status above.
+`.github/workflows/cy-prompt-suite.yml` runs Checkout's scenarios via `CyPromptCheckoutUiStrategy`
+instead — `workflow_dispatch`-only (never on push/PR, to avoid burning Cloud quota on every commit),
+`--browser chrome` (Chromium-only constraint), needs the `CYPRESS_RECORD_KEY` repo secret and the
+`projectId` already set in `cypress.config.ts`. It never gates the deterministic pipeline — see Status
+above for what "structurally verified" means here versus a live-confirmed AI-resolution run.
 
 ## Reporting
 
