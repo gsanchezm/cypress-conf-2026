@@ -2,6 +2,7 @@
   "name": "cypress-conf-2026",
   "version": "1.0.0",
   "description": "",
+  "packageManager": "pnpm@11.2.2",
   "scripts": {
     "cy:open": "cypress open",
     "cy:run": "cypress run",

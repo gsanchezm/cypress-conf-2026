@@ -51,7 +51,7 @@ or `CyPromptCheckoutUiStrategy` (Cypress's AI-native `cy.prompt()`, one batched 
 action), selected via `Cypress.env('UI_STRATEGY')`:
 
 ```bash
-npx cypress run --spec cypress/e2e/checkout/checkout.feature --env UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
+pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --env UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
 ```
 
 Locally this needs `cypress open`/`cypress run` while logged into Cypress Cloud; in CI it's
@@ -133,14 +133,14 @@ each country strategy composes its own required-field/tip rule, no chain needed)
 ## Running locally
 
 ```bash
-npm install
-npm run typecheck        # tsc --noEmit
-npm run test:unit:node    # framework-internal Node unit tests (Observer, etc.)
-npm run cy:open            # interactive runner
-npm run cy:run              # headless, all specs
-npx cypress run --spec cypress/e2e/auth/**       # one slice
-npx cypress run --spec cypress/e2e/catalog/**
-npx cypress run --spec cypress/e2e/checkout/**
+pnpm install
+pnpm run typecheck        # tsc --noEmit
+pnpm run test:unit:node    # framework-internal Node unit tests (Observer, etc.)
+pnpm run cy:open            # interactive runner
+pnpm run cy:run              # headless, all specs
+pnpm exec cypress run --spec cypress/e2e/auth/**       # one slice
+pnpm exec cypress run --spec cypress/e2e/catalog/**
+pnpm exec cypress run --spec cypress/e2e/checkout/**
 ```
 
 Both `omnipizza-frontend`/`omnipizza-backend` are live Render free-tier deploys — no local server to
