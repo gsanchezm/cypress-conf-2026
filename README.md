@@ -15,18 +15,30 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Core framework (`AtomicScenario`, `BaseApiClient`, `BaseUiComponent`, `LocatorProxy`, Observer reporting) | ✅ Done |
 | Auth & Session | ✅ Done |
 | Market & Catalog i18n (5 markets: MX/US/CH/JP/SA) | ✅ Done |
-| Cart & Checkout (multi-country) | ⏳ Not started — needs a live-app harvest first (see below) |
-| Orders & edge cases | ⏳ Not started |
-| `cy.prompt` suite (`UI_STRATEGY=cyPrompt`) | ⏳ Not started — depends on Checkout |
+| Cart & Checkout (multi-country) | 🚧 US and MX live; CH/JP/SA pending (Strategy registry already covers them — needs per-market total-text formatting, not yet built) |
+| Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
+| `cy.prompt` suite (`UI_STRATEGY=cyPrompt`) | ⏳ Not started — depends on Checkout being fully built out |
 
-The description above is the framework's design contract, not a live status claim — Auth and Catalog
-have both run green against the real app; the most recent local run predates a since-discovered
-environment issue (this workstation's outbound HTTPS to the OmniPizza hosts is currently broken,
-unrelated to the framework code) and hasn't been re-verified since.
+The description above is the framework's design contract, not a live status claim — Auth, Catalog, and
+Checkout (US/MX) have all been verified live against the real app (Checkout via direct browser
+automation + `fetch()`, not just this sandbox's blocked Cypress run). This workstation's outbound HTTPS
+to the OmniPizza hosts is broken for plain `curl`/Node `https` (unrelated to the framework code), so
+`cypress run` in this environment can't itself confirm a run — verification here happened through a
+real browser session instead.
 
-Checkout and Orders are deliberately not scaffolded ahead of a live harvest: route names,
-form-submission flow, and exact API field values are verified against the real running app before any
-code is written against them, never guessed.
+**Orders is deliberately out of scope.** Live testing confirmed the OmniPizza frontend has no
+order-history page (`/orders` redirects to `/catalog`) and no cancel UI anywhere — including
+`/order-success`, which was confirmed to be a frozen snapshot from the moment an order is placed: an
+order cancelled via the API afterward still renders as "out for delivery" on reload, with no dynamic
+status awareness at all. The API itself is fully verified (`GET /api/orders`, cancel `409` on a second
+attempt, `403` on cross-user access), but since this framework's whole thesis is that every test proves
+both the API and the UI in one atomic run, there is no honest way to build Orders as a
+`AtomicScenario`-shaped slice — it would need to fake a UI assertion. Decision: skip it rather than
+compromise the pattern.
+
+Checkout's remaining markets are not scaffolded ahead of a live harvest: route names, form-submission
+flow, and exact API field values (and, per-market, rendered text formatting) are verified against the
+real running app before any code is written against them, never guessed.
 
 ## Architecture
 
