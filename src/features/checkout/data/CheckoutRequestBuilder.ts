@@ -1,12 +1,6 @@
 import { CHECKOUT_COUNTRY_STRATEGIES } from '../strategies/CheckoutCountryStrategy';
-import type { CheckoutRequestData, CartItemRequest } from '../../../core/types';
-
-function toCartItemBody(item: CartItemRequest): Record<string, unknown> {
-  const body: Record<string, unknown> = { pizza_id: item.pizzaId, quantity: item.quantity };
-  if (item.size !== undefined) body.size = item.size;
-  if (item.toppings !== undefined) body.toppings = item.toppings;
-  return body;
-}
+import { toCartItemBody } from './toCartItemBody';
+import type { CheckoutRequestData } from '../../../core/types';
 
 // Builder, not a plain function: checkout payloads carry one required-field
 // key and one tip key that both vary by country (CheckoutCountryStrategy),
