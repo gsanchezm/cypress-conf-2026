@@ -3,7 +3,9 @@
     "usernameInput": "[data-testid=\"username-desktop\"]",
     "passwordInput": "[data-testid=\"password-desktop\"]",
     "submitButton": "[data-testid=\"login-button-desktop\"]",
-    "lockedOutError": "[data-testid=\"login-error\"]"
+    "lockedOutError": "[data-testid=\"login-error\"]",
+    "marketButton": "[data-testid=\"market-{countryCode}\"]",
+    "quickLoginButton": "[data-testid=\"user-{username}\"]"
   },
   "landing": {
     "readyMarker": "[data-testid=\"logout-btn\"]"

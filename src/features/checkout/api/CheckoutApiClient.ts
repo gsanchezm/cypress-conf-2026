@@ -52,15 +52,31 @@ export class CheckoutApiClient extends BaseApiClient {
   protected readonly basePath = '/api';
 
   // Confirmed live: replaces the entire cart (not additive), scoped to the
-  // session not the market. Returns the enriched cart so the caller can
-  // compute the real per-market subtotal (price varies by market/currency -
-  // there is no single hardcoded per-pizza price that works across all 5).
-  seedCart(accessToken: string, items: CartItemBody[]): Cypress.Chainable<EnrichedCartItemBody[]> {
-    return this.request<CartResponseBody>({
+  // session not the market. Returns void deliberately - this response
+  // carries no price data (confirmed: only pizza_id/quantity/size/
+  // toppings/item_id, no price); callers needing the priced cart must call
+  // getCart() afterward. Untyped request (matches setMarket's pattern)
+  // since the response is discarded - naming it as a generic here would
+  // hit the same TS/Cypress Chainable<T>.then(() => undefined) inference
+  // gap BaseApiClient.request documents, since T wouldn't be unknown.
+  seedCart(accessToken: string, items: CartItemBody[]): Cypress.Chainable<void> {
+    return this.request({
       method: 'POST',
       path: '/cart',
       headers: { Authorization: `Bearer ${accessToken}` },
       body: { items },
+    }).then(() => undefined) as Cypress.Chainable<void>;
+  }
+
+  // Requires X-Country-Code (400 without it, confirmed live) - the enriched,
+  // priced cart is market-dependent (same pizza prices differently per
+  // market), so the header isn't optional the way it might look from
+  // POST /api/cart's leaner response alone.
+  getCart(accessToken: string, countryCode: CountryCode): Cypress.Chainable<EnrichedCartItemBody[]> {
+    return this.request<CartResponseBody>({
+      method: 'GET',
+      path: '/cart',
+      headers: { Authorization: `Bearer ${accessToken}`, 'X-Country-Code': countryCode },
     }).then((body) => body.cart_items);
   }
 
