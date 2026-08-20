@@ -2,6 +2,7 @@ import { Before, Given, When, Then } from '@badeball/cypress-cucumber-preprocess
 import { createAuthFacade, createCheckoutFacade } from '../../../../cypress/support/e2e';
 import { AtomicScenario } from '../../../core/ui/AtomicScenario';
 import { CHECKOUT_COUNTRY_STRATEGIES } from '../strategies/CheckoutCountryStrategy';
+import { formatOrderTotal } from '../data/formatOrderTotal';
 import type { CountryCode, CartItemRequest } from '../../../core/types';
 
 interface CheckoutScenario {
@@ -10,7 +11,7 @@ interface CheckoutScenario {
   address: string;
 }
 
-// Live-harvested 2026-08-19 - see
+// Live-harvested 2026-08-19/20 - see
 // docs/superpowers/plans/2026-08-19-cypress-conf-2026-checkout-slice.md for
 // the full per-market DOM-testid/API-key table. Only market-specific INPUT
 // values live here; which DOM field/API key each market uses comes from
@@ -18,6 +19,9 @@ interface CheckoutScenario {
 const CHECKOUT_SCENARIOS: Record<string, CheckoutScenario> = {
   'United States': { countryCode: 'US', requiredFieldValue: '90210', address: '742 Evergreen Terrace' },
   Mexico: { countryCode: 'MX', requiredFieldValue: 'Polanco', address: 'Av. Reforma 123' },
+  Switzerland: { countryCode: 'CH', requiredFieldValue: '8001', address: 'Bahnhofstrasse 1' },
+  Japan: { countryCode: 'JP', requiredFieldValue: '東京都', address: '東京都渋谷区1-1-1' },
+  'Saudi Arabia': { countryCode: 'SA', requiredFieldValue: 'Al Olaya', address: '123 King Fahd Road' },
 };
 
 const ITEMS: CartItemRequest[] = [{ pizzaId: 'p01', quantity: 1, size: 'small' }];
@@ -75,18 +79,7 @@ function runCheckoutScenario(scenario: CheckoutScenario): void {
         .then((order) => {
           expect(order.status).to.equal('pending');
           expect(order.total).to.be.greaterThan(0);
-          // Rendered UI total has no formatting logic of its own to trust
-          // here (unverified for CH/JP/SA's different decimal/RTL
-          // formatting) - byte-verified live (via textContent + codePointAt,
-          // not a screenshot) for both US ("$16.03") and MX ("$299.55"):
-          // both are plain ASCII, matching this formula exactly. NOT
-          // proven for CH/JP/SA - JP renders comma-separated with zero
-          // decimals (confirmed in the Catalog slice: "￥2,051"), CHF
-          // carries a literal U+00A0, and SA is RTL with Arabic-Indic
-          // digits (confirmed via the earlier live harvest for this plan).
-          // Adding those markets needs real per-market formatting logic
-          // here, not just new CHECKOUT_SCENARIOS/Examples rows.
-          expectedTotalText = `${order.currencySymbol}${order.total.toFixed(2)}`;
+          expectedTotalText = formatOrderTotal(order.currency, order.currencySymbol, order.total);
         });
     },
     hydrateUi: () => {
@@ -128,6 +121,18 @@ When('they complete checkout with their zip code', () => {
 });
 
 When('they complete checkout with their neighborhood', () => {
+  runCheckoutScenario(requireActiveScenario());
+});
+
+When('they complete checkout with their postal code', () => {
+  runCheckoutScenario(requireActiveScenario());
+});
+
+When('they complete checkout with their prefecture', () => {
+  runCheckoutScenario(requireActiveScenario());
+});
+
+When('they complete checkout with their district', () => {
   runCheckoutScenario(requireActiveScenario());
 });
 
