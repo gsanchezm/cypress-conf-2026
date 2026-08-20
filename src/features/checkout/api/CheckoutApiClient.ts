@@ -1,11 +1,6 @@
 import { BaseApiClient } from '../../../core/http/BaseApiClient';
+import type { CartItemBody } from '../data/toCartItemBody';
 import type { CountryCode, OrderSummary } from '../../../core/types';
-
-interface CartItemBody {
-  pizza_id: string;
-  quantity: number;
-  size?: string;
-}
 
 interface EnrichedCartItemBody {
   price: number;

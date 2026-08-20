@@ -37,3 +37,15 @@ test('SAR: RTL marks, Arabic-Indic digits, U+066B decimal separator, trailing ".
     String.fromCodePoint(0x200f); // RLM
   assert.equal(formatOrderTotal('SAR', 'ر.س', 63.52), expected);
 });
+
+test('JPY: comma-grouping algorithm handles more than one group, not just the one live-verified value', () => {
+  // Pure algorithm check, not a live-DOM claim - only the single-group
+  // 2,572 case above was harvested from the real app. This guards the
+  // hand-rolled regex that replaced toLocaleString('en-US').
+  const expected = String.fromCodePoint(0xffe5) + '1,234,567';
+  assert.equal(formatOrderTotal('JPY', '¥', 1234567), expected);
+});
+
+test('throws on a currency with no registered formatter, instead of silently formatting it wrong', () => {
+  assert.throws(() => formatOrderTotal('EUR', '€', 10), /no formatter registered for currency "EUR"/);
+});

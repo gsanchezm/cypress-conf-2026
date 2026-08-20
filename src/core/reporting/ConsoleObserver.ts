@@ -9,8 +9,8 @@ const ICONS: Record<TestResult['state'], string> = {
 
 export class ConsoleObserver implements Observer {
   onSpecComplete(results: TestResult[]): void {
-    for (const result of results) {
+    results.forEach((result) => {
       console.log(`${ICONS[result.state]} [${result.slice}] ${result.title} (${result.durationMs}ms)`);
-    }
+    });
   }
 }

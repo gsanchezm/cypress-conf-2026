@@ -1,5 +1,6 @@
 import { CheckoutApiClient } from '../api/CheckoutApiClient';
 import { CheckoutRequestBuilder } from '../data/CheckoutRequestBuilder';
+import { toCartItemBody } from '../data/toCartItemBody';
 import { LocatorProxy } from '../../../core/locators/LocatorProxy';
 import type { CheckoutRequestData, OrderSummary, CountryCode } from '../../../core/types';
 
@@ -20,12 +21,7 @@ export class CheckoutFacade {
   seedCartViaApi(accessToken: string, countryCode: CountryCode, items: CheckoutRequestData['items']): Cypress.Chainable<number> {
     return this.checkoutApi
       .setMarket(accessToken, countryCode)
-      .then(() =>
-        this.checkoutApi.seedCart(
-          accessToken,
-          items.map((item) => ({ pizza_id: item.pizzaId, quantity: item.quantity, size: item.size })),
-        ),
-      )
+      .then(() => this.checkoutApi.seedCart(accessToken, items.map(toCartItemBody)))
       .then(() => this.checkoutApi.getCart(accessToken, countryCode))
       .then((cartItems) => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0));
   }
