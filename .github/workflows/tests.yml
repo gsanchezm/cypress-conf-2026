@@ -16,7 +16,7 @@ jobs:
       matrix:
         # One entry per vertical slice with a live spec under cypress/e2e/<slice>/**.
         # Add a slice here the same commit its .feature file is added - zero other CI edits needed.
-        slice: [auth, catalog]
+        slice: [auth, catalog, checkout]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
