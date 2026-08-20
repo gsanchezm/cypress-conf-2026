@@ -1,9 +1,7 @@
 import { Before, Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { createAuthFacade, createCheckoutFacade } from '../../../../cypress/support/e2e';
 import { AtomicScenario } from '../../../core/ui/AtomicScenario';
-import { CHECKOUT_COUNTRY_STRATEGIES } from '../strategies/CheckoutCountryStrategy';
-import { formatOrderTotal } from '../data/formatOrderTotal';
-import type { CountryCode, CartItemRequest } from '../../../core/types';
+import type { CountryCode, CartItemRequest, OrderSummary } from '../../../core/types';
 
 interface CheckoutScenario {
   countryCode: CountryCode;
@@ -49,9 +47,8 @@ Before(() => {
 function runCheckoutScenario(scenario: CheckoutScenario): void {
   const authFacade = createAuthFacade();
   const checkoutFacade = createCheckoutFacade();
-  const strategy = CHECKOUT_COUNTRY_STRATEGIES[scenario.countryCode];
   let accessToken: string;
-  let expectedTotalText: string;
+  let expectedOrder: OrderSummary;
 
   AtomicScenario.for('checkout').run({
     arrangeViaApi: () => {
@@ -79,31 +76,27 @@ function runCheckoutScenario(scenario: CheckoutScenario): void {
         .then((order) => {
           expect(order.status).to.equal('pending');
           expect(order.total).to.be.greaterThan(0);
-          expectedTotalText = formatOrderTotal(order.currency, order.currencySymbol, order.total);
+          expectedOrder = order;
         });
     },
     hydrateUi: () => {
       cy.then(() => {
         authFacade.loginViaUiWithMarket('standard', scenario.countryCode);
         authFacade.assertLandedOnCatalog();
-        checkoutFacade.addPizzaToCartViaUi('p01');
-        checkoutFacade.fillAndSubmitCheckoutForm(
-          {
-            countryCode: scenario.countryCode,
-            items: ITEMS,
-            name: 'Test Harvester',
-            address: scenario.address,
-            phone: '+15551234567',
-            paymentMethod: 'cash',
-            requiredFieldValue: scenario.requiredFieldValue,
-            tipPercentage: 0,
-          },
-          strategy.requiredFieldLocatorKey,
-        );
+        checkoutFacade.completeCheckoutViaUi({
+          countryCode: scenario.countryCode,
+          items: ITEMS,
+          name: 'Test Harvester',
+          address: scenario.address,
+          phone: '+15551234567',
+          paymentMethod: 'cash',
+          requiredFieldValue: scenario.requiredFieldValue,
+          tipPercentage: 0,
+        });
       });
     },
     assertUi: () => {
-      cy.then(() => checkoutFacade.assertOrderSuccess(expectedTotalText));
+      cy.then(() => checkoutFacade.assertOrderConfirmation(expectedOrder));
     },
   });
 }

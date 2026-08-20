@@ -7,6 +7,8 @@ import { CatalogFacade } from '../../src/features/catalog/facade/CatalogFacade';
 import catalogLocators from '../../src/features/catalog/locators/catalog.locators.json';
 import { CheckoutApiClient } from '../../src/features/checkout/api/CheckoutApiClient';
 import { CheckoutFacade } from '../../src/features/checkout/facade/CheckoutFacade';
+import { DeterministicCheckoutUiStrategy } from '../../src/features/checkout/strategies/DeterministicCheckoutUiStrategy';
+import { CyPromptCheckoutUiStrategy } from '../../src/features/checkout/strategies/CyPromptCheckoutUiStrategy';
 import checkoutLocators from '../../src/features/checkout/locators/checkout.locators.json';
 
 export function createAuthFacade(): AuthFacade {
@@ -18,5 +20,9 @@ export function createCatalogFacade(): CatalogFacade {
 }
 
 export function createCheckoutFacade(): CheckoutFacade {
-  return new CheckoutFacade(new CheckoutApiClient(), new LocatorProxy(checkoutLocators));
+  const uiStrategy =
+    Cypress.env('UI_STRATEGY') === 'cyPrompt'
+      ? new CyPromptCheckoutUiStrategy()
+      : new DeterministicCheckoutUiStrategy(new LocatorProxy(checkoutLocators));
+  return new CheckoutFacade(new CheckoutApiClient(), uiStrategy);
 }

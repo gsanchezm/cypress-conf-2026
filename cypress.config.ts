@@ -8,6 +8,7 @@ import { GithubActionsSummaryObserver } from './src/core/reporting/GithubActions
 import type { TestResult } from './src/core/reporting/Observer';
 
 export default defineConfig({
+  projectId: '5v45hh',
   viewportWidth: 1280,
   viewportHeight: 800,
   e2e: {
