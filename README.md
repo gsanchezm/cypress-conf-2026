@@ -15,12 +15,12 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Core framework (`AtomicScenario`, `BaseApiClient`, `BaseUiComponent`, `LocatorProxy`, Observer reporting) | ✅ Done |
 | Auth & Session | ✅ Done |
 | Market & Catalog i18n (5 markets: MX/US/CH/JP/SA) | ✅ Done |
-| Cart & Checkout (multi-country) | 🚧 US and MX live; CH/JP/SA pending (Strategy registry already covers them — needs per-market total-text formatting, not yet built) |
+| Cart & Checkout (multi-country, 5 markets: US/MX/CH/JP/SA) | ✅ Done |
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
 | `cy.prompt` suite (`UI_STRATEGY=cyPrompt`) | ⏳ Not started — depends on Checkout being fully built out |
 
 The description above is the framework's design contract, not a live status claim — Auth, Catalog, and
-Checkout (US/MX) have all been verified live against the real app (Checkout via direct browser
+Checkout (all 5 markets) have all been verified live against the real app (Checkout via direct browser
 automation + `fetch()`, not just this sandbox's blocked Cypress run). This workstation's outbound HTTPS
 to the OmniPizza hosts is broken for plain `curl`/Node `https` (unrelated to the framework code), so
 `cypress run` in this environment can't itself confirm a run — verification here happened through a
@@ -36,9 +36,13 @@ both the API and the UI in one atomic run, there is no honest way to build Order
 `AtomicScenario`-shaped slice — it would need to fake a UI assertion. Decision: skip it rather than
 compromise the pattern.
 
-Checkout's remaining markets are not scaffolded ahead of a live harvest: route names, form-submission
-flow, and exact API field values (and, per-market, rendered text formatting) are verified against the
-real running app before any code is written against them, never guessed.
+Checkout's 5 markets were each verified live before code was written against them: route names,
+form-submission flow, exact API field values, and per-market rendered total-text formatting (plain
+ASCII for US/MX, a no-break space for CH, comma-grouped fullwidth yen for JP, RTL marks + Arabic-Indic
+digits for SA) all came from direct browser inspection, never assumed. Each scenario places two real
+orders against the live backend (one via `arrangeViaApi`, one via the UI in `hydrateUi`) under the same
+deterministic user — 10 orders per full Checkout run. Fine for a demo/free-tier deploy; worth knowing
+before scaling the matrix further.
 
 ## Architecture
 

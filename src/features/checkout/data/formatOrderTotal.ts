@@ -13,8 +13,12 @@ export function formatOrderTotal(currency: string, currencySymbol: string, total
       // The DOM renders the fullwidth yen sign U+FFE5, comma-grouped, no
       // decimals - NOT the API's currency_symbol field, which is the
       // ordinary-width U+00A5. Same divergence already documented in the
-      // completed Catalog slice's MARKET_SCENARIOS.
-      return '￥' + Math.round(total).toLocaleString('en-US');
+      // completed Catalog slice's MARKET_SCENARIOS. Comma-grouping is done
+      // with an explicit regex, not toLocaleString('en-US') - the latter's
+      // grouping comes from the Node/Electron runtime's ICU data, not the
+      // app, which is an implicit dependency this byte-exact formatter
+      // shouldn't have.
+      return '￥' + String(Math.round(total)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     case 'CHF':
       // U+00A0 (no-break space) separates the code from the amount.
       return `${currencySymbol} ${total.toFixed(2)}`;
