@@ -38,3 +38,38 @@ export interface PizzaCatalogResponse {
   currency: string;
   pizzas: PizzaCatalogItem[];
 }
+
+export interface CartItemRequest {
+  pizzaId: string;
+  quantity: number;
+  size?: string;
+  toppings?: string[];
+}
+
+export type PaymentMethod = 'card' | 'cash' | 'paypal';
+
+export interface CheckoutRequestData {
+  countryCode: CountryCode;
+  items: CartItemRequest[];
+  name: string;
+  address: string;
+  phone: string;
+  paymentMethod: PaymentMethod;
+  requiredFieldValue: string;
+  tipPercentage: number;
+}
+
+export interface OrderSummary {
+  orderId: string;
+  status: string;
+  subtotal: number;
+  deliveryFee: number;
+  taxRate: number;
+  tipPercentage: number;
+  tax: number;
+  tip: number;
+  total: number;
+  currency: string;
+  currencySymbol: string;
+  timestamp: string;
+}
