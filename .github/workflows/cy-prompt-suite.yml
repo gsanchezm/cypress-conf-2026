@@ -24,7 +24,9 @@ jobs:
         run: npm run typecheck
 
       - name: Run Checkout via cy.prompt
-        run: npx cypress run --spec "cypress/e2e/checkout/checkout.feature" --env UI_STRATEGY=cyPrompt --browser chrome --record --key ${{ secrets.CYPRESS_RECORD_KEY }}
+        run: npx cypress run --spec "cypress/e2e/checkout/checkout.feature" --env UI_STRATEGY=cyPrompt --browser chrome --record
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
       - name: Upload mochawesome report
         if: always()

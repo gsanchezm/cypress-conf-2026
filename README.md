@@ -56,9 +56,12 @@ npx cypress run --spec cypress/e2e/checkout/checkout.feature --env UI_STRATEGY=c
 
 Locally this needs `cypress open`/`cypress run` while logged into Cypress Cloud; in CI it's
 `.github/workflows/cy-prompt-suite.yml` (`workflow_dispatch` only, never on push/PR, to avoid burning
-Cloud quota on every commit). Free-tier budget: 100 prompts/hour, and this suite costs exactly 10
-prompts per full run (5 scenarios × 2 batched calls each — `completeCheckout` and
-`assertOrderConfirmation`).
+Cloud quota on every commit). Free-tier budget: 100 prompts/hour. Each scenario makes exactly 2
+`cy.prompt()` calls (`completeCheckout` batches 10 steps, `assertOrderConfirmation` batches 2), so a
+full run is 10 calls - **but whether Cypress Cloud's hourly limit counts `cy.prompt()` calls or
+individual batched steps is unverified from this sandbox**. If it's steps, a full run costs 60, not 10,
+and two runs plus a retry could exhaust the free tier mid-demo. Confirm which it is (Cypress Cloud
+dashboard, or spec §14) before relying on repeated runs close together.
 
 This sandbox could not log into Cypress Cloud to exercise `cy.prompt`'s actual AI resolution against the
 live app. What was verified here: `tsc` is clean, and a throwaway diagnostic spec (since deleted) proved
