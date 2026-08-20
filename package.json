@@ -5,7 +5,7 @@
   "scripts": {
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "test:unit:node": "node --import tsx --test \"src/core/**/*.node.test.ts\"",
+    "test:unit:node": "node --import tsx --test \"src/**/*.node.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
