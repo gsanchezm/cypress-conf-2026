@@ -77,14 +77,22 @@ function runCheckoutScenario(scenario: CheckoutScenario): void {
           expect(order.total).to.be.greaterThan(0);
           // Rendered UI total has no formatting logic of its own to trust
           // here (unverified for CH/JP/SA's different decimal/RTL
-          // formatting) - only US/MX are in scope for this plan, both
-          // confirmed live to render as "<symbol><amount to 2dp>".
+          // formatting) - byte-verified live (via textContent + codePointAt,
+          // not a screenshot) for both US ("$16.03") and MX ("$299.55"):
+          // both are plain ASCII, matching this formula exactly. NOT
+          // proven for CH/JP/SA - JP renders comma-separated with zero
+          // decimals (confirmed in the Catalog slice: "￥2,051"), CHF
+          // carries a literal U+00A0, and SA is RTL with Arabic-Indic
+          // digits (confirmed via the earlier live harvest for this plan).
+          // Adding those markets needs real per-market formatting logic
+          // here, not just new CHECKOUT_SCENARIOS/Examples rows.
           expectedTotalText = `${order.currencySymbol}${order.total.toFixed(2)}`;
         });
     },
     hydrateUi: () => {
       cy.then(() => {
         authFacade.loginViaUiWithMarket('standard', scenario.countryCode);
+        authFacade.assertLandedOnCatalog();
         checkoutFacade.addPizzaToCartViaUi('p01');
         checkoutFacade.fillAndSubmitCheckoutForm(
           {
