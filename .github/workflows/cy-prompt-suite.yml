@@ -1,0 +1,54 @@
+name: cy.prompt suite
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cypress-cyprompt:
+    name: checkout (cy.prompt)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run Checkout via cy.prompt
+        run: npx cypress run --spec "cypress/e2e/checkout/checkout.feature" --env UI_STRATEGY=cyPrompt --browser chrome --record --key ${{ secrets.CYPRESS_RECORD_KEY }}
+
+      - name: Upload mochawesome report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-cyprompt-checkout
+          path: cypress/reports/mochawesome
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload screenshots (failures only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-cyprompt-checkout
+          path: cypress/screenshots
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-cyprompt-checkout
+          path: cypress/videos
+          retention-days: 7
+          if-no-files-found: ignore
