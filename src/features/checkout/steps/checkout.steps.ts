@@ -1,32 +1,26 @@
 import { Before, Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { createAuthFacade, createCheckoutFacade } from '../../../../cypress/support/e2e';
 import { AtomicScenario } from '../../../core/ui/AtomicScenario';
-import type { CountryCode } from '../../../core/types';
+import { CHECKOUT_COUNTRY_STRATEGIES } from '../strategies/CheckoutCountryStrategy';
+import type { CountryCode, CartItemRequest } from '../../../core/types';
 
 interface CheckoutScenario {
   countryCode: CountryCode;
-  requiredFieldLocatorKey: 'requiredFieldZipCode' | 'requiredFieldColonia' | 'requiredFieldDistrict';
   requiredFieldValue: string;
   address: string;
 }
 
 // Live-harvested 2026-08-19 - see
 // docs/superpowers/plans/2026-08-19-cypress-conf-2026-checkout-slice.md for
-// the full per-market DOM-testid/API-key table this data is drawn from.
+// the full per-market DOM-testid/API-key table. Only market-specific INPUT
+// values live here; which DOM field/API key each market uses comes from
+// CHECKOUT_COUNTRY_STRATEGIES (the Strategy registry), not duplicated here.
 const CHECKOUT_SCENARIOS: Record<string, CheckoutScenario> = {
-  'United States': {
-    countryCode: 'US',
-    requiredFieldLocatorKey: 'requiredFieldZipCode',
-    requiredFieldValue: '90210',
-    address: '742 Evergreen Terrace',
-  },
-  Mexico: {
-    countryCode: 'MX',
-    requiredFieldLocatorKey: 'requiredFieldColonia',
-    requiredFieldValue: 'Polanco',
-    address: 'Av. Reforma 123',
-  },
+  'United States': { countryCode: 'US', requiredFieldValue: '90210', address: '742 Evergreen Terrace' },
+  Mexico: { countryCode: 'MX', requiredFieldValue: 'Polanco', address: 'Av. Reforma 123' },
 };
+
+const ITEMS: CartItemRequest[] = [{ pizzaId: 'p01', quantity: 1, size: 'small' }];
 
 let activeScenario: CheckoutScenario | undefined;
 
@@ -41,29 +35,61 @@ Before(() => {
   activeScenario = undefined;
 });
 
-// The order is placed exactly once, via the real UI form, in hydrateUi -
-// that's the state-changing action under test (matching how auth.steps.ts's
-// locked-out scenario already treats a UI-driven action as hydrateUi, not
-// arrangeViaApi). arrangeViaApi is limited to login + cart seeding.
+// Exercises the checkout action twice, same precedent as auth.steps.ts's
+// locked-out scenario: once via a direct API call in arrangeViaApi (proves
+// the checkout API contract - status, computed totals, and is what makes
+// CheckoutRequestBuilder/CheckoutCountryStrategy/CheckoutApiClient genuinely
+// load-bearing, not unused code), and once via the real UI form in
+// hydrateUi (proves the actual user-facing flow works - that's the point
+// of testing Checkout at all). Both create real, separate orders.
 function runCheckoutScenario(scenario: CheckoutScenario): void {
   const authFacade = createAuthFacade();
   const checkoutFacade = createCheckoutFacade();
+  const strategy = CHECKOUT_COUNTRY_STRATEGIES[scenario.countryCode];
   let accessToken: string;
+  let expectedTotalText: string;
 
   AtomicScenario.for('checkout').run({
     arrangeViaApi: () => {
       authFacade.loginAs('standard').then((session) => {
+        expect(session.accessToken).to.be.a('string').and.not.be.empty;
         accessToken = session.accessToken;
       });
+      cy.then(() => checkoutFacade.seedCartViaApi(accessToken, scenario.countryCode, ITEMS))
+        .then((subtotal) =>
+          checkoutFacade.checkoutViaApi(
+            accessToken,
+            {
+              countryCode: scenario.countryCode,
+              items: ITEMS,
+              name: 'Test Harvester',
+              address: scenario.address,
+              phone: '+15551234567',
+              paymentMethod: 'cash',
+              requiredFieldValue: scenario.requiredFieldValue,
+              tipPercentage: 0,
+            },
+            subtotal,
+          ),
+        )
+        .then((order) => {
+          expect(order.status).to.equal('pending');
+          expect(order.total).to.be.greaterThan(0);
+          // Rendered UI total has no formatting logic of its own to trust
+          // here (unverified for CH/JP/SA's different decimal/RTL
+          // formatting) - only US/MX are in scope for this plan, both
+          // confirmed live to render as "<symbol><amount to 2dp>".
+          expectedTotalText = `${order.currencySymbol}${order.total.toFixed(2)}`;
+        });
     },
     hydrateUi: () => {
       cy.then(() => {
-        checkoutFacade.openCatalogAuthenticated(accessToken, scenario.countryCode);
+        authFacade.loginViaUiWithMarket('standard', scenario.countryCode);
         checkoutFacade.addPizzaToCartViaUi('p01');
         checkoutFacade.fillAndSubmitCheckoutForm(
           {
             countryCode: scenario.countryCode,
-            items: [{ pizzaId: 'p01', quantity: 1, size: 'small' }],
+            items: ITEMS,
             name: 'Test Harvester',
             address: scenario.address,
             phone: '+15551234567',
@@ -71,22 +97,16 @@ function runCheckoutScenario(scenario: CheckoutScenario): void {
             requiredFieldValue: scenario.requiredFieldValue,
             tipPercentage: 0,
           },
-          scenario.requiredFieldLocatorKey,
+          strategy.requiredFieldLocatorKey,
         );
       });
     },
     assertUi: () => {
-      checkoutFacade.assertOrderSuccess();
+      cy.then(() => checkoutFacade.assertOrderSuccess(expectedTotalText));
     },
   });
 }
 
-// A single regex with an optional "the" - "in the United States" and "in
-// Mexico" both need to match here, and two separate step definitions for
-// this (one with "the", one without) would collide on "in the United
-// States" (both would match it), producing Cucumber's "Multiple matching
-// step definitions" error - the same defect class an earlier draft of the
-// Catalog slice hit and fixed by scoping to one precise regex instead.
 Given(/^a standard customer with a pizza in their cart in (?:the )?(.+)$/, (market: string) => {
   const scenario = CHECKOUT_SCENARIOS[market];
   if (!scenario) {

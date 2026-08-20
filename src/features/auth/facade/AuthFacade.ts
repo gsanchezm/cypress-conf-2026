@@ -1,7 +1,7 @@
 import { AuthApiClient } from '../api/AuthApiClient';
 import { LocatorProxy } from '../../../core/locators/LocatorProxy';
 import { UserFactory, type DeterministicUserKey } from '../data/UserFactory';
-import type { AuthSession } from '../../../core/types';
+import type { AuthSession, CountryCode } from '../../../core/types';
 import { AUTH_TOKEN_STORAGE_KEY } from '../../../core/config/storageKeys';
 
 export class AuthFacade {
@@ -35,6 +35,24 @@ export class AuthFacade {
     cy.visit('/');
     cy.window().then((win) => win.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken));
     cy.visit('/catalog');
+  }
+
+  // Real UI login with a market pre-selected on the login screen - required
+  // whenever a scenario needs the app's omnipizza-country Zustand-persist
+  // state (tax rate, delivery fee, required checkout field) to be correct
+  // for a non-default market. Confirmed live (2026-08-19): writing
+  // localStorage's plain "countryCode" key and reloading does NOT update
+  // that blob - only selecting a market button on the login screen before
+  // authenticating does. loginAs()'s API-only login cannot substitute for
+  // this; it never touches the browser at all.
+  loginViaUiWithMarket(userKey: DeterministicUserKey, countryCode: CountryCode): void {
+    const user = UserFactory.deterministic(userKey);
+    cy.visit('/');
+    const marketSelector = this.locators.get('login.marketButton').replace('{countryCode}', countryCode);
+    cy.get(marketSelector).click();
+    const quickLoginSelector = this.locators.get('login.quickLoginButton').replace('{username}', user.username);
+    cy.get(quickLoginSelector).click();
+    cy.get(this.locators.get('login.submitButton')).click();
   }
 
   submitLoginFormAs(userKey: DeterministicUserKey): void {
