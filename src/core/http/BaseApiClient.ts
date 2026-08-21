@@ -1,4 +1,4 @@
-import { ApiError } from './ApiError';
+import { parseApiResponse } from './parseApiResponse';
 
 export interface ApiRequestOptions {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -33,21 +33,15 @@ export abstract class BaseApiClient {
   }
 
   // Returns the parsed body, or throws ApiError on 4xx/5xx - the default for
-  // "arrange" calls that expect success.
+  // "arrange" calls that expect success. The throw-or-return decision lives
+  // in parseApiResponse(), not here, so it's testable without cy.request().
   protected request<T>(options: ApiRequestOptions): Cypress.Chainable<T> {
-    return this.requestRaw(options).then((response) => {
-      if (response.status >= 400) {
-        throw new ApiError(
-          response.status,
-          response.body,
-          `${options.method} ${this.basePath}${options.path} failed with ${response.status}`,
-        );
-      }
-      return response.body as T;
+    return this.requestRaw(options).then((response) =>
       // The cast below bridges a known TS/Cypress generic-inference limit:
       // ThenReturn<Response<unknown>, T> can't be proven to equal
       // Chainable<T> for an unconstrained T, even though the runtime value
-      // is already correctly T-shaped from the `as T` cast above.
-    }) as Cypress.Chainable<T>;
+      // is already correctly T-shaped from parseApiResponse's own `as T` cast.
+      parseApiResponse<T>(response, `${options.method} ${this.basePath}${options.path}`),
+    ) as Cypress.Chainable<T>;
   }
 }

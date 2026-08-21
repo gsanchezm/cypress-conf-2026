@@ -1,8 +1,7 @@
-export interface AtomicScenarioSteps {
-  arrangeViaApi: () => void;
-  hydrateUi: () => void;
-  assertUi: () => void;
-}
+import { runAtomicSteps } from './runAtomicSteps';
+import type { AtomicScenarioSteps } from './runAtomicSteps';
+
+export type { AtomicScenarioSteps };
 
 export class AtomicScenario {
   private constructor(private readonly slice: string) {}
@@ -13,8 +12,6 @@ export class AtomicScenario {
 
   run(steps: AtomicScenarioSteps): void {
     cy.log(`[${this.slice}] atomic scenario`);
-    steps.arrangeViaApi();
-    steps.hydrateUi();
-    steps.assertUi();
+    runAtomicSteps(steps);
   }
 }

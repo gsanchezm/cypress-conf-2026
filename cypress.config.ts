@@ -13,7 +13,7 @@ export default defineConfig({
   viewportHeight: 800,
   e2e: {
     baseUrl: 'https://omnipizza-frontend.onrender.com',
-    specPattern: ['cypress/e2e/**/*.feature', 'cypress/unit/**/*.cy.ts'],
+    specPattern: ['cypress/e2e/**/*.feature'],
     supportFile: 'cypress/support/e2e.ts',
     async setupNodeEvents(on, config) {
       await addCucumberPreprocessorPlugin(on, config);
