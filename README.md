@@ -18,10 +18,14 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Cart & Checkout (multi-country, 5 markets: US/MX/CH/JP/SA) | ✅ Done |
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
 | `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
+| Assertion-budget refactor (1 API claim + 1 UI claim per scenario) | ⚠️ Built, **needs a re-run** — `tsc` and `node:test` exercise no UI assertion, so only `cypress run` can confirm it |
 
-The description above is the framework's design contract, and it's a live-verified one — Auth, Catalog,
-and Checkout (all 5 markets) all pass under real `cypress run` executions against the live app, not just
-direct browser automation. An earlier version of this README noted that this workstation's outbound
+The description above is the framework's design contract. Auth, Catalog and Checkout (all 5 markets)
+all passed under real `cypress run` executions against the live app, not just direct browser
+automation — but that was **before** the assertion-budget refactor rewrote what each scenario asserts.
+Those green runs no longer cover the current assertions; the suite needs one more `cypress run` to
+restore the "live-verified" claim in full. An earlier version of this README noted that this
+workstation's outbound
 HTTPS to the OmniPizza hosts was broken for `cypress run`/`curl`/Node `https` alike - that was Kaspersky
 intercepting the local Cypress process tree, not a real API outage, and it was fully resolved by
 uninstalling Kaspersky (2026-08-20). `cypress open`/`cypress run` both work normally now.
@@ -66,6 +70,22 @@ action), selected via `Cypress.env('UI_STRATEGY')`:
 ```bash
 pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --env UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
 ```
+
+**The prompt text is not in the TypeScript.** It lives in
+[`src/features/checkout/prompts/checkout.prompt.md`](src/features/checkout/prompts/checkout.prompt.md),
+one `##` section per strategy method, with the rationale as prose next to the steps it explains —
+editable by anyone who can read English, without touching code. esbuild's text loader
+(`loader: { '.md': 'text' }` in `cypress.config.ts`) turns the import into a plain string at bundle
+time, so `CyPromptCheckoutUiStrategy` stays synchronous; `cy.fixture`/`cy.readFile` would have forced a
+`Chainable` through the whole `CheckoutUiStrategy` interface.
+
+That move opens a hole, and `preparePrompt()` closes it. Inline, a renamed placeholder was a compile
+error. In a markdown file, it's invisible — `cy.prompt()` would receive the literal `{addres}`, hand it
+to the model, and the AI would improvise something plausible, producing a *silently wrong* test rather
+than a failing one. So `preparePrompt()` cross-checks `{token}`s against supplied values in both
+directions and throws on either mismatch. A `node:test` case reads the shipped `.md` from disk, so a
+typo'd heading or placeholder fails during `pnpm test:unit:node` rather than during a billed Cloud run
+— which is the only place `cy.prompt` can execute at all.
 
 Locally this needs `cypress open`/`cypress run` while logged into Cypress Cloud; in CI it's
 `.github/workflows/cy-prompt-suite.yml` (`workflow_dispatch` only, never on push/PR, to avoid burning
@@ -140,6 +160,42 @@ sequenceDiagram
     Step->>UI: assertUi()
     Note right of UI: asserts the rendered DOM
 ```
+
+### The assertion budget — one API claim, one UI claim
+
+Every scenario makes **at most two assertions**: one about the API contract, one about the rendered
+DOM. That isn't an arbitrary style rule — it falls straight out of the atomic thesis. If a scenario
+proves the API and the UI in one run, then it has exactly two things to say, and anything beyond that
+is a second test wearing the first one's clothes.
+
+Making that countable needs a distinction the code enforces:
+
+| | What it is | Mechanism | Counts toward the budget? |
+|---|---|---|---|
+| **Claim** | The product behaviour the scenario exists to prove | `expect()` / `.should()`, only inside an `assert*` method | Yes |
+| **Precondition** | What must hold for the claim to mean anything (a token was issued, the response is for the market we asked for) | `precondition()` — throws `PreconditionError` | No |
+| **Guard** | Waiting for the DOM to settle before reading it | `.should('be.visible')` on a ready marker | No |
+
+`precondition()` throws rather than asserts, so a broken arrange step reads as *"Precondition not met:
+the standard customer login issued an access token"* instead of masquerading as a product failure.
+Guards still use `.should()` — that's how Cypress retries, and a `.then()` check would fail on anything
+the app renders a tick late — so the invariant isn't "count `.should()` calls". It's: **every claim
+lives in an `assert*` method on a facade or strategy; a `.should()` anywhere else is a guard by
+construction.**
+
+| Scenario | API claim | UI claim |
+|---|---|---|
+| Auth — standard login | *(none — this scenario is about the UI landing state)* | `pathname === '/catalog'` |
+| Auth — locked out | login rejected with `403` | error text matches `/locked out/i` |
+| Catalog (×5 markets) | envelope currency **and** every pizza's currency are exactly this market's ISO code | p01's rendered price is byte-for-byte `$227.97` / `￥2,051` / … |
+| Checkout (×5 markets) | the placed order came back `pending` | `/order-success`'s total is byte-for-byte the API-computed total |
+
+Two notes on how the reduction was done. Catalog's four API assertions collapsed into **one** rather
+than three being deleted — envelope and per-item currencies fold into a single `Set`, so the
+stale-item case a bare envelope check would miss is still caught. And **no scenario was split** to
+meet the budget: a full Checkout run already places 10 real orders against a free-tier backend, so
+splitting would have paid for assertion hygiene with live API load. The reduction came from removing
+genuinely redundant claims, not from adding scenarios.
 
 ### How hydration works
 
@@ -278,6 +334,37 @@ classDiagram
 | **Factory** | `UserFactory` (deterministic roster, loaded from `deterministicUsers.json`) | Centralizes how test data is built per slice. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. |
 | **Adapter** *(minor)* | Cucumber step-definition layer | Thin adapter between Cucumber's step matching and our Facade interface. |
+
+### What came over from the 2025 framework — and what didn't
+
+[`cypress-conf-2025`](https://github.com/gsanchezm/cypress-conf-2025) shipped a `common/actions/`
+layer: twelve `BaseAction` subclasses behind an `ActionRegistry`, dispatched by string through a
+`Proxy` (`$loc.page.KEY.clickOnElement()`). Reviewing it for this year's framework turned up one thing
+worth keeping and a cause-and-effect worth putting on a slide.
+
+**Kept: `typeIfNotEmpty` → `fillField`.** 2025 re-typed through `cypress-recurse` until the input's
+value matched the text, because a controlled React input can silently drop characters when a re-render
+lands mid-type. This framework had five bare `.clear().type()` calls that would have surfaced such a
+drop as a mystery failure at the assertion three commands later. `fillField` keeps the verification via
+`.should('have.value', …)` — which retries the way `recurse` did, with no new dependency — and drops
+the *"IfNotEmpty"* half: 2025 skipped empty text because SauceDemo had optional fields, but every field
+here is required, so an empty value means broken test data and throws.
+
+**Not kept, and this is the interesting part.** `isElementVisible`, `waitUntilNotVisible` and
+`clickUntilVisible` all hand-roll their own waiting — `if ($body.find(sel).length)`, retry loops around
+`cy.wait(delay)`, booleans returned out of `.then()`. That reads like a list of Cypress anti-patterns
+until you notice *why* they exist: 2025 resolved every selector **asynchronously**, through
+`cy.task('loc:resolve')` into a Node-side `LocatorService`. An async selector breaks Cypress's built-in
+retry-ability, so every action had to rebuild waiting by hand. 2026's `LocatorProxy` resolves
+**synchronously** from a bundled JSON import, so `cy.get(sel).should(…)` retries natively and all three
+have nothing left to work around.
+
+> One decision about how you resolve a selector cost an entire actions layer.
+
+Also not ported: the `ActionRegistry` + `LocatorPageProxy` string dispatch (in TypeScript it makes every
+call `any`, turning a compile error into a runtime one — it solved a problem JS had and TS doesn't), the
+`cy.task` locator round-trip, and `RegisterGenerator`'s codegen'd registration files (explicit imports
+in the composition root keep go-to-definition and typechecking working).
 
 **Deliberately not built** (YAGNI/KISS): a Repository layer (`ApiClient` + `Facade` already cover it),
 Singleton (`Cypress.env()` is already a single config source), Command (no undo/replay requirement),
