@@ -17,7 +17,15 @@ export default defineConfig({
     supportFile: 'cypress/support/e2e.ts',
     async setupNodeEvents(on, config) {
       await addCucumberPreprocessorPlugin(on, config);
-      on('file:preprocessor', createBundler({ plugins: [createEsbuildPlugin(config)] }));
+      // The .md text loader is what lets cy.prompt's natural-language steps
+      // live in a markdown file instead of TypeScript string literals: the
+      // import becomes a plain string at bundle time, so the strategy that
+      // consumes it stays synchronous (cy.fixture/cy.readFile would force a
+      // Chainable through the whole CheckoutUiStrategy interface).
+      on(
+        'file:preprocessor',
+        createBundler({ plugins: [createEsbuildPlugin(config)], loader: { '.md': 'text' } }),
+      );
 
       const reportingSubject = new ReportingSubject();
       reportingSubject.subscribe(new ConsoleObserver());
