@@ -21,16 +21,18 @@ import { precondition } from '@/core/testing/precondition';
 // step did what it was told, and asserts nothing about product behaviour.
 // See precondition.ts for where that line is drawn.
 //
-// NOT YET RUN LIVE. This guard is stricter than the bare `.clear().type()`
-// it replaces, so it fires on any input the app rewrites on change - a
-// masked phone field turning "+15551234567" into "+1 (555) 123-4567" is the
-// likeliest candidate, and a `maxLength` on a required-detail field the
-// next. If checkout goes red on `have.value` for a field the form clearly
-// accepted, that is this guard being right about a transform rather than
-// wrong about the typing: compare against the app's rewritten value, or
-// scope the check to fields the app leaves alone. Do not "fix" it by
-// reverting to a bare type() - that is what hid the problem before.
-export function fillField(selector: string, value: string): void {
+// `expectedValue` exists because the guard found a real one on its first
+// live run (2026-08-21): OmniPizza's checkout normalises the phone input,
+// so typing "+15551234567" leaves "15551234567" in the DOM. Every other
+// field in the suite - including Japan's CJK address and prefecture and
+// Saudi Arabia's - keeps what was typed byte for byte, so the default of
+// `value` is right everywhere else.
+//
+// Pass the app's rewritten value here rather than relaxing the check.
+// Whatever normalisation is declared stays exact, so a field that starts
+// rewriting input in some new way still fails loudly instead of being
+// absorbed by a looser comparison.
+export function fillField(selector: string, value: string, expectedValue: string = value): void {
   precondition(value.length > 0, `a non-empty value was supplied for the field at ${selector}`);
-  cy.get(selector).clear().type(value).should('have.value', value);
+  cy.get(selector).clear().type(value).should('have.value', expectedValue);
 }

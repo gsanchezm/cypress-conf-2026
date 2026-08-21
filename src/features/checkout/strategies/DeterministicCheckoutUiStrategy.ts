@@ -50,7 +50,13 @@ export class DeterministicCheckoutUiStrategy implements CheckoutUiStrategy {
     fillField(this.locators.get('checkout.address'), order.address);
     fillField(this.locators.get(`checkout.${strategy.requiredFieldLocatorKey}`), order.requiredFieldValue);
     fillField(this.locators.get('checkout.fullName'), order.name);
-    fillField(this.locators.get('checkout.phone'), order.phone);
+    // The phone input strips the leading "+" - live-observed 2026-08-21,
+    // when fillField's value guard caught it on its first run: typing
+    // "+15551234567" leaves "15551234567" in the DOM. Narrowed to exactly
+    // that, not a general "digits only" rule, because stripping "+" is all
+    // that was actually observed - if the field ever starts removing other
+    // characters too, this should fail rather than quietly absorb it.
+    fillField(this.locators.get('checkout.phone'), order.phone, order.phone.replace(/^\+/, ''));
     cy.get(this.locators.get('checkout.paymentMethodCash')).click();
     cy.get(this.locators.get('checkout.placeOrderButton')).click();
     cy.get(this.locators.get('checkout.confirmOrderYes')).click();
