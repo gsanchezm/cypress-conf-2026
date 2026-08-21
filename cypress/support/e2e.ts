@@ -20,9 +20,10 @@ export function createCatalogFacade(): CatalogFacade {
 }
 
 export function createCheckoutFacade(): CheckoutFacade {
+  const checkoutApi = new CheckoutApiClient();
   const uiStrategy =
     Cypress.env('UI_STRATEGY') === 'cyPrompt'
       ? new CyPromptCheckoutUiStrategy()
-      : new DeterministicCheckoutUiStrategy(new LocatorProxy(checkoutLocators));
-  return new CheckoutFacade(new CheckoutApiClient(), uiStrategy);
+      : new DeterministicCheckoutUiStrategy(new LocatorProxy(checkoutLocators), checkoutApi);
+  return new CheckoutFacade(checkoutApi, uiStrategy);
 }

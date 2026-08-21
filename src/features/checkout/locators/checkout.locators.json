@@ -1,8 +1,4 @@
 {
-  "catalog": {
-    "addToCart": "[data-testid=\"add-to-cart-{pizzaId}-desktop\"]",
-    "confirmAddToCart": "[data-testid=\"confirm-add-to-cart\"]"
-  },
   "checkout": {
     "readyMarker": "[data-testid=\"screen-checkout\"]",
     "address": "[data-testid=\"address-desktop\"]",
