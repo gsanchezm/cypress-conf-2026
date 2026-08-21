@@ -105,6 +105,40 @@ this sandbox hits on every other host, not a code defect. Whether the AI correct
 one live run — triggered by you, either locally or via `cy-prompt-suite.yml` — before relying on this
 suite for the talk.
 
+### The broken-selector demo
+
+The two strategies exist to be compared, and this is the comparison. Point `BREAK_LOCATOR` at any
+locator key and that one selector starts resolving to `[data-cy-broken-locator="<key>"]` — an
+attribute no app ships, so it matches nothing:
+
+```bash
+# Deterministic path: fails. cy.get() is looking for a selector that no longer exists.
+pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose BREAK_LOCATOR=checkout.address
+
+# Same feature file, same broken key, cy.prompt path: unaffected.
+pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose UI_STRATEGY=cyPrompt,BREAK_LOCATOR=checkout.address --browser chrome --record
+```
+
+Nothing in the test code changes between those two commands — the composition root
+(`cypress/support/e2e.ts`) picks a different `SelectorSource`, and a Decorator (`BrokenSelectorSource`)
+wraps the real `LocatorProxy` for exactly one key. The broken selector names itself, so Cypress's own
+message reads `Expected to find element: [data-cy-broken-locator="checkout.address"], but never found
+it` — impossible to mistake for a real regression. A key no slice registers throws instead of running
+green, because a demo that silently breaks nothing is the worst outcome in front of an audience.
+
+> ⚠️ **What this demo proves, and what it does not.** It proves the deterministic path is coupled to a
+> **selector registry** while the prompt path is coupled only to the **rendered UI** — `cy.prompt` never
+> reads `checkout.locators.json`, so breaking that file cannot affect it. It does **not** prove
+> `cy.prompt` survives a change to *the app*. On a slide those two claims read identically and only the
+> first one is demonstrated here. The honest stronger version mutates the live DOM — rename the real
+> `data-testid` on the element after the form renders, so the deterministic selector matches nothing
+> that actually exists and the AI has to resolve the field by semantics. That is riskier (React may
+> re-render and restore the attribute) but it proves what the slide claims.
+
+**Verification status is split.** "Deterministic fails when the selector is broken" is verified locally.
+"`cy.prompt` still passes" is **not** — that half needs the billed Cloud run, like everything else
+`cy.prompt`.
+
 ## Architecture
 
 Vertical slicing, not layered folders — each slice under `src/features/<slice>/` is independently

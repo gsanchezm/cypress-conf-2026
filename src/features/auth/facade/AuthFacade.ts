@@ -1,5 +1,5 @@
 import { AuthApiClient } from '../api/AuthApiClient';
-import { LocatorProxy } from '@/core/locators/LocatorProxy';
+import type { SelectorSource } from '@/core/locators/SelectorSource';
 import { fillField } from '@/core/ui/fillField';
 import { UserFactory, type DeterministicUserKey } from '../data/UserFactory';
 import type { AuthSession, CountryCode } from '@/core/types';
@@ -8,7 +8,7 @@ import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 export class AuthFacade {
   constructor(
     private readonly authApi: AuthApiClient,
-    private readonly locators: LocatorProxy,
+    private readonly locators: SelectorSource,
   ) {}
 
   // API-only: returns the session, never touches localStorage. Cypress can

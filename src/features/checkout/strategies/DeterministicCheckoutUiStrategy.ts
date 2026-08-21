@@ -3,7 +3,7 @@ import { CHECKOUT_COUNTRY_STRATEGIES } from './CheckoutCountryStrategy';
 import { formatOrderTotal } from '../data/formatOrderTotal';
 import { toCartItemBody } from '../data/toCartItemBody';
 import { CheckoutApiClient } from '../api/CheckoutApiClient';
-import { LocatorProxy } from '@/core/locators/LocatorProxy';
+import type { SelectorSource } from '@/core/locators/SelectorSource';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 import { precondition } from '@/core/testing/precondition';
 import { fillField } from '@/core/ui/fillField';
@@ -18,7 +18,7 @@ import type { CheckoutRequestData, OrderSummary } from '@/core/types';
 // FORM itself works.
 export class DeterministicCheckoutUiStrategy implements CheckoutUiStrategy {
   constructor(
-    private readonly locators: LocatorProxy,
+    private readonly locators: SelectorSource,
     private readonly checkoutApi: CheckoutApiClient,
   ) {}
 

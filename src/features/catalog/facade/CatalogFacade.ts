@@ -1,5 +1,5 @@
 import { CatalogApiClient } from '../api/CatalogApiClient';
-import { LocatorProxy } from '@/core/locators/LocatorProxy';
+import type { SelectorSource } from '@/core/locators/SelectorSource';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 import { precondition } from '@/core/testing/precondition';
 import type { CountryCode, PizzaCatalogResponse } from '@/core/types';
@@ -15,7 +15,7 @@ export interface CatalogMarketExpectation {
 export class CatalogFacade {
   constructor(
     private readonly catalogApi: CatalogApiClient,
-    private readonly locators: LocatorProxy,
+    private readonly locators: SelectorSource,
   ) {}
 
   setMarketAndFetchPizzas(accessToken: string, countryCode: CountryCode): Cypress.Chainable<PizzaCatalogResponse> {
