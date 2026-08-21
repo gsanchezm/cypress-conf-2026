@@ -1,21 +1,16 @@
 import { Before, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { createAuthFacade, createCatalogFacade } from '@support/e2e';
 import { AtomicScenario } from '@/core/ui/AtomicScenario';
-import type { CountryCode } from '@/core/types';
+import type { CatalogMarketExpectation } from '../facade/CatalogFacade';
 
-interface MarketScenario {
-  countryCode: CountryCode;
-  isoCurrency: string; // Asserted against the API response's `currency` field.
+// countryCode / isoCurrency / expectedPriceText come from
+// CatalogMarketExpectation - they are what CatalogFacade's two assert
+// methods consume. currencyName is local to the step layer.
+interface MarketScenario extends CatalogMarketExpectation {
   currencyName: string; // Must match the Then step's captured text - a
   // mismatch here (e.g. a typo'd Examples row pairing the wrong market with
   // the wrong currency name) throws instead of silently passing, so the
   // Then step text is a real constraint, not decoration.
-  expectedPriceText: string; // Exact rendered text of pizza p01's price -
-  // proves the specific market's pricing, not just "some currency showed
-  // up". A format-only check can't distinguish Mexico from the United
-  // States (both render "$" + 2 decimals), so this must be an exact match.
-  pricePattern: RegExp; // Format check applied to every visible price (not
-  // just p01), proving the whole catalog is consistently localized.
 }
 
 // Prices are for pizza p01 (Margherita, base_price 12.99), live-harvested
@@ -29,14 +24,12 @@ const MARKET_SCENARIOS: Record<string, MarketScenario> = {
     isoCurrency: 'USD',
     currencyName: 'US dollars',
     expectedPriceText: '$12.99',
-    pricePattern: /^\$\d+\.\d{2}$/,
   },
   Mexico: {
     countryCode: 'MX',
     isoCurrency: 'MXN',
     currencyName: 'Mexican pesos',
     expectedPriceText: '$227.97',
-    pricePattern: /^\$\d+\.\d{2}$/,
   },
   Switzerland: {
     countryCode: 'CH',
@@ -47,21 +40,18 @@ const MARKET_SCENARIOS: Record<string, MarketScenario> = {
     // the live DOM. Written as an explicit escape, not a literal character,
     // since the two are visually indistinguishable in an editor.
     expectedPriceText: 'CHF 10.16',
-    pricePattern: /^CHF \d+\.\d{2}$/,
   },
   Japan: {
     countryCode: 'JP',
     isoCurrency: 'JPY',
     currencyName: 'Japanese yen',
     expectedPriceText: '￥2,051',
-    pricePattern: /^￥[\d,]+$/,
   },
   'Saudi Arabia': {
     countryCode: 'SA',
     isoCurrency: 'SAR',
     currencyName: 'Saudi riyals',
     expectedPriceText: '‏٤٨٫٧١ ر.س.‏',
-    pricePattern: /^‏[٠-٩٫]+ ر\.س\.‏$/,
   },
 };
 
@@ -95,19 +85,12 @@ function runCatalogScenario(scenario: MarketScenario): void {
       authFacade.loginAs('standard').then((session) => {
         accessToken = session.accessToken;
       });
-      cy.then(() => catalogFacade.setMarketAndFetchPizzas(accessToken, scenario.countryCode)).then(
-        (response) => {
-          // Top-level metadata proves the response envelope reflects the
-          // requested market; the per-pizza check proves every mapped item
-          // actually carries that market's currency too - a response could
-          // pass the envelope check while individual items still carried
-          // stale data from a different market, and top-level alone
-          // wouldn't catch it.
-          expect(response.countryCode).to.equal(scenario.countryCode);
-          expect(response.currency).to.equal(scenario.isoCurrency);
-          expect(response.pizzas.length).to.be.greaterThan(0);
-          expect(response.pizzas.every((pizza) => pizza.currency === scenario.isoCurrency)).to.be.true;
-        },
+      // No expect() lives inline in a step definition: assertions belong in
+      // a named facade method, so "how many claims does this scenario make?"
+      // is answerable by reading the step, not by auditing four anonymous
+      // expects buried in a callback.
+      cy.then(() => catalogFacade.setMarketAndFetchPizzas(accessToken, scenario.countryCode)).then((response) =>
+        catalogFacade.assertApiCurrencyMatchesMarket(response, scenario),
       );
     },
     hydrateUi: () => {

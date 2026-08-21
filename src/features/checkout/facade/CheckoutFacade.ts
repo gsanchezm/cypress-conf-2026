@@ -2,6 +2,7 @@ import { CheckoutApiClient } from '../api/CheckoutApiClient';
 import { CheckoutRequestBuilder } from '../data/CheckoutRequestBuilder';
 import { toCartItemBody } from '../data/toCartItemBody';
 import type { CheckoutUiStrategy } from '../strategies/CheckoutUiStrategy';
+import { precondition } from '@/core/testing/precondition';
 import type { CheckoutRequestData, OrderSummary, CountryCode } from '@/core/types';
 
 export class CheckoutFacade {
@@ -36,6 +37,19 @@ export class CheckoutFacade {
   checkoutViaApi(accessToken: string, data: CheckoutRequestData, subtotal: number): Cypress.Chainable<OrderSummary> {
     const body = CheckoutRequestBuilder.fromCheckoutData(data, subtotal);
     return this.checkoutApi.checkout(accessToken, body);
+  }
+
+  // The slice's single API-side claim: the order the checkout endpoint
+  // returned was actually created, in the state a new order starts in.
+  //
+  // A positive total is a precondition rather than a second claim - the
+  // UI-side assertion compares the rendered total against this same
+  // `total`, so a zero or negative one would make that comparison
+  // meaningless rather than merely wrong, which is precisely what a
+  // precondition is for.
+  assertOrderCreated(order: OrderSummary): void {
+    precondition(order.total > 0, `the API-placed order carries a positive total (got ${order.total})`);
+    expect(order.status).to.equal('pending');
   }
 
   // Delegates to whichever CheckoutUiStrategy the composition root

@@ -1,6 +1,7 @@
 import { Before, Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { createAuthFacade, createCheckoutFacade } from '@support/e2e';
 import { AtomicScenario } from '@/core/ui/AtomicScenario';
+import { precondition } from '@/core/testing/precondition';
 import type { CountryCode, CartItemRequest, OrderSummary } from '@/core/types';
 
 interface CheckoutScenario {
@@ -53,7 +54,10 @@ function runCheckoutScenario(scenario: CheckoutScenario): void {
   AtomicScenario.for('checkout').run({
     arrangeViaApi: () => {
       authFacade.loginAs('standard').then((session) => {
-        expect(session.accessToken).to.be.a('string').and.not.be.empty;
+        // A precondition, not a claim: this scenario is about checkout, and
+        // whether login issues a usable token is auth.feature's subject.
+        // Here it only has to hold for the rest of the run to mean anything.
+        precondition(session.accessToken.length > 0, 'the standard customer login issued an access token');
         accessToken = session.accessToken;
       });
       cy.then(() => checkoutFacade.seedCartViaApi(accessToken, scenario.countryCode, ITEMS))
@@ -74,8 +78,7 @@ function runCheckoutScenario(scenario: CheckoutScenario): void {
           ),
         )
         .then((order) => {
-          expect(order.status).to.equal('pending');
-          expect(order.total).to.be.greaterThan(0);
+          checkoutFacade.assertOrderCreated(order);
           expectedOrder = order;
         });
     },
