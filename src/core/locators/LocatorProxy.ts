@@ -1,6 +1,8 @@
+import type { SelectorSource } from './SelectorSource';
+
 export type LocatorTree = { [key: string]: string | LocatorTree };
 
-export class LocatorProxy {
+export class LocatorProxy implements SelectorSource {
   private readonly cache = new Map<string, string>();
 
   constructor(private readonly tree: LocatorTree) {}
