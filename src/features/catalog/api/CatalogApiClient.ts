@@ -1,5 +1,5 @@
-import { BaseApiClient } from '../../../core/http/BaseApiClient';
-import type { CountryConfig, PizzaCatalogItem, PizzaCatalogResponse, CountryCode } from '../../../core/types';
+import { BaseApiClient } from '@/core/http/BaseApiClient';
+import type { CountryConfig, PizzaCatalogItem, PizzaCatalogResponse, CountryCode } from '@/core/types';
 
 interface CountryInfoBody {
   code: CountryCode;

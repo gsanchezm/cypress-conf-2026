@@ -1,6 +1,6 @@
 import type { CheckoutUiStrategy } from './CheckoutUiStrategy';
 import { formatOrderTotal } from '../data/formatOrderTotal';
-import type { CheckoutRequestData, OrderSummary } from '../../../core/types';
+import type { CheckoutRequestData, OrderSummary } from '@/core/types';
 
 // One batched cy.prompt() call per method (never per click) - preserves
 // the multi-step batching cy.prompt's own docs are built around, and

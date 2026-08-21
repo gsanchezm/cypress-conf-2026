@@ -1,6 +1,6 @@
 import { CHECKOUT_COUNTRY_STRATEGIES } from '../strategies/CheckoutCountryStrategy';
 import { toCartItemBody } from './toCartItemBody';
-import type { CheckoutRequestData } from '../../../core/types';
+import type { CheckoutRequestData } from '@/core/types';
 
 // Builder, not a plain function: checkout payloads carry one required-field
 // key and one tip key that both vary by country (CheckoutCountryStrategy),

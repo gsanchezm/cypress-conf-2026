@@ -1,6 +1,6 @@
-import { BaseApiClient } from '../../../core/http/BaseApiClient';
+import { BaseApiClient } from '@/core/http/BaseApiClient';
 import type { CartItemBody } from '../data/toCartItemBody';
-import type { CountryCode, OrderSummary } from '../../../core/types';
+import type { CountryCode, OrderSummary } from '@/core/types';
 
 interface EnrichedCartItemBody {
   price: number;

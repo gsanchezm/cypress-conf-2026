@@ -1,7 +1,7 @@
 import { Before, When, Then } from '@badeball/cypress-cucumber-preprocessor';
-import { createAuthFacade, createCatalogFacade } from '../../../../cypress/support/e2e';
-import { AtomicScenario } from '../../../core/ui/AtomicScenario';
-import type { CountryCode } from '../../../core/types';
+import { createAuthFacade, createCatalogFacade } from '@support/e2e';
+import { AtomicScenario } from '@/core/ui/AtomicScenario';
+import type { CountryCode } from '@/core/types';
 
 interface MarketScenario {
   countryCode: CountryCode;

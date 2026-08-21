@@ -1,7 +1,7 @@
 import { CatalogApiClient } from '../api/CatalogApiClient';
-import { LocatorProxy } from '../../../core/locators/LocatorProxy';
-import { AUTH_TOKEN_STORAGE_KEY } from '../../../core/config/storageKeys';
-import type { CountryCode, PizzaCatalogResponse } from '../../../core/types';
+import { LocatorProxy } from '@/core/locators/LocatorProxy';
+import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
+import type { CountryCode, PizzaCatalogResponse } from '@/core/types';
 
 export class CatalogFacade {
   constructor(

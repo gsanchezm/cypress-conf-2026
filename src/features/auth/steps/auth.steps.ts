@@ -1,6 +1,6 @@
 import { Before, Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
-import { createAuthFacade } from '../../../../cypress/support/e2e';
-import { AtomicScenario } from '../../../core/ui/AtomicScenario';
+import { createAuthFacade } from '@support/e2e';
+import { AtomicScenario } from '@/core/ui/AtomicScenario';
 import type { DeterministicUserKey } from '../data/UserFactory';
 
 let userKey: DeterministicUserKey | undefined;

@@ -1,5 +1,5 @@
-import { BaseApiClient } from '../../../core/http/BaseApiClient';
-import type { AuthSession } from '../../../core/types';
+import { BaseApiClient } from '@/core/http/BaseApiClient';
+import type { AuthSession } from '@/core/types';
 
 interface LoginResponseBody {
   access_token: string;

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CheckoutRequestBuilder } from './CheckoutRequestBuilder';
-import type { CheckoutRequestData } from '../../../core/types';
+import type { CheckoutRequestData } from '@/core/types';
 
 const baseData: CheckoutRequestData = {
   countryCode: 'US',
