@@ -139,6 +139,11 @@ green, because a demo that silently breaks nothing is the worst outcome in front
 "`cy.prompt` still passes" is **not** — that half needs the billed Cloud run, like everything else
 `cy.prompt`.
 
+The two-pair `--expose A=x,B=y` syntax above is verified separately, so the billed run can't be lost to
+a flag-parsing mistake: `--expose UI_STRATEGY=deterministic,BREAK_LOCATOR=checkout.address` failed all
+5 markets on `[data-cy-broken-locator=...]`, which only happens if **both** pairs parsed — had the
+second been swallowed, the run would have passed 5/5.
+
 ## Architecture
 
 Vertical slicing, not layered folders — each slice under `src/features/<slice>/` is independently
@@ -366,7 +371,7 @@ classDiagram
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have several country-conditional fields (computed property names for the required-field/tip keys) — reads better as a fluent construction than a function with many optional args. |
 | **Factory** | `UserFactory` (deterministic roster, loaded from `deterministicUsers.json`) | Centralizes how test data is built per slice. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. |
-| **Decorator** | `BrokenSelectorSource` wraps any `SelectorSource` | Breaks exactly one locator key while passing every other through untouched — the broken-selector demo is a wiring choice in the composition root, not a code change. |
+| **Decorator** | `BrokenSelectorSource` wraps any `SelectorSource` | Breaks exactly one locator key while passing every other through untouched — the broken-selector demo is a wiring choice in the composition root, not a code change. (Read the caveat in [the demo section](#the-broken-selector-demo) before putting it on a slide.) |
 | **Adapter** *(minor)* | Cucumber step-definition layer | Thin adapter between Cucumber's step matching and our Facade interface. |
 
 ### What came over from the 2025 framework — and what didn't
