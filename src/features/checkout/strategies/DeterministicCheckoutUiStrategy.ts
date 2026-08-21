@@ -6,6 +6,7 @@ import { CheckoutApiClient } from '../api/CheckoutApiClient';
 import { LocatorProxy } from '@/core/locators/LocatorProxy';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 import { precondition } from '@/core/testing/precondition';
+import { fillField } from '@/core/ui/fillField';
 import type { CheckoutRequestData, OrderSummary } from '@/core/types';
 
 // Seeds the cart via API instead of clicking catalog's "add to cart" -
@@ -46,10 +47,10 @@ export class DeterministicCheckoutUiStrategy implements CheckoutUiStrategy {
     cy.get(this.locators.get(`checkout.${strategy.requiredFieldLocatorKey}`), { timeout: 10000 }).should(
       'be.visible',
     );
-    cy.get(this.locators.get('checkout.address')).clear().type(order.address);
-    cy.get(this.locators.get(`checkout.${strategy.requiredFieldLocatorKey}`)).clear().type(order.requiredFieldValue);
-    cy.get(this.locators.get('checkout.fullName')).clear().type(order.name);
-    cy.get(this.locators.get('checkout.phone')).clear().type(order.phone);
+    fillField(this.locators.get('checkout.address'), order.address);
+    fillField(this.locators.get(`checkout.${strategy.requiredFieldLocatorKey}`), order.requiredFieldValue);
+    fillField(this.locators.get('checkout.fullName'), order.name);
+    fillField(this.locators.get('checkout.phone'), order.phone);
     cy.get(this.locators.get('checkout.paymentMethodCash')).click();
     cy.get(this.locators.get('checkout.placeOrderButton')).click();
     cy.get(this.locators.get('checkout.confirmOrderYes')).click();

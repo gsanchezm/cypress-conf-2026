@@ -1,5 +1,6 @@
 import { AuthApiClient } from '../api/AuthApiClient';
 import { LocatorProxy } from '@/core/locators/LocatorProxy';
+import { fillField } from '@/core/ui/fillField';
 import { UserFactory, type DeterministicUserKey } from '../data/UserFactory';
 import type { AuthSession, CountryCode } from '@/core/types';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
@@ -57,9 +58,16 @@ export class AuthFacade {
 
   submitLoginFormAs(userKey: DeterministicUserKey): void {
     const user = UserFactory.deterministic(userKey);
-    cy.get(this.locators.get('login.usernameInput')).clear().type(user.username);
-    cy.get(this.locators.get('login.passwordInput')).clear().type(user.password);
+    fillField(this.locators.get('login.usernameInput'), user.username);
+    fillField(this.locators.get('login.passwordInput'), user.password);
     cy.get(this.locators.get('login.submitButton')).click();
+  }
+
+  // The locked-out scenario's API-side claim. Lives here rather than inline
+  // in the step definition for the same reason as every other assert*
+  // method: claims are countable only if they all have names.
+  assertLoginRejectedAsLockedOut(response: Cypress.Response<unknown>): void {
+    expect(response.status).to.equal(403);
   }
 
   // Asserts on the route, not just the generic authenticated-shell marker:

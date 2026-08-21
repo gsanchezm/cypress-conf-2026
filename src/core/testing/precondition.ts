@@ -9,10 +9,15 @@ export class PreconditionError extends Error {
 // PRECONDITION is something that must hold for a scenario's claim to mean
 // anything (a token was issued, the response is for the market we asked
 // for), whereas a CLAIM is the product behaviour the scenario exists to
-// prove. Preconditions throw; only claims use expect()/should(). Keeping
-// them in different mechanisms is what makes "how many things does this
-// scenario assert?" answerable by counting expect()/should() calls - if
-// preconditions were written as expect() too, the count would be noise.
+// prove.
+//
+// Preconditions over plain JavaScript values throw, so they never appear in
+// the assertion count. DOM-level guards still use .should() - that is how
+// Cypress retries, and a .then() check would fail on anything the app
+// renders a tick late - so counting .should() calls alone does not give the
+// claim count. What does: every claim lives in an `assert*` method on a
+// facade or strategy, and nothing outside one makes a claim. A .should()
+// found anywhere else is a guard by construction.
 //
 // The `asserts` signature also narrows the caller's type, so a guarded
 // `string | null` is a `string` afterwards without a second check.
