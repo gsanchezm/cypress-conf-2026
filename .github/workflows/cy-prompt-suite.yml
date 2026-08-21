@@ -29,7 +29,7 @@ jobs:
         run: pnpm run typecheck
 
       - name: Run Checkout via cy.prompt
-        run: pnpm exec cypress run --spec "cypress/e2e/checkout/checkout.feature" --env UI_STRATEGY=cyPrompt --browser chrome --record
+        run: pnpm exec cypress run --spec "cypress/e2e/checkout/checkout.feature" --expose UI_STRATEGY=cyPrompt --browser chrome --record
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
