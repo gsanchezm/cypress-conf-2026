@@ -65,7 +65,7 @@ Then('they should see a locked-out account message', () => {
   AtomicScenario.for('auth').run({
     arrangeViaApi: () => {
       facade.attemptLoginAs(requireUserKey()).then((response) => {
-        expect(response.status).to.equal(403);
+        facade.assertLoginRejectedAsLockedOut(response);
       });
     },
     hydrateUi: () => {
