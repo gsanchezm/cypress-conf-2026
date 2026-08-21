@@ -12,19 +12,19 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 
 | Slice | Status |
 |---|---|
-| Core framework (`AtomicScenario`, `BaseApiClient`, `BaseUiComponent`, `LocatorProxy`, Observer reporting) | ✅ Done |
+| Core framework (`AtomicScenario`, `BaseApiClient`, `LocatorProxy`, Observer reporting) | ✅ Done |
 | Auth & Session | ✅ Done |
 | Market & Catalog i18n (5 markets: MX/US/CH/JP/SA) | ✅ Done |
 | Cart & Checkout (multi-country, 5 markets: US/MX/CH/JP/SA) | ✅ Done |
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
 | `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
 
-The description above is the framework's design contract, not a live status claim — Auth, Catalog, and
-Checkout (all 5 markets) have all been verified live against the real app (Checkout via direct browser
-automation + `fetch()`, not just this sandbox's blocked Cypress run). This workstation's outbound HTTPS
-to the OmniPizza hosts is broken for plain `curl`/Node `https` (unrelated to the framework code), so
-`cypress run` in this environment can't itself confirm a run — verification here happened through a
-real browser session instead.
+The description above is the framework's design contract, and it's a live-verified one — Auth, Catalog,
+and Checkout (all 5 markets) all pass under real `cypress run` executions against the live app, not just
+direct browser automation. An earlier version of this README noted that this workstation's outbound
+HTTPS to the OmniPizza hosts was broken for `cypress run`/`curl`/Node `https` alike - that was Kaspersky
+intercepting the local Cypress process tree, not a real API outage, and it was fully resolved by
+uninstalling Kaspersky (2026-08-20). `cypress open`/`cypress run` both work normally now.
 
 **Orders is deliberately out of scope.** Live testing confirmed the OmniPizza frontend has no
 order-history page (`/orders` redirects to `/catalog`) and no cancel UI anywhere — including
@@ -43,6 +43,19 @@ digits for SA) all came from direct browser inspection, never assumed. Each scen
 orders against the live backend (one via `arrangeViaApi`, one via the UI in `hydrateUi`) under the same
 deterministic user — 10 orders per full Checkout run. Fine for a demo/free-tier deploy; worth knowing
 before scaling the matrix further.
+
+`DeterministicCheckoutUiStrategy.completeCheckout()` seeds the cart via API (`CheckoutApiClient.seedCart`)
+instead of clicking catalog's "add to cart" button — live-verified 2026-08-20 that a `cy.request()`-seeded
+cart (Node-side, the same mechanism used here) renders correctly on `/checkout` after a real UI login,
+so re-driving catalog's add-to-cart UI here would be redundant with `CatalogFacade`'s own suite, not
+additional coverage. The checkout **form** itself (address, required field, name, phone, payment,
+place-order, confirm) still runs through real UI interaction — `/order-success`'s order-id/order-total
+only populate from that real submit, live-confirmed to be unreachable via API-placed order + direct
+navigation (the client-side order store stays empty, so those elements never render). `/checkout`'s cart
+also renders empty on first paint and populates a moment later — a client-side store rehydration, not a
+network fetch — so the required-field check after the API seed needs headroom beyond Cypress's default
+4s command timeout. `CyPromptCheckoutUiStrategy` is untouched by this — it still drives catalog's
+add-to-cart through natural language, since its whole premise is exercising the AI-resolved UI path.
 
 **The `cy.prompt` suite covers Checkout only** (spec §10 names only `CyPromptCheckoutUiStrategy` — no
 cy.prompt work for Auth/Catalog, to keep the free-tier prompt budget small). Every `checkout.feature`
@@ -81,12 +94,11 @@ readable, demoable, and deletable:
 ```
 cypress/
 ├── e2e/{auth,catalog,checkout}/*.feature   # Gherkin - pure business language, no "click"/"selector"/"API"
-├── unit/*.cy.ts                             # internal framework tests, not business specs
 └── support/e2e.ts                           # composition root (browser-side DIP wiring)
 src/
 ├── core/
-│   ├── http/        BaseApiClient, ApiError
-│   ├── ui/           BaseUiComponent, AtomicScenario
+│   ├── http/        BaseApiClient, ApiError, parseApiResponse (pure, Node-testable)
+│   ├── ui/           AtomicScenario, runAtomicSteps (pure, Node-testable)
 │   ├── locators/      LocatorProxy
 │   ├── types/         shared contracts used by 2+ slices
 │   ├── config/         shared constants (e.g. localStorage keys)
@@ -112,12 +124,154 @@ Every scenario runs the same three steps, in this order, enforced by a Template 
 AtomicScenario.for('catalog').run({ arrangeViaApi, hydrateUi, assertUi });
 ```
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Step as Step definition
+    participant API as Live backend
+    participant UI as Browser
+
+    Step->>API: arrangeViaApi()
+    Note right of API: real HTTP call(s) -<br/>asserts status, schema, business rule
+    API-->>Step: response
+    Step->>UI: hydrateUi()
+    Note right of UI: injects API-produced state<br/>and/or drives the real UI
+    UI-->>Step: page settled
+    Step->>UI: assertUi()
+    Note right of UI: asserts the rendered DOM
+```
+
+### How hydration works
+
+"Hydrate" doesn't mean one fixed technique here - each slice's `hydrateUi` uses whatever the live app
+actually allows, discovered by testing against the real DOM rather than assumed.
+
+**Auth - standard login: pure injection.** There's nothing to prove about the login form itself in this
+scenario - `arrangeViaApi` already proved the credentials work via the API, so `hydrateUi` just needs an
+authenticated `/catalog` to assert against.
+
+```mermaid
+flowchart LR
+    A1["cy.visit('/')"] --> A2["write token<br/>to localStorage"] --> A3["cy.visit('/catalog')"]
+```
+
+**Auth - locked-out: pure real UI.** A failure state can't be injected - the rendered error message only
+exists if the real form is actually submitted with those credentials.
+
+```mermaid
+flowchart LR
+    B1["cy.visit('/')"] --> B2["fill username/password, submit"]
+```
+
+**Catalog: pure injection.** Writing `token` + `countryCode` to localStorage and doing a two-phase
+`cy.visit()` genuinely reproduces an authenticated, market-selected `/catalog` - live-verified to work
+reliably **only on a fresh boot** (no pre-existing `omnipizza-country` blob in localStorage). Cypress's
+default `testIsolation: true` clears storage between every test, so this holds for the real suite even
+though it looked broken the first time it was tried in a browser session carrying leftover state from
+earlier manual testing.
+
+```mermaid
+flowchart LR
+    C1["cy.visit('/')"] --> C2["write token + countryCode<br/>to localStorage"] --> C3["cy.visit('/catalog')"]
+```
+
+**Checkout: a hybrid**, and deliberately so - see the full walkthrough below.
+
+#### Checkout's hydration, step by step
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Test as hydrateUi
+    participant Browser
+    participant Backend as omnipizza-backend
+    participant Store as Client-side cart store<br/>(localStorage, Zustand)
+
+    Test->>Browser: Real UI login (market MX + quick-login + submit)
+    Browser-->>Test: lands on /catalog, token in localStorage
+    Test->>Browser: read token from localStorage
+    Test->>Backend: cy.request POST /api/cart (seedCart)
+    Backend-->>Test: 200 OK
+    Test->>Browser: cy.visit('/checkout')
+    Browser-->>Test: first paint - cart still reads empty
+    Note over Browser,Store: no GET /api/cart ever fires here -<br/>the store rehydrates client-side, ~2-3s later
+    Store-->>Browser: cart populates, required field renders
+    Test->>Browser: cy.get(requiredField, timeout 10s).should('be.visible')
+    Note over Test,Browser: Cypress's built-in retry-ability absorbs the wait
+    Test->>Browser: fill address, required field, name, phone, payment
+    Test->>Browser: click place-order, click confirm-order-yes
+    Browser-->>Test: /order-success populates - ONLY from this click
+```
+
+Login stays real UI here (not injection, unlike Catalog) because the composition root wires
+`DeterministicCheckoutUiStrategy` to run *after* `AuthFacade.loginViaUiWithMarket` in
+`checkout.steps.ts` - reusing Catalog's injection trick would be a valid alternative (same fresh-boot
+caveat applies) but was left as real UI so this slice still exercises the login form and market picker
+once, deliberately, rather than nowhere.
+
+The part that **cannot** be shortcut is the checkout form submission itself, because `/order-success` has
+no server fetch to fall back on:
+
+```mermaid
+flowchart LR
+    subgraph works["This works"]
+        direction TB
+        W1["Real UI: fill checkout form,<br/>click place-order, click confirm"] --> W2["/order-success renders:<br/>order-id + order-total present"]
+    end
+
+    subgraph blocked["This does NOT work"]
+        direction TB
+        X1["POST /api/checkout via API<br/>real order created server-side"] --> X2["cy.visit('/order-success') directly"]
+        X2 --> X3["generic shell renders,<br/>order-id/order-total absent from DOM,<br/>omnipizza-order in localStorage is null"]
+    end
+```
+
+Live-verified 2026-08-20: placing a real order via `POST /api/checkout` and then navigating straight to
+`/order-success` renders the generic "out for delivery" shell, but `order-id`/`order-total` never appear
+in the DOM at all - they're written by whatever client-side action fires on the real "confirm order"
+click, not fetched from the server. That's the one hard boundary this framework has found so far for
+API-only hydration.
+
+#### Method reference
+
+| Method | Slice | What it does |
+|---|---|---|
+| `AuthFacade.hydrateSessionAndOpenCatalog(token)` | Auth | Pure injection: two-phase `cy.visit('/')` → write token → `cy.visit('/catalog')`. Used only by the standard-login scenario. |
+| `AuthFacade.submitLoginFormAs(userKey)` | Auth | Real UI: fills username/password and submits. Used by the locked-out scenario, where the failure state can only be reproduced, not injected. |
+| `CatalogFacade.openCatalogAuthenticated(token, countryCode)` | Catalog | Pure injection: two-phase visit, writes `token` + `countryCode` to localStorage. Works because the app's boot logic re-derives its full `omnipizza-country` Zustand blob from that plain key - but only on a fresh boot. |
+| `CheckoutFacade.seedCartViaApi(...)` | Checkout | Called from `arrangeViaApi`, not `hydrateUi` - sets market, seeds the cart, fetches the enriched/priced cart to compute a real subtotal for the API-side order. |
+| `CheckoutFacade.completeCheckoutViaUi(order)` | Checkout | Delegates to whichever `CheckoutUiStrategy` the composition root wired in - the step definition never knows which one is active. |
+| `DeterministicCheckoutUiStrategy.completeCheckout(order)` | Checkout | Runs after the real UI login: reads the token, seeds the cart via `CheckoutApiClient.seedCart` (API), visits `/checkout` directly, then drives the real checkout form (address, required field, name, phone, payment, submit). |
+| `DeterministicCheckoutUiStrategy.assertOrderConfirmation(expected)` | Checkout | Asserts `/order-success`'s rendered order-id/order-total match the API-computed expected order - only reachable after a real form submit. |
+| `CyPromptCheckoutUiStrategy.completeCheckout(order)` | Checkout | Drives the entire flow, including "add to cart", through natural-language `cy.prompt()` steps - no API shortcut, since exercising the AI-resolved UI path end to end is this strategy's whole purpose. |
+
+```mermaid
+classDiagram
+    class CheckoutUiStrategy {
+        <<interface>>
+        +completeCheckout(order) void
+        +assertOrderConfirmation(expected) void
+    }
+    class DeterministicCheckoutUiStrategy {
+        -locators LocatorProxy
+        -checkoutApi CheckoutApiClient
+        +completeCheckout(order) void
+        +assertOrderConfirmation(expected) void
+    }
+    class CyPromptCheckoutUiStrategy {
+        +completeCheckout(order) void
+        +assertOrderConfirmation(expected) void
+    }
+    CheckoutUiStrategy <|.. DeterministicCheckoutUiStrategy
+    CheckoutUiStrategy <|.. CyPromptCheckoutUiStrategy
+```
+
 ### Pattern map
 
 | Pattern | Where | Why here |
 |---|---|---|
 | **Proxy** | `LocatorProxy` wraps `locators/*.json` | Dot-path selector lookup with caching; throws a clear error on a missing key instead of a silent `undefined`. Replaces classic POM. |
-| **Template Method** | `BaseApiClient.request()`, `BaseUiComponent.load()`, `AtomicScenario` | Fixes the algorithm skeleton; slices fill in only the specific steps. |
+| **Template Method** | `BaseApiClient.request()`, `AtomicScenario` | Fixes the algorithm skeleton; slices fill in only the specific steps. |
 | **Facade** | `AuthFacade`, `CatalogFacade`, `CheckoutFacade` | One narrow entrypoint per slice, hides API+data+locator/strategy wiring from step definitions. |
 | **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.env('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have several country-conditional fields (computed property names for the required-field/tip keys) — reads better as a fluent construction than a function with many optional args. |
