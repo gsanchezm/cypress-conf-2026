@@ -21,10 +21,13 @@ export abstract class BaseApiClient {
       headers: options.headers,
       failOnStatusCode: false,
       // Render free-tier services can cold-start; give the first request
-      // room. retryOnNetworkFailure defaults to true in Cypress already -
+      // room - 60s covers Render's documented worst-case cold-start latency
+      // (30s wasn't enough, confirmed live: first request of a run timed out
+      // at 30s, the next one succeeded immediately once the instance was
+      // warm). retryOnNetworkFailure defaults to true in Cypress already -
       // stated explicitly here so the cold-start handling this spec
       // promises is visible in the code, not an unstated default.
-      timeout: 30000,
+      timeout: 60000,
       retryOnNetworkFailure: true,
     });
   }
