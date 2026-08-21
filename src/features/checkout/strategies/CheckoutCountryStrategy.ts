@@ -1,4 +1,4 @@
-import type { CountryCode } from '../../../core/types';
+import type { CountryCode } from '@/core/types';
 
 export interface CheckoutCountryStrategy {
   readonly countryCode: CountryCode;

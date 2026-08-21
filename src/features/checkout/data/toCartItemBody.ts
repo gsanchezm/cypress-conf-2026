@@ -1,4 +1,4 @@
-import type { CartItemRequest } from '../../../core/types';
+import type { CartItemRequest } from '@/core/types';
 
 export interface CartItemBody {
   pizza_id: string;

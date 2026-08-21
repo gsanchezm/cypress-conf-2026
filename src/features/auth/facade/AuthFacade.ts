@@ -1,8 +1,8 @@
 import { AuthApiClient } from '../api/AuthApiClient';
-import { LocatorProxy } from '../../../core/locators/LocatorProxy';
+import { LocatorProxy } from '@/core/locators/LocatorProxy';
 import { UserFactory, type DeterministicUserKey } from '../data/UserFactory';
-import type { AuthSession, CountryCode } from '../../../core/types';
-import { AUTH_TOKEN_STORAGE_KEY } from '../../../core/config/storageKeys';
+import type { AuthSession, CountryCode } from '@/core/types';
+import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 
 export class AuthFacade {
   constructor(

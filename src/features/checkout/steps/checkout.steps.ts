@@ -1,7 +1,7 @@
 import { Before, Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
-import { createAuthFacade, createCheckoutFacade } from '../../../../cypress/support/e2e';
-import { AtomicScenario } from '../../../core/ui/AtomicScenario';
-import type { CountryCode, CartItemRequest, OrderSummary } from '../../../core/types';
+import { createAuthFacade, createCheckoutFacade } from '@support/e2e';
+import { AtomicScenario } from '@/core/ui/AtomicScenario';
+import type { CountryCode, CartItemRequest, OrderSummary } from '@/core/types';
 
 interface CheckoutScenario {
   countryCode: CountryCode;

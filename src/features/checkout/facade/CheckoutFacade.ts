@@ -2,7 +2,7 @@ import { CheckoutApiClient } from '../api/CheckoutApiClient';
 import { CheckoutRequestBuilder } from '../data/CheckoutRequestBuilder';
 import { toCartItemBody } from '../data/toCartItemBody';
 import type { CheckoutUiStrategy } from '../strategies/CheckoutUiStrategy';
-import type { CheckoutRequestData, OrderSummary, CountryCode } from '../../../core/types';
+import type { CheckoutRequestData, OrderSummary, CountryCode } from '@/core/types';
 
 export class CheckoutFacade {
   constructor(

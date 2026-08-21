@@ -1,15 +1,15 @@
-import { AuthApiClient } from '../../src/features/auth/api/AuthApiClient';
-import { AuthFacade } from '../../src/features/auth/facade/AuthFacade';
-import { LocatorProxy } from '../../src/core/locators/LocatorProxy';
-import authLocators from '../../src/features/auth/locators/auth.locators.json';
-import { CatalogApiClient } from '../../src/features/catalog/api/CatalogApiClient';
-import { CatalogFacade } from '../../src/features/catalog/facade/CatalogFacade';
-import catalogLocators from '../../src/features/catalog/locators/catalog.locators.json';
-import { CheckoutApiClient } from '../../src/features/checkout/api/CheckoutApiClient';
-import { CheckoutFacade } from '../../src/features/checkout/facade/CheckoutFacade';
-import { DeterministicCheckoutUiStrategy } from '../../src/features/checkout/strategies/DeterministicCheckoutUiStrategy';
-import { CyPromptCheckoutUiStrategy } from '../../src/features/checkout/strategies/CyPromptCheckoutUiStrategy';
-import checkoutLocators from '../../src/features/checkout/locators/checkout.locators.json';
+import { AuthApiClient } from '@/features/auth/api/AuthApiClient';
+import { AuthFacade } from '@/features/auth/facade/AuthFacade';
+import { LocatorProxy } from '@/core/locators/LocatorProxy';
+import authLocators from '@/features/auth/locators/auth.locators.json';
+import { CatalogApiClient } from '@/features/catalog/api/CatalogApiClient';
+import { CatalogFacade } from '@/features/catalog/facade/CatalogFacade';
+import catalogLocators from '@/features/catalog/locators/catalog.locators.json';
+import { CheckoutApiClient } from '@/features/checkout/api/CheckoutApiClient';
+import { CheckoutFacade } from '@/features/checkout/facade/CheckoutFacade';
+import { DeterministicCheckoutUiStrategy } from '@/features/checkout/strategies/DeterministicCheckoutUiStrategy';
+import { CyPromptCheckoutUiStrategy } from '@/features/checkout/strategies/CyPromptCheckoutUiStrategy';
+import checkoutLocators from '@/features/checkout/locators/checkout.locators.json';
 
 export function createAuthFacade(): AuthFacade {
   return new AuthFacade(new AuthApiClient(), new LocatorProxy(authLocators));

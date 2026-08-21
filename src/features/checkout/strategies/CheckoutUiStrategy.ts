@@ -1,4 +1,4 @@
-import type { CheckoutRequestData, OrderSummary } from '../../../core/types';
+import type { CheckoutRequestData, OrderSummary } from '@/core/types';
 
 // Scoped at business-action granularity (one method per Gherkin When step,
 // not per click) - a per-click interface would throw away cy.prompt's own
