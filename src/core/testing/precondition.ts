@@ -17,7 +17,8 @@ export class PreconditionError extends Error {
 // renders a tick late - so counting .should() calls alone does not give the
 // claim count. What does: every claim lives in an `assert*` method on a
 // facade or strategy, and nothing outside one makes a claim. A .should()
-// found anywhere else is a guard by construction.
+// found anywhere else - fillField's value check, a ready-marker wait - is a
+// guard by construction.
 //
 // The `asserts` signature also narrows the caller's type, so a guarded
 // `string | null` is a `string` afterwards without a second check.
