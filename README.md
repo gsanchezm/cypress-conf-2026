@@ -67,7 +67,7 @@ or `CyPromptCheckoutUiStrategy` (Cypress's AI-native `cy.prompt()`, one batched 
 action), selected via `Cypress.env('UI_STRATEGY')`:
 
 ```bash
-pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --env UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
+pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
 ```
 
 **The prompt text is not in the TypeScript.** It lives in

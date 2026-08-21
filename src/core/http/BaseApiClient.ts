@@ -16,7 +16,7 @@ export abstract class BaseApiClient {
   protected requestRaw(options: ApiRequestOptions): Cypress.Chainable<Cypress.Response<unknown>> {
     return cy.request({
       method: options.method,
-      url: `${Cypress.env('apiUrl')}${this.basePath}${options.path}`,
+      url: `${Cypress.expose('apiUrl')}${this.basePath}${options.path}`,
       body: options.body,
       headers: options.headers,
       failOnStatusCode: false,
