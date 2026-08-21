@@ -18,14 +18,13 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Cart & Checkout (multi-country, 5 markets: US/MX/CH/JP/SA) | ✅ Done |
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
 | `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
-| Assertion-budget refactor (1 API claim + 1 UI claim per scenario) | ⚠️ Built, **needs a re-run** — `tsc` and `node:test` exercise no UI assertion, so only `cypress run` can confirm it |
+| Assertion-budget refactor (1 API claim + 1 UI claim per scenario) | ✅ Done — re-verified live 2026-08-21, 12/12 (auth 2, catalog 5, checkout 5) |
 
-The description above is the framework's design contract. Auth, Catalog and Checkout (all 5 markets)
-all passed under real `cypress run` executions against the live app, not just direct browser
-automation — but that was **before** the assertion-budget refactor rewrote what each scenario asserts.
-Those green runs no longer cover the current assertions; the suite needs one more `cypress run` to
-restore the "live-verified" claim in full. An earlier version of this README noted that this
-workstation's outbound
+The description above is the framework's design contract, and it's a live-verified one — Auth, Catalog
+and Checkout (all 5 markets) all pass under real `cypress run` executions against the live app, not
+just direct browser automation, and were re-run after the assertion-budget refactor rewrote what each
+scenario asserts (2026-08-21: 12/12). An earlier version of this README noted that this workstation's
+outbound
 HTTPS to the OmniPizza hosts was broken for `cypress run`/`curl`/Node `https` alike - that was Kaspersky
 intercepting the local Cypress process tree, not a real API outage, and it was fully resolved by
 uninstalling Kaspersky (2026-08-20). `cypress open`/`cypress run` both work normally now.
@@ -349,6 +348,22 @@ drop as a mystery failure at the assertion three commands later. `fillField` kee
 `.should('have.value', …)` — which retries the way `recurse` did, with no new dependency — and drops
 the *"IfNotEmpty"* half: 2025 skipped empty text because SauceDemo had optional fields, but every field
 here is required, so an empty value means broken test data and throws.
+
+**It earned its keep on the first run.** All 5 markets failed immediately, in the phone field:
+
+```
+- '15551234567'     ← what the DOM actually holds
++ '+15551234567'    ← what we typed
+```
+
+OmniPizza's checkout strips the leading `+`. The bare `.clear().type()` had been hiding that
+indefinitely — we typed one thing, the app stored another, and nothing ever noticed. The fix passes the
+app's normalized value as `fillField`'s optional third argument rather than loosening the comparison,
+so the check stays exact and a field that starts rewriting input in some *new* way still fails loudly.
+
+Worth recording what did **not** fail: the guard ran clean on Japan's CJK address and prefecture
+(`東京都渋谷区1-1-1`, `東京都`) and on Saudi Arabia's values, across all five markets. Phone is the only
+normalizing input in the form.
 
 **Not kept, and this is the interesting part.** `isElementVisible`, `waitUntilNotVisible` and
 `clickUntilVisible` all hand-roll their own waiting — `if ($body.find(sel).length)`, retry loops around
