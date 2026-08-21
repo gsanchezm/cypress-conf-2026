@@ -28,8 +28,8 @@ Some rationale for the assertion below.
 
 test('parses each heading into a section of ordered steps', () => {
   const doc = parsePromptDocument(DOC);
-  assert.deepEqual(Object.keys(doc), ['completeCheckout', 'assertOrderConfirmation']);
-  assert.deepEqual(doc.completeCheckout, [
+  assert.deepEqual([...doc.keys()], ['completeCheckout', 'assertOrderConfirmation']);
+  assert.deepEqual(doc.get('completeCheckout'), [
     'Add the pizza with id {pizzaId} to the cart',
     'Enter {address} into the address field',
     'Click the place order button',
@@ -38,7 +38,23 @@ test('parses each heading into a section of ordered steps', () => {
 
 test('drops prose, keeping only list items as steps', () => {
   const doc = parsePromptDocument(DOC);
-  assert.deepEqual(doc.assertOrderConfirmation, ['Verify the order total shown is exactly {expectedTotalText}']);
+  assert.deepEqual(doc.get('assertOrderConfirmation'), [
+    'Verify the order total shown is exactly {expectedTotalText}',
+  ]);
+});
+
+// A Record would report these as duplicates of keys nobody declared, since
+// `'constructor' in {}` is true. The Map has no inherited keys.
+test('treats a section named after an Object.prototype key as an ordinary section', () => {
+  const doc = parsePromptDocument('## constructor\n\n- a step\n\n## toString\n\n- another step\n');
+  assert.deepEqual([...doc.keys()], ['constructor', 'toString']);
+  assert.deepEqual(doc.get('constructor'), ['a step']);
+});
+
+test('ignores a deeper heading level instead of opening a section for it', () => {
+  const doc = parsePromptDocument('## real\n\n### not a section\n\n- a step\n');
+  assert.deepEqual([...doc.keys()], ['real']);
+  assert.deepEqual(doc.get('real'), ['a step']);
 });
 
 test('rejects a document that declares the same section twice', () => {
