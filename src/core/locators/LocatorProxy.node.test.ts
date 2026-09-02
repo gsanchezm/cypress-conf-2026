@@ -34,3 +34,10 @@ test('caches a resolved key so repeated lookups do not re-walk the tree', () => 
 
   assert.equal(readCount, readsAfterFirstCall);
 });
+
+test('offers its registry selector as the single candidate', () => {
+  const proxy = new LocatorProxy({ login: { usernameInput: '[data-testid="login-username"]' } });
+  assert.deepEqual(proxy.candidates('login.usernameInput'), [
+    { tier: 'registry', selector: '[data-testid="login-username"]' },
+  ]);
+});

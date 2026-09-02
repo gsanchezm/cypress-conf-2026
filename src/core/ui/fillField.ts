@@ -1,4 +1,6 @@
 import { precondition } from '@/core/testing/precondition';
+import { locate } from './locate';
+import type { SelectorSource } from '@/core/locators/SelectorSource';
 
 // Extracted from the 2025 framework's `typeIfNotEmpty` action, with the two
 // halves of that name treated differently.
@@ -32,7 +34,10 @@ import { precondition } from '@/core/testing/precondition';
 // Whatever normalisation is declared stays exact, so a field that starts
 // rewriting input in some new way still fails loudly instead of being
 // absorbed by a looser comparison.
-export function fillField(selector: string, value: string, expectedValue: string = value): void {
-  precondition(value.length > 0, `a non-empty value was supplied for the field at ${selector}`);
-  cy.get(selector).clear().type(value).should('have.value', expectedValue);
+//
+// Takes the source and the key rather than a selector so the field can be
+// healed: locate() is the only place a selector is turned into elements.
+export function fillField(source: SelectorSource, dotPath: string, value: string, expectedValue: string = value): void {
+  precondition(value.length > 0, `a non-empty value was supplied for the field "${dotPath}"`);
+  locate(source, dotPath).clear().type(value).should('have.value', expectedValue);
 }

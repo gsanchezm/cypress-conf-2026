@@ -7,6 +7,7 @@ import type { SelectorSource } from '@/core/locators/SelectorSource';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 import { precondition } from '@/core/testing/precondition';
 import { fillField } from '@/core/ui/fillField';
+import { locate } from '@/core/ui/locate';
 import type { CheckoutRequestData, OrderSummary } from '@/core/types';
 
 // Seeds the cart via API instead of clicking catalog's "add to cart" -
@@ -38,28 +39,26 @@ export class DeterministicCheckoutUiStrategy implements CheckoutUiStrategy {
     });
 
     cy.visit('/checkout');
-    cy.get(this.locators.get('checkout.readyMarker')).should('be.visible');
+    locate(this.locators, 'checkout.readyMarker').should('be.visible');
     // Checkout's cart comes from a client-side store that rehydrates a
     // moment after the API-seeded cart above resolves, not from a fetch on
     // page load (live-confirmed: no /api/cart GET ever fires here) - the
     // form below doesn't render at all while the cart still reads empty, so
     // this field needs headroom beyond the default 4s command timeout.
-    cy.get(this.locators.get(`checkout.${strategy.requiredFieldLocatorKey}`), { timeout: 10000 }).should(
-      'be.visible',
-    );
-    fillField(this.locators.get('checkout.address'), order.address);
-    fillField(this.locators.get(`checkout.${strategy.requiredFieldLocatorKey}`), order.requiredFieldValue);
-    fillField(this.locators.get('checkout.fullName'), order.name);
+    locate(this.locators, `checkout.${strategy.requiredFieldLocatorKey}`, { timeout: 10000 }).should('be.visible');
+    fillField(this.locators, 'checkout.address', order.address);
+    fillField(this.locators, `checkout.${strategy.requiredFieldLocatorKey}`, order.requiredFieldValue);
+    fillField(this.locators, 'checkout.fullName', order.name);
     // The phone input strips the leading "+" - live-observed 2026-08-21,
     // when fillField's value guard caught it on its first run: typing
     // "+15551234567" leaves "15551234567" in the DOM. Narrowed to exactly
     // that, not a general "digits only" rule, because stripping "+" is all
     // that was actually observed - if the field ever starts removing other
     // characters too, this should fail rather than quietly absorb it.
-    fillField(this.locators.get('checkout.phone'), order.phone, order.phone.replace(/^\+/, ''));
-    cy.get(this.locators.get('checkout.paymentMethodCash')).click();
-    cy.get(this.locators.get('checkout.placeOrderButton')).click();
-    cy.get(this.locators.get('checkout.confirmOrderYes')).click();
+    fillField(this.locators, 'checkout.phone', order.phone, order.phone.replace(/^\+/, ''));
+    locate(this.locators, 'checkout.paymentMethodCash').click();
+    locate(this.locators, 'checkout.placeOrderButton').click();
+    locate(this.locators, 'checkout.confirmOrderYes').click();
   }
 
   // One claim: the total /order-success renders is byte-for-byte the total
@@ -77,8 +76,8 @@ export class DeterministicCheckoutUiStrategy implements CheckoutUiStrategy {
   // only as a render guard.
   assertOrderConfirmation(expected: OrderSummary): void {
     const expectedTotalText = formatOrderTotal(expected.currency, expected.currencySymbol, expected.total);
-    cy.get(this.locators.get('orderSuccess.readyMarker')).should('be.visible');
-    cy.get(this.locators.get('orderSuccess.orderId')).should('be.visible');
-    cy.get(this.locators.get('orderSuccess.orderTotal')).should('have.text', expectedTotalText);
+    locate(this.locators, 'orderSuccess.readyMarker').should('be.visible');
+    locate(this.locators, 'orderSuccess.orderId').should('be.visible');
+    locate(this.locators, 'orderSuccess.orderTotal').should('have.text', expectedTotalText);
   }
 }

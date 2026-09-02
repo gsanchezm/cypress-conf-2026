@@ -1,6 +1,7 @@
 import { AuthApiClient } from '../api/AuthApiClient';
 import type { SelectorSource } from '@/core/locators/SelectorSource';
 import { fillField } from '@/core/ui/fillField';
+import { locate } from '@/core/ui/locate';
 import { UserFactory, type DeterministicUserKey } from '../data/UserFactory';
 import type { AuthSession, CountryCode } from '@/core/types';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
@@ -49,18 +50,20 @@ export class AuthFacade {
   loginViaUiWithMarket(userKey: DeterministicUserKey, countryCode: CountryCode): void {
     const user = UserFactory.deterministic(userKey);
     cy.visit('/');
+    // These two keys stay on cy.get rather than locate(): a template is not
+    // a selector until the facade interpolates it, so it cannot be healed.
     const marketSelector = this.locators.get('login.marketButton').replace('{countryCode}', countryCode);
     cy.get(marketSelector).click();
     const quickLoginSelector = this.locators.get('login.quickLoginButton').replace('{username}', user.username);
     cy.get(quickLoginSelector).click();
-    cy.get(this.locators.get('login.submitButton')).click();
+    locate(this.locators, 'login.submitButton').click();
   }
 
   submitLoginFormAs(userKey: DeterministicUserKey): void {
     const user = UserFactory.deterministic(userKey);
-    fillField(this.locators.get('login.usernameInput'), user.username);
-    fillField(this.locators.get('login.passwordInput'), user.password);
-    cy.get(this.locators.get('login.submitButton')).click();
+    fillField(this.locators, 'login.usernameInput', user.username);
+    fillField(this.locators, 'login.passwordInput', user.password);
+    locate(this.locators, 'login.submitButton').click();
   }
 
   // The locked-out scenario's API-side claim. Lives here rather than inline
@@ -78,7 +81,7 @@ export class AuthFacade {
   // the catalog page itself.
   assertLandedOnCatalog(): void {
     cy.location('pathname').should('eq', '/catalog');
-    cy.get(this.locators.get('landing.readyMarker')).should('be.visible');
+    locate(this.locators, 'landing.readyMarker').should('be.visible');
   }
 
   // Asserts on the message text, not just visibility: the harvested
@@ -92,7 +95,7 @@ export class AuthFacade {
   // plausible casing difference between the API's error text and however
   // the frontend renders it.
   assertLockedOutMessageVisible(): void {
-    cy.get(this.locators.get('login.lockedOutError'))
+    locate(this.locators, 'login.lockedOutError')
       .should('be.visible')
       .invoke('text')
       .should('match', /locked out/i);
