@@ -1,3 +1,9 @@
 allowBuilds:
   cypress: true
   esbuild: true
+# pnpm 11 rejects lockfile entries younger than 24 h (its minimum-release-age
+# default). 28.0.0 was published 2026-09-02T11:15Z, so without this exclusion
+# `pnpm install --frozen-lockfile` fails with ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION
+# until 2026-09-03T11:15Z. Safe to delete after that date.
+minimumReleaseAgeExclude:
+  - '@badeball/cypress-cucumber-preprocessor@28.0.0'
