@@ -178,7 +178,7 @@ server is the read-only Actions toolset, authenticated with a `GH_MCP_PAT` envir
 never committed.
 
 **CI.** [`claude-ci-triage.yml`](.github/workflows/claude-ci-triage.yml) fires when *Deterministic suite*
-fails on `main`, downloads the failed jobs' logs and screenshot artifacts, runs the deterministic
+fails (a push to `main` or a PR against it; `workflow_run` reads the triage file from `main`), downloads the failed jobs' logs and screenshot artifacts, runs the deterministic
 `triage:signals` hint, and asks `claude-code-action@v1` for a `--json-schema` verdict
 `{category, confidence, evidence, summary}`. Flake or cold start at ≥ 0.7 → `gh run rerun --failed`
 (at most twice, because every rerun fires the trigger again); anything else → a PR comment or an issue.
