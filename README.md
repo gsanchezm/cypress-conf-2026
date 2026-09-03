@@ -472,17 +472,29 @@ request extra timeout headroom for this.
 
 ## Running in CI
 
-`.github/workflows/tests.yml` runs the deterministic suite on `push`/`pull_request` to `main` and on
-`workflow_dispatch`. One matrix job per vertical slice with a live `.feature` spec — adding a slice is
-a one-line matrix edit, no other CI changes. Mochawesome reports, screenshots, and videos upload as
-artifacts; a per-slice results table is appended to the run's job summary automatically via
-`GithubActionsSummaryObserver`.
+`.github/workflows/tests.yml` runs on `push`/`pull_request` to `main` and on `workflow_dispatch`. A
+single `check` job runs `pnpm typecheck` and `pnpm test:unit:node` — the offline guards, including
+the one that reads `checkout.prompt.md` from disk and the one that asserts the 10-executions budget;
+the Cypress matrix (one job per vertical slice with a live `.feature`) only starts once `check` is
+green. Adding a slice is a one-line matrix edit. The Cypress binary is cached per version
+(`~/.cache/Cypress`, keyed on the `cypress@x.y.z` entry in `pnpm-lock.yaml`), pnpm is pinned from
+`package.json`'s `packageManager`, runs use `--browser chrome`, `cypress.config.ts` sets
+`retries: { runMode: 2, openMode: 0 }` (every retry shows up as `attempts` in the summary), a
+concurrency group cancels superseded runs (they all share one live backend), and the workflow holds
+`contents: read` only.
 
-`.github/workflows/cy-prompt-suite.yml` runs Checkout's scenarios via `CyPromptCheckoutUiStrategy`
-instead — `workflow_dispatch`-only (never on push/PR, to avoid burning Cloud quota on every commit),
-`--browser chrome` (Chromium-only constraint), needs the `CYPRESS_RECORD_KEY` repo secret and the
-`projectId` already set in `cypress.config.ts`. It never gates the deterministic pipeline — see Status
-above for what "structurally verified" means here versus a live-confirmed AI-resolution run.
+**Recording is opt-in.** Pushes never record: the free Cloud plan has 500 test results a month and
+12 per run would burn it in about 40 pushes. To record (Test Replay, flake data), dispatch the
+workflow manually with the `record` box ticked — only then is `--record` added and
+`CYPRESS_RECORD_KEY` passed. Mochawesome reports upload always; screenshots only on failure. A
+per-slice results block — totals, attempts, failure cause, by-strategy timings — is appended to the
+job summary by `GithubActionsSummaryObserver`.
+
+`.github/workflows/cy-prompt-suite.yml` runs Checkout via `CyPromptCheckoutUiStrategy` instead —
+`workflow_dispatch`-only, `--browser chrome` (Chromium-only constraint), always recorded (`cy.prompt`
+requires Cloud), needs the `CYPRESS_RECORD_KEY` repo secret and the `projectId` in
+`cypress.config.ts`. Each dispatch costs 10 of the 100 monthly executions. It never gates the
+deterministic pipeline — see Status above for what "structurally verified" means versus a live run.
 
 ## Reporting
 

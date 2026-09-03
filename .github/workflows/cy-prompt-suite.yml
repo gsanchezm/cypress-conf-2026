@@ -1,20 +1,29 @@
+# BUDGET (verified 2026-09-02, docs.cypress.io/cloud/faq#cyprompt + cypress.io/pricing):
+# every cy.prompt() command that runs is one billed execution. This suite
+# makes 2 calls x 5 markets = 10 executions per dispatch, plus 5 recorded
+# test results. The free Starter plan holds 100 executions and 500 test
+# results per month -> 10 dispatches a month, rehearsals included, and a
+# Cypress retry re-runs the scenario's calls. Only the repo owner triggers
+# this workflow. It has never completed end to end (README, Status).
 name: cy.prompt suite
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   cypress-cyprompt:
     name: checkout (cy.prompt)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11.2.2
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -48,14 +57,5 @@ jobs:
         with:
           name: screenshots-cyprompt-checkout
           path: cypress/screenshots
-          retention-days: 7
-          if-no-files-found: ignore
-
-      - name: Upload videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: videos-cyprompt-checkout
-          path: cypress/videos
           retention-days: 7
           if-no-files-found: ignore

@@ -6,11 +6,58 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      record:
+        description: 'Record to Cypress Cloud (spends 12 of the free plan''s 500 test results per month)'
+        type: boolean
+        default: false
+
+# Nothing here writes to the repository; the job summary and artifacts need no token scope.
+permissions:
+  contents: read
+
+# Every job hits the one shared live OmniPizza backend: a superseded run must
+# stop placing orders, not race the new one.
+concurrency:
+  group: deterministic-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  check:
+    name: typecheck + unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # No `version:` on purpose - the action reads package.json's
+      # packageManager field, so the pin lives in one place.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm typecheck
+
+      # The offline guards: prompt-document placeholders, the 10-executions
+      # budget, the after:spec mapper, the failure classifier.
+      - name: Unit tests (node:test)
+        run: pnpm test:unit:node
+
   cypress:
     name: ${{ matrix.slice }}
+    needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -23,8 +70,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 11.2.2
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -32,14 +77,27 @@ jobs:
           node-version: lts/*
           cache: pnpm
 
+      - name: Read the Cypress version from the lockfile
+        id: cypress-version
+        run: echo "version=$(grep -m1 -oE '^  cypress@[0-9]+\.[0-9]+\.[0-9]+' pnpm-lock.yaml | cut -d@ -f2)" >> "$GITHUB_OUTPUT"
+
+      # Restored before install: cypress's postinstall skips the download
+      # when this version's binary is already in ~/.cache/Cypress.
+      - name: Cache the Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-binary-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type-check
-        run: pnpm run typecheck
-
+      # --record only when the workflow was dispatched with the `record`
+      # box ticked; pushes and PRs never touch the Cloud quota.
       - name: Run ${{ matrix.slice }} slice
-        run: pnpm exec cypress run --spec "cypress/e2e/${{ matrix.slice }}/**"
+        run: pnpm exec cypress run --browser chrome --spec "cypress/e2e/${{ matrix.slice }}/**" ${{ inputs.record == true && '--record' || '' }}
+        env:
+          CYPRESS_RECORD_KEY: ${{ inputs.record == true && secrets.CYPRESS_RECORD_KEY || '' }}
 
       - name: Upload mochawesome report
         if: always()
@@ -56,14 +114,5 @@ jobs:
         with:
           name: screenshots-${{ matrix.slice }}
           path: cypress/screenshots
-          retention-days: 7
-          if-no-files-found: ignore
-
-      - name: Upload videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: videos-${{ matrix.slice }}
-          path: cypress/videos
           retention-days: 7
           if-no-files-found: ignore
