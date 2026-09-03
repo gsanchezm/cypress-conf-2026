@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { ReportingSubject } from './ReportingSubject';
 import { GithubActionsSummaryObserver } from './GithubActionsSummaryObserver';
 import type { TestResult } from './Observer';
+import type { RunMetadata, RunSummary } from './RunObserver';
 
 const sampleResult: TestResult = {
   specPath: 'cypress/e2e/auth/auth.feature',
@@ -42,4 +43,39 @@ test('GithubActionsSummaryObserver appends a markdown table row to the summary f
 test('GithubActionsSummaryObserver is a no-op when no summary path is configured', () => {
   const observer = new GithubActionsSummaryObserver(undefined);
   assert.doesNotThrow(() => observer.onSpecComplete([sampleResult]));
+});
+
+const sampleMetadata: RunMetadata = {
+  startedAt: '2026-09-02T10:00:00.000Z',
+  finishedAt: '2026-09-02T10:01:30.000Z',
+  browser: 'chrome 140.0.0.0',
+  cypressVersion: '15.21.0',
+  labels: {},
+  screenshots: [],
+  attemptsByTitle: {},
+};
+
+test('ReportingSubject hands every collected spec result to a run observer on run completion', async () => {
+  const received: RunSummary[] = [];
+  const subject = new ReportingSubject();
+  subject.subscribeRun({ onRunComplete: (summary) => { received.push(summary); } });
+  subject.notify([sampleResult]);
+  subject.notify([{ ...sampleResult, title: 'A locked-out customer cannot log in' }]);
+
+  await subject.notifyRunComplete(sampleMetadata);
+
+  assert.deepEqual(received[0].results.map((result) => result.title), [
+    'A standard customer logs in successfully',
+    'A locked-out customer cannot log in',
+  ]);
+});
+
+test('ReportingSubject spreads the run metadata into the summary it publishes', async () => {
+  const received: RunSummary[] = [];
+  const subject = new ReportingSubject();
+  subject.subscribeRun({ onRunComplete: (summary) => { received.push(summary); } });
+
+  await subject.notifyRunComplete(sampleMetadata);
+
+  assert.equal(received[0].browser, 'chrome 140.0.0.0');
 });
