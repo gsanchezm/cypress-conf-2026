@@ -487,8 +487,10 @@ exists but only reaches Node (`config.env`, readable from a test solely through 
 Removed config keys such as `allowCypressEnv` or `execTimeout` are warned about once at startup
 (`ALLOW_CYPRESS_ENV_REMOVED` / `EXEC_TIMEOUT_REMOVED`), not rejected — this branch simply does not set
 them. A visible side effect: every 15.21.0 baseline log opens with the `allowCypressEnv configuration
-option is enabled` warning that 26.x forced on this repo; none of the 16.0.0 logs prints a warning of
-any kind.
+option is enabled` warning that 26.x forced on this repo; the 16.0.0 logs print no Cypress warning at
+all. (The one `DeprecationWarning` still in them is Node's own DEP0190, emitted by the local run-lock
+wrapper that serialises the five worktrees against the shared backend; it appears identically in the
+15.21.0 logs and has nothing to do with Cypress.)
 
 ### keystrokeDelay
 
@@ -514,7 +516,10 @@ slower than 15.21.0 in Chrome on any slice (auth 0.64x, catalog 0.88x, checkout 
 the two runs), and the 16.0.0 Chrome numbers land where the Electron ones did: auth inside the
 Electron reference range, checkout below it, catalog 50 ms above the top of its range. Single runs
 against a free-tier backend carry run-to-run noise of this size (the two 16.0.0 checkout runs
-themselves differ by 1.4 s), so the honest reading is "no slowdown", not "a 20 % speed-up". The
+themselves differ by 1.4 s), so the honest reading is "no slowdown", not "a 20 % speed-up". An
+independent re-run of the same four slices later the same day (auth, catalog, checkout x2, same
+machine, Chrome 152) repeated 12/12 + 5/5 at auth 2950 ms, catalog 6840 ms, checkout 19645 / 19440 ms
+- the same picture, with checkout landing between the two runs above and the baseline. The
 #34760 threshold set in advance (checkout more than 1.5x the baseline) was never approached, so the
 one-off `--config forceHttp1=true` diagnostic was not run; `forceHttp1` is deprecated on arrival and
 is not set in this repo.
