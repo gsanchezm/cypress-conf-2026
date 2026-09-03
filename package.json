@@ -7,7 +7,11 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "test:unit:node": "node --import tsx --test \"src/**/*.node.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "tap": "tsx scripts/tap.ts",
+    "tap:status": "tsx scripts/tap.ts status",
+    "tap:specs": "tsx scripts/tap.ts specs",
+    "tap:run": "tsx scripts/tap.ts verdict"
   },
   "repository": {
     "type": "git",
