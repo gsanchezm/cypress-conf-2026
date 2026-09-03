@@ -10,3 +10,4 @@ docs/*
 .claude/settings.local.json
 .tap-*.json
 ci-artifacts/
+.agents/

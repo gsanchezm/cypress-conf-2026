@@ -54,27 +54,27 @@ The README explains the framework. This file explains how an agent (Claude Code,
   never create accounts or enable integrations.
 - Never `git push`, never touch `main` or another worktree, never rewrite history, never edit
   `docs/index.html` (a Claude Design export the owner re-exports).
-- The Bash PreToolUse hook `guard-bash` mechanically denies `UI_STRATEGY=cyPrompt`, `cy-prompt-suite.yml`,
-  `--record` / `CYPRESS_RECORD_KEY` and `git push`; the rest is on you.
 
 ## Agent tooling in this repo
 
-- **Skills** — `.claude/skills/` holds the five official `cypress-io/ai-toolkit` skills (MIT), copied — not
-  symlinked — so a fresh clone needs no install; `skills-lock.json` pins their upstream hashes
-  (`pnpm dlx skills update` refreshes them; never hand-edit a skill, the hash would drift). `cypress-tap` is
-  the red→green loop — where its text says `npx cypress tap …` read `pnpm tap …` (pnpm only, and the
-  wrapper absorbs the Windows abort); `cypress-cloud-cli` is Cloud triage; `cypress-author` /
-  `cypress-explain` / `cypress-docs` are authoring aids.
+- **Skills** — `.claude/skills/` holds the five official `cypress-io/ai-toolkit` skills (MIT) as copies, not
+  symlinks, so a fresh clone needs no install; `skills-lock.json` pins their upstream hashes. Refresh ONLY by
+  re-running `pnpm dlx skills add cypress-io/ai-toolkit -a claude-code -s '*' -y --copy` from the repo root,
+  then verify `find .claude/skills -type l | wc -l` prints 0. Never run `pnpm dlx skills update` or `skills check`:
+  they download into an untracked `.agents/skills/` tree and replace `.claude/skills/<name>` with junctions or
+  symlinks to it, silently breaking the zero-install copies. Never hand-edit a skill. `cypress-tap` is the
+  red→green loop (read its `npx cypress tap …` as `pnpm tap …`); `cypress-cloud-cli` is Cloud triage;
+  `cypress-author` / `cypress-explain` / `cypress-docs` are authoring aids.
 - **MCP** — `.mcp.json` declares `cypress-cloud` (`https://mcp.cypress.io/mcp`, OAuth via `/mcp`,
   read-only, 100 tool calls/hour) and `github` (remote GitHub MCP, Actions toolset, read-only endpoint,
   `GH_MCP_PAT` env var with Actions: read; unset → Claude Code warns and the server stays unusable, never
   commit a token). **Cloud MCP and the Cloud CLI (`cy-cloud`) both need a Cypress Cloud org admin to
   enable them on the organization's Integrations page — the owner has NOT done this yet**; until then
   those tools error out and the recorded fixtures are the demo.
-- **Subagents** — `@agent-cy-fixer` (red→green through tap; edits steps / strategies / locators only, max
-  5 iterations, prints a JSON verdict) and `@agent-cy-triage` (read-only; returns
-  `{category, confidence, evidence[]}`).
-- **Hooks** — `.claude/settings.json`: `guard-oracle` (Edit|Write|MultiEdit) and `guard-bash` (Bash) deny
-  with exit 2 + reason; `after-edit` returns typecheck + sibling-test results as `additionalContext`;
-  `audit-mcp` appends every `mcp__cypress-cloud__*` / `mcp__github__*` call to `.claude/audit.jsonl`
-  (git-ignored). Demo any of them offline: `echo '<hook json>' | pnpm exec tsx scripts/hooks/<name>.ts`.
+- **Subagents** — `@agent-cy-fixer` (red→green through tap; edits steps / strategies / locators only, max 5
+  iterations, prints a JSON verdict) and `@agent-cy-triage` (read-only; returns `{category, confidence, evidence[]}`).
+- **Hooks** — `.claude/settings.json`: `guard-oracle` (Edit|Write|MultiEdit) denies oracle edits and `guard-bash`
+  (Bash) denies `UI_STRATEGY=cyPrompt`, `cy-prompt-suite.yml`, `--record` / `CYPRESS_RECORD_KEY` and `git push`
+  — both exit 2 with a reason, the rest of "Never" is on you; `after-edit` returns typecheck + sibling-test
+  results as `additionalContext`; `audit-mcp` appends every `mcp__cypress-cloud__*` / `mcp__github__*` call to
+  `.claude/audit.jsonl` (git-ignored). Demo any offline: `echo '<hook json>' | pnpm exec tsx scripts/hooks/<name>.ts`.
