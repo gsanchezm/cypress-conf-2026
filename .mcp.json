@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "cypress-cloud": {
+      "type": "http",
+      "url": "https://mcp.cypress.io/mcp"
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/x/actions/readonly",
+      "headers": {
+        "Authorization": "Bearer ${GH_MCP_PAT}"
+      }
+    }
+  }
+}
