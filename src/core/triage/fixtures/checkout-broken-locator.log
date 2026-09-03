@@ -1,0 +1,4 @@
+  1) Cart & Checkout
+       A customer in Mexico completes an order:
+     CypressError: Timed out retrying after 10000ms: Expected to find element: [data-cy-broken-locator="checkout.address"], but never found it.
+      at Context.eval (webpack:///./src/features/checkout/strategies/DeterministicCheckoutUiStrategy.ts:44:7)

@@ -11,7 +11,9 @@
     "tap": "tsx scripts/tap.ts",
     "tap:status": "tsx scripts/tap.ts status",
     "tap:specs": "tsx scripts/tap.ts specs",
-    "tap:run": "tsx scripts/tap.ts verdict"
+    "tap:run": "tsx scripts/tap.ts verdict",
+    "flake-audit": "tsx scripts/flake-audit.ts",
+    "triage:signals": "tsx scripts/triage-signals.ts"
   },
   "repository": {
     "type": "git",

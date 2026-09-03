@@ -1,0 +1,61 @@
+{
+  "tests": [
+    {
+      "projectId": "5v45hh",
+      "runNumber": 42,
+      "specFilepath": "cypress/e2e/checkout/checkout.feature",
+      "specName": "checkout.feature",
+      "testName": ["Checkout", "A customer in Mexico completes an order"],
+      "testId": "7c1e9d20-5a3b-4c8d-9e0f-1a2b3c4d5e6f",
+      "testReplayUrl": "https://cloud.cypress.io/projects/5v45hh/runs/42/overview/7c1e9d20",
+      "browserName": "Chrome",
+      "status": "passed",
+      "attempts": [
+        {
+          "attemptNumber": 1,
+          "errorName": "CypressError",
+          "errorMessage": "Timed out retrying after 10000ms: Expected to find element: [data-testid=\"colonia\"], but never found it.",
+          "stackTrace": "at Context.eval (webpack:///./src/features/checkout/strategies/DeterministicCheckoutUiStrategy.ts:47:7)"
+        },
+        { "attemptNumber": 2, "errorName": null, "errorMessage": null, "stackTrace": null }
+      ]
+    },
+    {
+      "projectId": "5v45hh",
+      "runNumber": 42,
+      "specFilepath": "cypress/e2e/auth/auth.feature",
+      "specName": "auth.feature",
+      "testName": ["Authentication", "A standard customer logs in successfully"],
+      "testId": "1a2b3c4d-0000-4000-8000-000000000001",
+      "testReplayUrl": "https://cloud.cypress.io/projects/5v45hh/runs/42/overview/1a2b3c4d",
+      "browserName": "Chrome",
+      "status": "passed",
+      "attempts": [{ "attemptNumber": 1, "errorName": null, "errorMessage": null, "stackTrace": null }]
+    },
+    {
+      "projectId": "5v45hh",
+      "runNumber": 42,
+      "specFilepath": "cypress/e2e/catalog/catalog.feature",
+      "specName": "catalog.feature",
+      "testName": ["Catalog", "A customer in Japan sees prices in yen"],
+      "testId": "9f8e7d6c-0000-4000-8000-000000000002",
+      "testReplayUrl": "https://cloud.cypress.io/projects/5v45hh/runs/42/overview/9f8e7d6c",
+      "browserName": "Chrome",
+      "status": "failed",
+      "attempts": [
+        {
+          "attemptNumber": 1,
+          "errorName": "AssertionError",
+          "errorMessage": "expected '￥2,051' to equal '￥2,052'",
+          "stackTrace": "at CatalogFacade.assertCatalogShowsCurrency"
+        },
+        {
+          "attemptNumber": 2,
+          "errorName": "AssertionError",
+          "errorMessage": "expected '￥2,051' to equal '￥2,052'",
+          "stackTrace": "at CatalogFacade.assertCatalogShowsCurrency"
+        }
+      ]
+    }
+  ]
+}
