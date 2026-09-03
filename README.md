@@ -206,7 +206,11 @@ its timestamp and scenario title — so clear it before a demo whose counts matt
 the facade after `get()` and are neither harvested nor healed. `catalog.allPizzaPrices` matches many
 elements by design and heals nothing. Explicit `role`/`aria-label` attributes only — implicit ARIA
 roles need the accessibility tree, which nothing in a headless run exposes (`cypress tap aria` is
-open-mode only). A heal is narrated, never written back into the registry.
+open-mode only). A heal is narrated, never written back into the registry. The harvest records the
+visible text of `orderSuccess.orderId` (`#ORDER-…`) as its `text` tier, and that value is unique to the
+order the harvest placed, so it can never match a later run and re-harvesting churns those five
+strings (verified 2026-09-02: `pnpm harvest:locators` on a committed map diffs only there); the key
+still heals through nothing but its registry selector, which is unchanged.
 
 The two-pair `--expose A=x,B=y` syntax above is verified separately, so the billed run can't be lost to
 a flag-parsing mistake: `--expose UI_STRATEGY=deterministic,BREAK_LOCATOR=checkout.address` failed all
