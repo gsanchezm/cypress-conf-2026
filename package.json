@@ -6,6 +6,7 @@
   "scripts": {
     "cy:open": "cypress open",
     "cy:run": "cypress run",
+    "harvest:locators": "cypress run --browser chrome --config specPattern=cypress/harvest/**/*.cy.ts",
     "test:unit:node": "node --import tsx --test \"src/**/*.node.test.ts\"",
     "typecheck": "tsc --noEmit"
   },

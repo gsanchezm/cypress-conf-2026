@@ -1,1 +1,12 @@
-{}
+{
+  "catalog.readyMarker": {},
+  "catalog.firstPizzaPrice": {
+    "text": [
+      "$12.99",
+      "$227.97",
+      "CHF 10.16",
+      "￥2,051",
+      "‏٤٨٫٧١ ر.س.‏"
+    ]
+  }
+}

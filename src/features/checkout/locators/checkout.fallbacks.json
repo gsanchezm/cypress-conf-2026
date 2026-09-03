@@ -1,1 +1,140 @@
-{}
+{
+  "checkout.readyMarker": {},
+  "checkout.address": {
+    "id": [
+      "field-address"
+    ],
+    "placeholder": [
+      "123 Luxury Avenue",
+      "Av. Reforma 123",
+      "Musterstraße 123",
+      "東京都渋谷区...",
+      "123 شارع الفخامة"
+    ],
+    "inputType": [
+      "text"
+    ]
+  },
+  "checkout.fullName": {
+    "id": [
+      "field-full-name"
+    ],
+    "placeholder": [
+      "Julian Casablancas"
+    ],
+    "inputType": [
+      "text"
+    ]
+  },
+  "checkout.phone": {
+    "id": [
+      "field-phone"
+    ],
+    "placeholder": [
+      "+52 55 1234 5678"
+    ],
+    "title": [
+      "Enter a valid phone number (7-15 digits)",
+      "Ingrese un teléfono válido (7-15 dígitos)",
+      "Geben Sie eine gültige Telefonnummer ein (7-15 Ziffern)",
+      "有効な電話番号を入力してください（7〜15桁）",
+      "أدخل رقم هاتف صالحًا (من 7 إلى 15 رقمًا)"
+    ],
+    "inputType": [
+      "tel"
+    ]
+  },
+  "checkout.paymentMethodCash": {
+    "role": [
+      "radio"
+    ],
+    "text": [
+      "CashPay on Delivery",
+      "EfectivoPagar al recibir",
+      "BarzahlungZahlung bei Lieferung",
+      "現金代金引換",
+      "نقدًاالدفع عند الاستلام"
+    ]
+  },
+  "checkout.requiredFieldZipCode": {
+    "id": [
+      "field-zip-code"
+    ],
+    "placeholder": [
+      "90210",
+      "8001",
+      "東京都"
+    ],
+    "inputType": [
+      "text"
+    ]
+  },
+  "checkout.requiredFieldColonia": {
+    "id": [
+      "field-colonia"
+    ],
+    "placeholder": [
+      "Polanco"
+    ],
+    "inputType": [
+      "text"
+    ]
+  },
+  "checkout.requiredFieldDistrict": {
+    "id": [
+      "field-district"
+    ],
+    "placeholder": [
+      "العليا"
+    ],
+    "inputType": [
+      "text"
+    ]
+  },
+  "checkout.placeOrderButton": {
+    "text": [
+      "Place Order",
+      "Realizar Pedido",
+      "Bestellung aufgeben",
+      "注文する",
+      "تأكيد الطلب"
+    ]
+  },
+  "checkout.confirmOrderYes": {
+    "text": [
+      "Place Order",
+      "Realizar Pedido",
+      "Bestellung aufgeben",
+      "注文する",
+      "تأكيد الطلب"
+    ]
+  },
+  "checkout.orderTotal": {
+    "text": [
+      "Total$16.03",
+      "Total$299.55",
+      "GesamtCHF 12.54",
+      "合計￥2,572",
+      "الإجمالي‏٦٣٫٥٢ ر.س.‏"
+    ]
+  },
+  "orderSuccess.readyMarker": {},
+  "orderSuccess.orderId": {
+    "text": [
+      "#ORDER-0FC537E9",
+      "#ORDER-7FBA154B",
+      "#ORDER-59EDAE0A",
+      "#ORDER-A885EC82",
+      "#ORDER-8F60D07C"
+    ]
+  },
+  "orderSuccess.orderTotal": {
+    "text": [
+      "$16.03",
+      "$299.55",
+      "CHF 12.54",
+      "￥2,572",
+      "‏٦٣٫٥٢ ر.س.‏"
+    ]
+  }
+}
