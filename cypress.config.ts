@@ -86,9 +86,11 @@ export default defineConfig({
   // `env` key in per-test overrides. Nothing this framework passes is a
   // secret (the backend URL and the UI-strategy switch are both public
   // config), so both live here, are read with Cypress.expose() in the
-  // browser, and are set from the CLI with `--expose KEY=VALUE` (`--env`
-  // is gone in 16). If a real secret ever has to reach a test, cy.env() is
-  // the API for that.
+  // browser, and are set from the CLI with `--expose KEY=VALUE`. `--env`
+  // still exists in 16 but only feeds config.env in Node: nothing in the
+  // browser reads it synchronously any more (the async cy.env() is its one
+  // remaining reader), so it is useless for these two values. If a real
+  // secret ever has to reach a test, cy.env() is the API for that.
   //
   // History, because an earlier version of this comment said the opposite:
   // on 15.21 with @badeball/cypress-cucumber-preprocessor 26.0.0 the
@@ -98,7 +100,9 @@ export default defineConfig({
   // (2026-08-27) stopped doing that on Cypress >= 15.17 and reads its own
   // overrides from --expose instead; 28.0.0 (2026-09-02) is the first
   // release whose peer range admits Cypress 16. Do not re-add
-  // allowCypressEnv in any form: 16 rejects the key.
+  // allowCypressEnv: 16 prints an ALLOW_CYPRESS_ENV_REMOVED warning on
+  // every run for the removed key (a warning, not a validation error -
+  // packages/config marks it isWarning: true).
   expose: {
     apiUrl: 'https://omnipizza-backend.onrender.com',
   },
