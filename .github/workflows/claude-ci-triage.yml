@@ -1,0 +1,174 @@
+name: Claude CI triage
+
+# Fires after the deterministic suite fails on main (workflow_run only
+# triggers from the default branch) and classifies the failure with
+# anthropics/claude-code-action + a JSON schema. Flake or cold start with
+# confidence >= 0.7 -> rerun the failed jobs; anything else -> PR comment or
+# issue with the evidence. Needs the ANTHROPIC_API_KEY repository secret.
+# Never records to Cypress Cloud and never touches the cy.prompt suite.
+
+on:
+  workflow_run:
+    workflows: ["Deterministic suite"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Run id of a failed "Deterministic suite" run to triage
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: claude-ci-triage-${{ github.event.workflow_run.id || inputs.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download failure screenshots from the failed run
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.RUN_ID }}
+          github-token: ${{ github.token }}
+          pattern: screenshots-*
+          path: ci-artifacts/screenshots
+
+      - name: Collect failed job logs
+        id: failure_details
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            fs.mkdirSync('ci-artifacts/logs', { recursive: true });
+            const runId = Number(process.env.RUN_ID);
+            const { owner, repo } = context.repo;
+            const run = await github.rest.actions.getWorkflowRun({ owner, repo, run_id: runId });
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, { owner, repo, run_id: runId, per_page: 100 });
+            const failed = jobs.filter((job) => job.conclusion === 'failure');
+            await Promise.all(
+              failed.map(async (job) => {
+                const logs = await github.rest.actions.downloadJobLogsForWorkflowRun({ owner, repo, job_id: job.id });
+                const safeName = job.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                fs.writeFileSync(`ci-artifacts/logs/${safeName}.log`, String(logs.data));
+              }),
+            );
+            core.setOutput('run_url', run.data.html_url);
+            core.setOutput('head_branch', run.data.head_branch);
+            core.setOutput('failed_jobs', failed.map((job) => job.name).join(', ') || '(none)');
+            core.setOutput('pr_number', run.data.pull_requests?.[0]?.number ?? '');
+
+      - name: Deterministic pre-classification
+        run: |
+          shopt -s nullglob
+          logs=(ci-artifacts/logs/*.log)
+          if [ ${#logs[@]} -eq 0 ]; then echo '{"suggested":null,"signals":[]}' > ci-artifacts/signals.json; else pnpm triage:signals "${logs[@]}" > ci-artifacts/signals.json; fi
+          cat ci-artifacts/signals.json
+
+      - name: Classify the failure with Claude
+        id: triage
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            A run of the "Deterministic suite" Cypress workflow failed.
+            Run: ${{ steps.failure_details.outputs.run_url }}
+            Failed jobs: ${{ steps.failure_details.outputs.failed_jobs }}
+            Branch: ${{ steps.failure_details.outputs.head_branch }}
+
+            Read every file under ci-artifacts/logs/ (failed job logs), look at ci-artifacts/screenshots/ (file names carry the failing test title),
+            and read ci-artifacts/signals.json - a deterministic pre-classification produced by src/core/triage/classifyFailureSignals.ts.
+            Read CLAUDE.md for the harness rules and src/core/testing/precondition.ts for the claim/precondition/guard distinction.
+
+            Classify the failure into exactly one category, highest precedence first:
+            - selector_drift: data-cy-broken-locator, "Expected to find element ... but never found it", LocatorProxy: no selector registered
+            - cold_start: ETIMEDOUT / ECONNRESET / ECONNREFUSED / socket hang up / 502-504 from onrender.com / cy.request() timed out (the backend is a Render free-tier service)
+            - env: PreconditionError / "Precondition not met", BREAK_LOCATOR: no slice registers, missing --expose values
+            - flake: passed on a later attempt, "(N retries)", verdicts that differ between attempts
+            - regression: an AssertionError raised inside an assert* method with the app reachable
+            Agree with signals.json's "suggested" value or explain in the evidence why you disagree.
+            Confidence >= 0.7 only when at least two independent pieces of evidence agree.
+          claude_args: |
+            --json-schema '{"type":"object","properties":{"category":{"type":"string","enum":["regression","flake","selector_drift","env","cold_start"]},"confidence":{"type":"number","minimum":0,"maximum":1},"evidence":{"type":"array","items":{"type":"string"}},"summary":{"type":"string"}},"required":["category","confidence","evidence","summary"]}'
+            --allowedTools 'Read,Glob,Grep,Bash(ls:*),Bash(cat:*)'
+            --max-turns 25
+
+      - name: Rerun failed jobs (flake or cold start, confidence >= 0.7)
+        if: |
+          (fromJSON(steps.triage.outputs.structured_output).category == 'flake' ||
+           fromJSON(steps.triage.outputs.structured_output).category == 'cold_start') &&
+          fromJSON(steps.triage.outputs.structured_output).confidence >= 0.7
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERDICT: ${{ steps.triage.outputs.structured_output }}
+        run: |
+          echo "Rerunning failed jobs of run $RUN_ID: $(echo "$VERDICT" | jq -r '.summary')"
+          gh run rerun "$RUN_ID" --failed --repo "$GITHUB_REPOSITORY"
+
+      - name: Report the verdict on the PR or as an issue
+        if: |
+          !((fromJSON(steps.triage.outputs.structured_output).category == 'flake' ||
+             fromJSON(steps.triage.outputs.structured_output).category == 'cold_start') &&
+            fromJSON(steps.triage.outputs.structured_output).confidence >= 0.7)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERDICT: ${{ steps.triage.outputs.structured_output }}
+          PR_NUMBER: ${{ steps.failure_details.outputs.pr_number }}
+          RUN_URL: ${{ steps.failure_details.outputs.run_url }}
+          HEAD_BRANCH: ${{ steps.failure_details.outputs.head_branch }}
+        run: |
+          category=$(echo "$VERDICT" | jq -r '.category')
+          confidence=$(echo "$VERDICT" | jq -r '.confidence')
+          summary=$(echo "$VERDICT" | jq -r '.summary')
+          evidence=$(echo "$VERDICT" | jq -r '.evidence[] | "- " + .')
+          body=$(printf '## Claude CI triage: `%s` (confidence %s)\n\n%s\n\n**Evidence**\n%s\n\n[Failed run](%s)\n' "$category" "$confidence" "$summary" "$evidence" "$RUN_URL")
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "CI triage: $category on $HEAD_BRANCH (run $RUN_ID)" --body "$body"
+          fi
+
+      - name: Job summary
+        if: always()
+        env:
+          VERDICT: ${{ steps.triage.outputs.structured_output }}
+        # The fallback is single-quoted on purpose: a bare `}` inside
+        # ${VAR:-...} ends the expansion early and leaves a stray brace.
+        run: |
+          verdict=${VERDICT:-'{"error":"no verdict produced"}'}
+          {
+            echo "## Claude CI triage"
+            echo
+            echo '```json'
+            jq . <<< "$verdict" || printf '%s\n' "$verdict"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
