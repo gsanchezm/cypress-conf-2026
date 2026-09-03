@@ -24,6 +24,8 @@
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^26.0.0",
     "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
+    "@cucumber/gherkin": "^41.0.0",
+    "@cucumber/messages": "^33.0.4",
     "@types/node": "^26.2.0",
     "cypress": "^15.21.0",
     "cypress-on-fix": "^1.1.0",
