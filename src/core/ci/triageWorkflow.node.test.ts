@@ -19,3 +19,26 @@ test('claude-ci-triage listens to the deterministic workflow by its exact name',
 test('the triage workflow never records to Cloud, never runs cy.prompt and only uses the Anthropic key secret', () => {
   assert.doesNotMatch(read('claude-ci-triage.yml'), /CYPRESS_RECORD_KEY|--record|cyPrompt|secrets\.(?!ANTHROPIC_API_KEY|GITHUB_TOKEN)/);
 });
+
+type Step = { id?: string; if?: string };
+const stepGate = (id: string): string => {
+  const { jobs } = parse(read('claude-ci-triage.yml')) as { jobs: { triage: { steps: Step[] } } };
+  const step = jobs.triage.steps.find((candidate) => candidate.id === id);
+  if (!step?.if) throw new Error(`step "${id}" has no if: gate`);
+  return step.if.replace(/\s+/g, ' ').trim();
+};
+
+// workflow_run `completed` fires again for every `gh run rerun`, so an
+// uncapped flake verdict would rerun forever. The cap lives in the rerun gate.
+test('the rerun gate stops after the third attempt of the failed run', () => {
+  assert.match(stepGate('rerun'), /github\.event\.workflow_run\.run_attempt < 3/);
+});
+
+// If the two gates drift apart a verdict can be silently dropped (neither
+// rerun nor reported). The report gate must be the exact negation of the
+// rerun gate behind the shared "a verdict exists" guard.
+test('the report gate is the exact complement of the rerun gate', () => {
+  const guard = "steps.triage.outputs.structured_output != '' && ";
+  const rerun = stepGate('rerun');
+  assert.equal(stepGate('report'), `${guard}!(${rerun.slice(guard.length)})`);
+});

@@ -122,8 +122,12 @@ jobs:
             --allowedTools 'Read,Glob,Grep,Bash(ls:*),Bash(cat:*)'
             --max-turns 25
 
-      - name: Rerun failed jobs (flake or cold start, confidence >= 0.7)
+      # workflow_run "completed" fires again for every rerun attempt, so the rerun is capped at run_attempt < 3.
+      - name: Rerun failed jobs (flake or cold start, confidence >= 0.7, at most two reruns)
+        id: rerun
         if: |
+          steps.triage.outputs.structured_output != '' &&
+          (github.event_name == 'workflow_dispatch' || github.event.workflow_run.run_attempt < 3) &&
           (fromJSON(steps.triage.outputs.structured_output).category == 'flake' ||
            fromJSON(steps.triage.outputs.structured_output).category == 'cold_start') &&
           fromJSON(steps.triage.outputs.structured_output).confidence >= 0.7
@@ -134,9 +138,13 @@ jobs:
           echo "Rerunning failed jobs of run $RUN_ID: $(echo "$VERDICT" | jq -r '.summary')"
           gh run rerun "$RUN_ID" --failed --repo "$GITHUB_REPOSITORY"
 
+      # Exact complement of the rerun gate: an exhausted-attempts flake/cold_start verdict lands here.
       - name: Report the verdict on the PR or as an issue
+        id: report
         if: |
-          !((fromJSON(steps.triage.outputs.structured_output).category == 'flake' ||
+          steps.triage.outputs.structured_output != '' &&
+          !((github.event_name == 'workflow_dispatch' || github.event.workflow_run.run_attempt < 3) &&
+            (fromJSON(steps.triage.outputs.structured_output).category == 'flake' ||
              fromJSON(steps.triage.outputs.structured_output).category == 'cold_start') &&
             fromJSON(steps.triage.outputs.structured_output).confidence >= 0.7)
         env:
