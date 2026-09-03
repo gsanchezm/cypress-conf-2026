@@ -1,3 +1,4 @@
+import { appendFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { defineConfig } from 'cypress';
 import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
@@ -6,12 +7,18 @@ import { createEsbuildPlugin } from '@badeball/cypress-cucumber-preprocessor/esb
 import { ReportingSubject } from './src/core/reporting/ReportingSubject';
 import { ConsoleObserver } from './src/core/reporting/ConsoleObserver';
 import { GithubActionsSummaryObserver } from './src/core/reporting/GithubActionsSummaryObserver';
-import type { TestResult } from './src/core/reporting/Observer';
+import { readRunLabels } from './src/core/reporting/runLabels';
+import { toTestResults } from './src/core/reporting/afterSpecMapper';
 
 export default defineConfig({
   projectId: '5v45hh',
   viewportWidth: 1280,
   viewportHeight: 800,
+  // Two retries in CI absorb Render's free-tier hiccups; none in open mode
+  // so a developer sees the first failure, not the third. Every retry is
+  // one more `attempts` on the TestResult row - the number is reported,
+  // not hidden.
+  retries: { runMode: 2, openMode: 0 },
   e2e: {
     baseUrl: 'https://omnipizza-frontend.onrender.com',
     specPattern: ['cypress/e2e/**/*.feature'],
@@ -52,17 +59,17 @@ export default defineConfig({
       reportingSubject.subscribe(new ConsoleObserver());
       reportingSubject.subscribe(new GithubActionsSummaryObserver(process.env.GITHUB_STEP_SUMMARY));
 
+      // Labels are read once per run: config.expose already holds every
+      // `--expose K=V` pair merged over the `expose` block below.
+      const labels = readRunLabels(config.expose);
+
       on('after:spec', (spec, results) => {
-        const sliceMatch = spec.relative.match(/[\\/]e2e[\\/]([^\\/]+)[\\/]/);
-        const slice = sliceMatch ? sliceMatch[1] : 'unknown';
-        const testResults = (results?.tests ?? []).map((t) => ({
-          specPath: spec.relative,
-          title: t.title.join(' > '),
-          state: t.state as TestResult['state'],
-          durationMs: t.duration ?? 0,
-          slice,
-        }));
-        reportingSubject.notify(testResults);
+        // Opt-in raw evidence: AFTER_SPEC_DUMP=<path> appends one JSON line per
+        // spec. It is what the mapper was designed from and what any later
+        // agent can replay offline; unset, nothing is written.
+        const dumpPath = process.env.AFTER_SPEC_DUMP;
+        if (dumpPath) appendFileSync(dumpPath, `${JSON.stringify({ spec, results, expose: config.expose })}\n`);
+        reportingSubject.notify(toTestResults(spec.relative, results, labels));
       });
 
       return config;
