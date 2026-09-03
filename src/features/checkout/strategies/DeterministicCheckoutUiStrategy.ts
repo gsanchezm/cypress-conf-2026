@@ -8,6 +8,7 @@ import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 import { precondition } from '@/core/testing/precondition';
 import { fillField } from '@/core/ui/fillField';
 import { locate } from '@/core/ui/locate';
+import { mutateDomIfRequested } from '@/core/ui/mutateDom';
 import type { CheckoutRequestData, OrderSummary } from '@/core/types';
 
 // Seeds the cart via API instead of clicking catalog's "add to cart" -
@@ -46,6 +47,8 @@ export class DeterministicCheckoutUiStrategy implements CheckoutUiStrategy {
     // form below doesn't render at all while the cart still reads empty, so
     // this field needs headroom beyond the default 4s command timeout.
     locate(this.locators, `checkout.${strategy.requiredFieldLocatorKey}`, { timeout: 10000 }).should('be.visible');
+    // The demo's seam: the form has rendered, nothing has been typed yet.
+    mutateDomIfRequested(this.locators, 'checkout');
     fillField(this.locators, 'checkout.address', order.address);
     fillField(this.locators, `checkout.${strategy.requiredFieldLocatorKey}`, order.requiredFieldValue);
     fillField(this.locators, 'checkout.fullName', order.name);
@@ -77,6 +80,7 @@ export class DeterministicCheckoutUiStrategy implements CheckoutUiStrategy {
   assertOrderConfirmation(expected: OrderSummary): void {
     const expectedTotalText = formatOrderTotal(expected.currency, expected.currencySymbol, expected.total);
     locate(this.locators, 'orderSuccess.readyMarker').should('be.visible');
+    mutateDomIfRequested(this.locators, 'orderSuccess');
     locate(this.locators, 'orderSuccess.orderId').should('be.visible');
     locate(this.locators, 'orderSuccess.orderTotal').should('have.text', expectedTotalText);
   }

@@ -3,6 +3,7 @@ import type { SelectorSource } from '@/core/locators/SelectorSource';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
 import { precondition } from '@/core/testing/precondition';
 import { locate } from '@/core/ui/locate';
+import { mutateDomIfRequested } from '@/core/ui/mutateDom';
 import type { CountryCode, PizzaCatalogResponse } from '@/core/types';
 
 // What a market is expected to produce, on both sides of the atomic run:
@@ -83,6 +84,7 @@ export class CatalogFacade {
   // from the next - a narrow failure mode, not worth a third assertion in a
   // scenario budgeted at one API claim and one UI claim.
   assertCatalogShowsCurrency(scenario: CatalogMarketExpectation): void {
+    mutateDomIfRequested(this.locators, 'catalog');
     locate(this.locators, 'catalog.readyMarker').should('be.visible');
     locate(this.locators, 'catalog.firstPizzaPrice')
       .invoke('text')

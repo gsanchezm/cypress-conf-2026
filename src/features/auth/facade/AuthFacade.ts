@@ -2,6 +2,7 @@ import { AuthApiClient } from '../api/AuthApiClient';
 import type { SelectorSource } from '@/core/locators/SelectorSource';
 import { fillField } from '@/core/ui/fillField';
 import { locate } from '@/core/ui/locate';
+import { mutateDomIfRequested } from '@/core/ui/mutateDom';
 import { UserFactory, type DeterministicUserKey } from '../data/UserFactory';
 import type { AuthSession, CountryCode } from '@/core/types';
 import { AUTH_TOKEN_STORAGE_KEY } from '@/core/config/storageKeys';
@@ -50,6 +51,7 @@ export class AuthFacade {
   loginViaUiWithMarket(userKey: DeterministicUserKey, countryCode: CountryCode): void {
     const user = UserFactory.deterministic(userKey);
     cy.visit('/');
+    mutateDomIfRequested(this.locators, 'login');
     // These two keys stay on cy.get rather than locate(): a template is not
     // a selector until the facade interpolates it, so it cannot be healed.
     const marketSelector = this.locators.get('login.marketButton').replace('{countryCode}', countryCode);
@@ -61,6 +63,7 @@ export class AuthFacade {
 
   submitLoginFormAs(userKey: DeterministicUserKey): void {
     const user = UserFactory.deterministic(userKey);
+    mutateDomIfRequested(this.locators, 'login');
     fillField(this.locators, 'login.usernameInput', user.username);
     fillField(this.locators, 'login.passwordInput', user.password);
     locate(this.locators, 'login.submitButton').click();
@@ -80,6 +83,7 @@ export class AuthFacade {
   // checking the marker alone would pass green while proving nothing about
   // the catalog page itself.
   assertLandedOnCatalog(): void {
+    mutateDomIfRequested(this.locators, 'landing');
     cy.location('pathname').should('eq', '/catalog');
     locate(this.locators, 'landing.readyMarker').should('be.visible');
   }
