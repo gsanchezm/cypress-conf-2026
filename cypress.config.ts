@@ -12,6 +12,18 @@ export default defineConfig({
   projectId: '5v45hh',
   viewportWidth: 1280,
   viewportHeight: 800,
+  // Chrome, not Electron. 16 deprecates Electron as a test browser (a
+  // warning at the top of every run), keeps it on the legacy HTTP/1.1 proxy
+  // path while Chrome gets the native network (HTTP/2), and ships with an
+  // open Windows regression - cypress-io/cypress#34771, headless Electron
+  // screenshots/videos come out 1264x712 instead of 1280x720. CI passes
+  // --browser chrome explicitly as well; this covers local runs.
+  defaultBrowser: 'chrome',
+  // keystrokeDelay is left at 16's new default of 0 ms (was 10). Checked
+  // rather than assumed, because fillField's have.value guard and the
+  // phone field's "+" normalisation are exactly where a typing-speed change
+  // would show: 2026-09-02, checkout.feature twice in Chrome, 5 markets
+  // each, 10/10 at 0 ms.
   e2e: {
     baseUrl: 'https://omnipizza-frontend.onrender.com',
     specPattern: ['cypress/e2e/**/*.feature'],
@@ -68,26 +80,25 @@ export default defineConfig({
       return config;
     },
   },
-  // `expose`, not `env`: Cypress 15 deprecated Cypress.env() because any
-  // browser code on the page could read it. Nothing this framework passes
-  // is a secret - the backend URL and the UI-strategy switch are both
-  // public config - so both moved to expose, and no Cypress.env() call is
-  // left in our own code. If a real secret ever has to reach a test,
-  // cy.env() is the API for that.
+  // `expose`, not `env`. Cypress 15.10 deprecated Cypress.env() because any
+  // browser code on the page could read it, and Cypress 16 removed it
+  // outright - together with the `allowCypressEnv` migration flag and the
+  // `env` key in per-test overrides. Nothing this framework passes is a
+  // secret (the backend URL and the UI-strategy switch are both public
+  // config), so both live here, are read with Cypress.expose() in the
+  // browser, and are set from the CLI with `--expose KEY=VALUE` (`--env`
+  // is gone in 16). If a real secret ever has to reach a test, cy.env() is
+  // the API for that.
   //
-  // allowCypressEnv STAYS ON, and that is not an oversight. Setting it to
-  // false is what the deprecation warning asks for, but it makes every
-  // single spec fail: @badeball/cypress-cucumber-preprocessor calls
-  // `createTestFilter(gherkinDocument, Cypress.env())` while building the
-  // tests for each .feature - its tag-filtering path, unconditional, on
-  // every file. Verified live 2026-08-21: with it off, 3 of 3 specs die
-  // before a test runs. 26.0.0 is the latest published version, so there is
-  // no release to upgrade into yet.
-  //
-  // So the run-level warning stays until the preprocessor migrates. Retry
-  // this flag on the next @badeball release; the only other route is
-  // patching the dependency, which trades a cosmetic warning for a
-  // permanent maintenance burden.
+  // History, because an earlier version of this comment said the opposite:
+  // on 15.21 with @badeball/cypress-cucumber-preprocessor 26.0.0 the
+  // run-level allowCypressEnv warning could not be silenced - 26.x called
+  // Cypress.env() itself while building each .feature's tests, so turning
+  // the flag off killed every spec (verified live 2026-08-21). 27.0.0
+  // (2026-08-27) stopped doing that on Cypress >= 15.17 and reads its own
+  // overrides from --expose instead; 28.0.0 (2026-09-02) is the first
+  // release whose peer range admits Cypress 16. Do not re-add
+  // allowCypressEnv in any form: 16 rejects the key.
   expose: {
     apiUrl: 'https://omnipizza-backend.onrender.com',
   },
