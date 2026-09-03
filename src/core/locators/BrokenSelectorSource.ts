@@ -1,4 +1,4 @@
-import type { SelectorSource } from './SelectorSource';
+import { BROKEN_TIER, type SelectorCandidate, type SelectorSource } from './SelectorSource';
 
 // Names itself inside the selector, so Cypress's own failure message reads
 // "Expected to find element: [data-cy-broken-locator="checkout.address"],
@@ -30,5 +30,10 @@ export class BrokenSelectorSource implements SelectorSource {
 
   get(dotPath: string): string {
     return dotPath === this.brokenKey ? brokenSelectorFor(dotPath) : this.inner.get(dotPath);
+  }
+
+  candidates(dotPath: string): readonly SelectorCandidate[] {
+    if (dotPath !== this.brokenKey) return this.inner.candidates(dotPath);
+    return [{ tier: BROKEN_TIER, selector: brokenSelectorFor(dotPath) }];
   }
 }

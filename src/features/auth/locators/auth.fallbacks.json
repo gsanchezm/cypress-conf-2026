@@ -1,0 +1,32 @@
+{
+  "login.usernameInput": {
+    "placeholder": [
+      "standard_user"
+    ],
+    "inputType": [
+      "text"
+    ]
+  },
+  "login.passwordInput": {
+    "placeholder": [
+      "••••••••"
+    ],
+    "inputType": [
+      "password"
+    ]
+  },
+  "login.submitButton": {
+    "text": [
+      "Sign In"
+    ]
+  },
+  "landing.readyMarker": {
+    "text": [
+      "Logout",
+      "Salir",
+      "Abmelden",
+      "ログアウト",
+      "تسجيل الخروج"
+    ]
+  }
+}

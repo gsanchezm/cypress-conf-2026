@@ -35,3 +35,17 @@ test('rejects a key the real source does not know, at construction time', () => 
     /no selector registered for key "checkout.adress"/,
   );
 });
+
+test('offers the self-identifying selector as the single candidate for the broken key', () => {
+  const source = new BrokenSelectorSource(new LocatorProxy(tree), 'checkout.address');
+  assert.deepEqual(source.candidates('checkout.address'), [
+    { tier: 'broken', selector: brokenSelectorFor('checkout.address') },
+  ]);
+});
+
+test('passes candidates for every other key through to the real source', () => {
+  const source = new BrokenSelectorSource(new LocatorProxy(tree), 'checkout.address');
+  assert.deepEqual(source.candidates('checkout.fullName'), [
+    { tier: 'registry', selector: '[data-testid="full-name-desktop"]' },
+  ]);
+});

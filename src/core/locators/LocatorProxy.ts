@@ -1,4 +1,4 @@
-import type { SelectorSource } from './SelectorSource';
+import { REGISTRY_TIER, type SelectorCandidate, type SelectorSource } from './SelectorSource';
 
 export type LocatorTree = { [key: string]: string | LocatorTree };
 
@@ -24,5 +24,9 @@ export class LocatorProxy implements SelectorSource {
 
     this.cache.set(dotPath, value);
     return value;
+  }
+
+  candidates(dotPath: string): readonly SelectorCandidate[] {
+    return [{ tier: REGISTRY_TIER, selector: this.get(dotPath) }];
   }
 }
