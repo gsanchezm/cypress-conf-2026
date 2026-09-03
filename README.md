@@ -19,6 +19,7 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
 | `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
 | Assertion-budget refactor (1 API claim + 1 UI claim per scenario) | ✅ Done — re-verified live 2026-08-21, 12/12 (auth 2, catalog 5, checkout 5) |
+| Self-healing locators without an LLM (`HEAL_LOCATORS=a11y`) + "break the app, not the JSON" (`MUTATE_DOM`) | ✅ Done — live-verified 2026-09-02, matrix below (checkout 5/5 ×3, 5/5 fail ×1 by design); full suite without flags 12/12 |
 
 The description above is the framework's design contract, and it's a live-verified one — Auth, Catalog
 and Checkout (all 5 markets) all pass under real `cypress run` executions against the live app, not
@@ -105,39 +106,105 @@ this sandbox hits on every other host, not a code defect. Whether the AI correct
 one live run — triggered by you, either locally or via `cy-prompt-suite.yml` — before relying on this
 suite for the talk.
 
-### The broken-selector demo
+### Break the app, not the JSON — three healers, one renamed attribute
 
-The two strategies exist to be compared, and this is the comparison. Point `BREAK_LOCATOR` at any
-locator key and that one selector starts resolving to `[data-cy-broken-locator="<key>"]` — an
-attribute no app ships, so it matches nothing:
+The earlier version of this demo (`BREAK_LOCATOR`) swapped one *registry* value for a selector no app
+ships. That proved the deterministic path is coupled to `checkout.locators.json` — and nothing more,
+because `cy.prompt` never reads that file. The claim a slide actually wants to make is *"the test
+survives a change to the app"*, and that needs the app to change. So now it does:
 
 ```bash
-# Deterministic path: fails. cy.get() is looking for a selector that no longer exists.
-pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose BREAK_LOCATOR=checkout.address
+# (ii) The app changes, the registry does not. After /checkout renders, the real data-testid on the
+#      address input is renamed address-desktop -> address-desktop--renamed-by-demo. Deterministic path: fails.
+pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --expose MUTATE_DOM=checkout.address
 
-# Same feature file, same broken key, cy.prompt path: unaffected.
-pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose UI_STRATEGY=cyPrompt,BREAK_LOCATOR=checkout.address --browser chrome --record
+# (iii) Same run, plus the LLM-free healer. Passes; the command log names the tier that healed.
+pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --expose MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y
+
+# (iv) The registry-only break still exists, and the healer handles it the same way.
+pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --expose BREAK_LOCATOR=checkout.address,HEAL_LOCATORS=a11y
 ```
 
-Nothing in the test code changes between those two commands — the composition root
-(`cypress/support/e2e.ts`) picks a different `SelectorSource`, and a Decorator (`BrokenSelectorSource`)
-wraps the real `LocatorProxy` for exactly one key. The broken selector names itself, so Cypress's own
-message reads `Expected to find element: [data-cy-broken-locator="checkout.address"], but never found
-it` — impossible to mistake for a real regression. A key no slice registers throws instead of running
-green, because a demo that silently breaks nothing is the worst outcome in front of an audience.
+Nothing in the test code changes between these commands. `cypress/support/e2e.ts` picks the
+`SelectorSource`; `MUTATE_DOM` is a one-line hook after each screen's ready guards
+(`mutateDomIfRequested(this.locators, 'checkout')` in `DeterministicCheckoutUiStrategy`, the same in
+the Auth and Catalog facades); `HEAL_LOCATORS=a11y` wraps the source in a third Decorator,
+`A11yFallbackSelectorSource`, outside `BrokenSelectorSource`. Passing `BREAK_LOCATOR` and `MUTATE_DOM`
+together throws — they are two versions of the same demo, and a key no slice registers throws too,
+for the same reason as before: a demo that silently breaks nothing is the worst outcome on stage.
 
-> ⚠️ **What this demo proves, and what it does not.** It proves the deterministic path is coupled to a
-> **selector registry** while the prompt path is coupled only to the **rendered UI** — `cy.prompt` never
-> reads `checkout.locators.json`, so breaking that file cannot affect it. It does **not** prove
-> `cy.prompt` survives a change to *the app*. On a slide those two claims read identically and only the
-> first one is demonstrated here. The honest stronger version mutates the live DOM — rename the real
-> `data-testid` on the element after the form renders, so the deterministic selector matches nothing
-> that actually exists and the AI has to resolve the field by semantics. That is riskier (React may
-> re-render and restore the attribute) but it proves what the slide claims.
+**How a synchronous selector source can heal.** `SelectorSource.get()` still returns one selector
+string, synchronously — the 2025 retrospective below is the reason that must not change. What was
+added is `candidates(key)`: an ordered list, registry first, and one Cypress-side primitive,
+`locate(source, key)` (`src/core/ui/locate.ts`), that at command run-time picks the first tier
+matching **exactly one** element and yields a normal `cy.get(chosen)`. With no healer wired every key
+has one candidate and `locate` *is* `cy.get(selector, options)` — the deterministic command stream is
+unchanged, which is what row (i) below and the 12/12 full-suite run re-verify. With more than one
+candidate the choice is made inside a `.should()` guard, so it retries with Cypress's own loop (a
+form that renders 2–3 s late still resolves) and the chosen selector is handed to a normal `cy.get`,
+so `.type()`/`.click()`/`.should()` keep their retry-ability. Two-or-more matches is ambiguous and
+skipped, never picked: typing into the wrong input would pass `fillField`'s own guard and fail three
+commands later as a mystery.
 
-**Verification status is split.** "Deterministic fails when the selector is broken" is verified locally.
-"`cy.prompt` still passes" is **not** — that half needs the billed Cloud run, like everything else
-`cy.prompt`.
+The tiers, in order (`src/core/locators/fallbackTiers.ts`): registry `data-testid` → `id` → `name` →
+`aria-label` → `placeholder` → `title` → `role` → `input[type]` → innermost element containing the
+visible text. Only CSS/jQuery-expressible tiers, so the healed element goes through `cy.get` with full
+retry-ability. No LLM, no network, no Cloud quota, sub-second.
+
+**The map is harvested, not written.** `pnpm harvest:locators` runs a headless spec
+(`cypress/harvest/locators.harvest.cy.ts`, outside the e2e pattern so CI never sees it) that logs in
+per market, walks login → catalog → checkout → order-success, and records the attributes above for
+every non-templated registry key into `src/features/<slice>/locators/<slice>.fallbacks.json`. Five
+markets, five real orders. A localized attribute is stored once per market; only the rendered
+market's value can match, so the other four cost nothing.
+
+**Saudi Arabia (RTL) heals through exactly the same tiers.** The Arabic values live in the same lists
+as the English, Spanish, German and Japanese ones, byte for byte as the DOM holds them. In run (iii)
+the SA scenario healed via `id [id="field-address"]` — and so did the other four markets, through the
+identical selector, because `id` is the first fallback tier and the app's `id` is locale-free. The
+Arabic placeholder (`123 شارع الفخامة`) sits three tiers further down and was never consulted; it is
+the tier that would carry SA if the `id` went too, and the harvest already holds it. Nothing in the
+healer knows what a market is, what direction the text runs, or which script it is written in.
+
+**Results (2026-09-02, Chrome, live app, all under the cross-worktree lock):**
+
+| # | `--expose` | Result | Evidence (`cypress/reports/demo-trail.log`) |
+|---|---|---|---|
+| i | *(none)* | 5/5 pass, `All specs passed!` (00:24) | file not created — nothing healed, nothing mutated |
+| ii | `MUTATE_DOM=checkout.address` | 5/5 **fail**, `1 of 1 failed (100%)` (00:33), every scenario `Timed out retrying after 4000ms: Expected to find element: [data-testid="address-desktop"], but never found it` | 5× `[mutate-dom] checkout.address: renamed data-testid "address-desktop" -> "address-desktop--renamed-by-demo" on 1 element(s); the registry still says [data-testid="address-desktop"]` |
+| iii | `MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y` | 5/5 pass, `All specs passed!` (00:24) | 5× `[mutate-dom] …` + 5× `[heal] checkout.address: registry [data-testid="address-desktop"] matched no single element; healed via id [id="field-address"]` — US, MX, CH, JP and SA alike |
+| iv | `BREAK_LOCATOR=checkout.address,HEAL_LOCATORS=a11y` | 5/5 pass, `All specs passed!` (00:23) | 5× `[heal] checkout.address: broken [data-cy-broken-locator="checkout.address"] matched no single element; healed via id [id="field-address"]` |
+
+React did not restore the renamed attribute in (ii): all five scenarios failed on the address step,
+and the 4 s timeout in the error is `cy.get`'s own — the deterministic path really did lose the
+element. The full logs of each row are kept locally under `docs/superpowers/reports/` (git-ignored).
+
+Harvested tiers for `checkout.address` (`src/features/checkout/locators/checkout.fallbacks.json`):
+
+```json
+"checkout.address": {
+  "id": ["field-address"],
+  "placeholder": ["123 Luxury Avenue", "Av. Reforma 123", "Musterstraße 123", "東京都渋谷区...", "123 شارع الفخامة"],
+  "inputType": ["text"]
+}
+```
+
+`cy.log` never reaches the terminal in `cypress run`, so every heal and mutation is narrated twice:
+`logStep` for the command log / Test Replay / `cypress open` (the stage), and one line appended to
+`cypress/reports/demo-trail.log` via `cy.writeFile` for anyone reading a headless run afterwards (no
+`cy.task`, so `cypress.config.ts` is untouched). The file accumulates across runs — each line carries
+its timestamp and scenario title — so clear it before a demo whose counts matter.
+
+> **What this proves now.** (ii)+(iii) prove the deterministic path fails on a *real DOM change* and
+> the a11y healer recovers from it by semantics; (iv) proves the same healer covers the registry-only
+> break. What it still does not prove is `cy.prompt` surviving (ii) — that is one billed Cloud run,
+> and the `MUTATE_DOM` hook is one call away in `CyPromptCheckoutUiStrategy` for whoever triggers it.
+
+**Known limits.** Templated keys (`login.marketButton`, `login.quickLoginButton`) are interpolated by
+the facade after `get()` and are neither harvested nor healed. `catalog.allPizzaPrices` matches many
+elements by design and heals nothing. Explicit `role`/`aria-label` attributes only — implicit ARIA
+roles need the accessibility tree, which nothing in a headless run exposes (`cypress tap aria` is
+open-mode only). A heal is narrated, never written back into the registry.
 
 The two-pair `--expose A=x,B=y` syntax above is verified separately, so the billed run can't be lost to
 a flag-parsing mistake: `--expose UI_STRATEGY=deterministic,BREAK_LOCATOR=checkout.address` failed all
@@ -364,14 +431,15 @@ classDiagram
 
 | Pattern | Where | Why here |
 |---|---|---|
-| **Proxy** | `LocatorProxy` wraps `locators/*.json` | Dot-path selector lookup with caching; throws a clear error on a missing key instead of a silent `undefined`. Replaces classic POM. |
+| **Proxy** | `LocatorProxy` wraps `locators/*.json` | Dot-path selector lookup with caching; throws a clear error on a missing key instead of a silent `undefined`. Replaces classic POM. `candidates()` is the seam healing extends; `get()` stays synchronous and single-valued. |
 | **Template Method** | `BaseApiClient.request()`, `AtomicScenario` | Fixes the algorithm skeleton; slices fill in only the specific steps. |
 | **Facade** | `AuthFacade`, `CatalogFacade`, `CheckoutFacade` | One narrow entrypoint per slice, hides API+data+locator/strategy wiring from step definitions. |
 | **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.env('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have several country-conditional fields (computed property names for the required-field/tip keys) — reads better as a fluent construction than a function with many optional args. |
 | **Factory** | `UserFactory` (deterministic roster, loaded from `deterministicUsers.json`) | Centralizes how test data is built per slice. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. |
-| **Decorator** | `BrokenSelectorSource` wraps any `SelectorSource` | Breaks exactly one locator key while passing every other through untouched — the broken-selector demo is a wiring choice in the composition root, not a code change. (Read the caveat in [the demo section](#the-broken-selector-demo) before putting it on a slide.) |
+| **Decorator** | `BrokenSelectorSource` wraps any `SelectorSource` | Breaks exactly one locator key while passing every other through untouched — the broken-selector demo is a wiring choice in the composition root, not a code change. (Kept as the registry-only variant - row iv of the matrix in [the demo section](#break-the-app-not-the-json--three-healers-one-renamed-attribute).) |
+| **Decorator** | `A11yFallbackSelectorSource` wraps any `SelectorSource` | Appends harvested a11y fallback tiers to a key's candidates; `locate()` picks the first tier that matches exactly one element at command run-time. Composes outside `BrokenSelectorSource`. |
 | **Adapter** *(minor)* | Cucumber step-definition layer | Thin adapter between Cucumber's step matching and our Facade interface. |
 
 ### What came over from the 2025 framework — and what didn't
@@ -437,6 +505,7 @@ pnpm run cy:run              # headless, all specs
 pnpm exec cypress run --spec cypress/e2e/auth/**       # one slice
 pnpm exec cypress run --spec cypress/e2e/catalog/**
 pnpm exec cypress run --spec cypress/e2e/checkout/**
+pnpm harvest:locators   # regenerate src/features/*/locators/*.fallbacks.json from the live app (5 markets, places 5 real orders)
 ```
 
 Both `omnipizza-frontend`/`omnipizza-backend` are live Render free-tier deploys — no local server to
