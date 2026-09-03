@@ -7,7 +7,8 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "test:unit:node": "node --import tsx --test \"src/**/*.node.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "warmup": "tsx scripts/warmup.ts"
   },
   "repository": {
     "type": "git",

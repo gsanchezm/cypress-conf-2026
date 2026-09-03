@@ -14,5 +14,5 @@
       "@support/*": ["cypress/support/*"]
     }
   },
-  "include": ["src", "cypress", "cypress.config.ts"]
+  "include": ["src", "cypress", "cypress.config.ts", "scripts"]
 }

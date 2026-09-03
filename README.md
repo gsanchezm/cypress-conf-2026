@@ -459,6 +459,7 @@ each country strategy composes its own required-field/tip rule, no chain needed)
 pnpm install
 pnpm run typecheck        # tsc --noEmit
 pnpm run test:unit:node    # framework-internal Node unit tests (Observer, etc.)
+pnpm warmup                 # wake both Render services, prints per-service timings; run it 5 min before a demo
 pnpm run cy:open            # interactive runner
 pnpm run cy:run              # headless, all specs
 pnpm exec cypress run --spec cypress/e2e/auth/**       # one slice
