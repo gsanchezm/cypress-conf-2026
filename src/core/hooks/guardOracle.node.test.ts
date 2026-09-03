@@ -52,6 +52,25 @@ test('writing a whole new facade that contains expect( is denied', () => {
   assert.equal(decideOracleGuard([intent], options).allow, false);
 });
 
+test('authoring a cy.prompt( call in a step file is denied because it is billed per execution', () => {
+  const intent = { filePath: 'src/features/auth/steps/auth.steps.ts', before: '', after: "cy.prompt(['log in as {user}'])" };
+  assert.match(reasonOf(decideOracleGuard([intent], options)), /billed per execution/);
+});
+
+test('the cyPrompt strategy itself may keep calling cy.prompt(', () => {
+  const intent = {
+    filePath: 'src/features/checkout/strategies/CyPromptCheckoutUiStrategy.ts',
+    before: 'cy.prompt(prompt.steps)',
+    after: 'cy.prompt(prompt.steps, { placeholders: prompt.placeholders })',
+  };
+  assert.equal(decideOracleGuard([intent], options).allow, true);
+});
+
+test('removing a stray cy.prompt( call is allowed (only authoring one is guarded)', () => {
+  const intent = { filePath: 'src/features/auth/steps/auth.steps.ts', before: "cy.prompt(['x'])", after: 'authFacade.login()' };
+  assert.equal(decideOracleGuard([intent], options).allow, true);
+});
+
 test('ALLOW_TEST_EDITS lets a human change the contract', () => {
   const intent = { filePath: 'cypress/e2e/auth/auth.feature', before: '', after: '' };
   assert.equal(decideOracleGuard([intent], { ...options, allowTestEdits: true }).allow, true);

@@ -15,6 +15,11 @@ const FEATURE_FILE = /^cypress\/e2e\/.+\.feature$/;
 // free to change.
 const CLAIM_HOME = /^src\/features\/[^/]+\/(facade|strategies)\/[^/]+\.ts$/;
 const CLAIM_SYNTAX = /\bassert[A-Z]\w*\s*\(|\.should\(|\bexpect\(/;
+// cy.prompt is billed per execution and exists only inside the owner-triggered
+// cyPrompt strategy; a call authored anywhere else runs through plain
+// `cypress run` and is caught by neither guard-bash nor the assertion budget.
+const PROMPT_CALL = /\bcy\.prompt\s*\(/;
+const PROMPT_HOME = /^src\/features\/[^/]+\/strategies\/CyPrompt[^/]*\.ts$/;
 
 const toPosix = (path: string): string => path.replace(/\\/g, '/');
 
@@ -48,9 +53,20 @@ function denyClaim(path: string): GuardDecision {
   };
 }
 
+function denyPromptCall(path: string): GuardDecision {
+  return {
+    allow: false,
+    reason:
+      `${path}: this edit authors a cy.prompt( call outside the cyPrompt strategy. cy.prompt is billed per execution ` +
+      '(100/month on the free plan) and only the owner-triggered CyPromptCheckoutUiStrategy may call it; write a deterministic ' +
+      'step (locate/fillField over the locator registry) instead, or re-run with ALLOW_TEST_EDITS=1 when a human is extending the strategy.',
+  };
+}
+
 function decideOne(intent: EditIntent, projectDir: string): GuardDecision {
   const path = toProjectRelative(intent.filePath, projectDir);
   if (FEATURE_FILE.test(path)) return denyFeature(path);
+  if (PROMPT_CALL.test(intent.after) && !PROMPT_HOME.test(path)) return denyPromptCall(path);
   if (!CLAIM_HOME.test(path)) return { allow: true };
   if (!CLAIM_SYNTAX.test(`${intent.before}\n${intent.after}`)) return { allow: true };
   return denyClaim(path);
