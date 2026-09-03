@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "pnpm exec tsx scripts/hooks/guard-oracle.ts", "timeout": 30 }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "pnpm exec tsx scripts/hooks/guard-bash.ts", "timeout": 30 }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "pnpm exec tsx scripts/hooks/after-edit.ts", "timeout": 180 }]
+      },
+      {
+        "matcher": "mcp__cypress-cloud__.*|mcp__github__.*",
+        "hooks": [{ "type": "command", "command": "pnpm exec tsx scripts/hooks/audit-mcp.ts", "timeout": 15 }]
+      }
+    ]
+  }
+}

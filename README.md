@@ -245,6 +245,47 @@ a flag-parsing mistake: `--expose UI_STRATEGY=deterministic,BREAK_LOCATOR=checko
 5 markets on `[data-cy-broken-locator=...]`, which only happens if **both** pairs parsed — had the
 second been swallowed, the run would have passed 5/5.
 
+## The agentic loop
+
+The framework is operable by an agent without loosening its oracle. Three layers, each demonstrable
+offline, without a model:
+
+| Layer | Files | Demo without a model |
+|---|---|---|
+| **Guardrails** (deterministic) | `.claude/settings.json` → `scripts/hooks/*.ts` → `src/core/hooks/*.ts` | `echo '{"tool_name":"Edit","tool_input":{"file_path":"cypress/e2e/auth/auth.feature","old_string":"a","new_string":"b"}}' \| pnpm exec tsx scripts/hooks/guard-oracle.ts` → exit 2, "`auth.feature` is the oracle" |
+| **Loop** (`cypress tap`) | `scripts/tap.ts` → `src/core/tap/{parseTapOutput,freshVerdict}.ts` | `pnpm tap:status` → `{"status":"not connected"}` with exit 0, even though Node 24 on Windows aborts every `cypress tap` call in libuv teardown (`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`, exit `0xC0000409`) after the JSON has already been printed |
+| **Triage** | `.claude/agents/cy-triage.md`, `scripts/{flake-audit,triage-signals}.ts`, `.github/workflows/claude-ci-triage.yml` | `pnpm flake-audit src/core/cloud/fixtures/cy-cloud-test-list.sample.json` → `flakyCount: 1`; `pnpm triage:signals src/core/triage/fixtures/checkout-broken-locator.log` → `"suggested": "selector_drift"` |
+
+**Red → green without touching the mouse.** Terminal 1: `pnpm cy:open` (E2E, Chrome). Terminal 2:
+`claude`, then `@agent-cy-fixer fix cypress/e2e/checkout/checkout.feature`. The subagent
+([`.claude/agents/cy-fixer.md`](.claude/agents/cy-fixer.md), preloaded with the official `cypress-tap`
+skill) runs `pnpm tap:run <spec>` — a baseline `status`, one `run`, then polling until a verdict whose
+`startedAt` moved past the baseline — reads `reporter`, pins the failing command, reads `dom`/`aria`,
+patches a step definition, a strategy or a `locators/*.json`, and reruns, at most five times, before
+printing a one-line JSON verdict. Seed the failure with the same `--expose BREAK_LOCATOR=checkout.address`
+the broken-selector demo uses, on the `cypress open` command line only, never in code. The PreToolUse
+hook denies any edit to a `.feature`, or to an `assert*` method, a `.should(` or an `expect(` call in a
+facade or strategy (exit 2, reason shown to the agent); `ALLOW_TEST_EDITS=1` is the human override. A
+second PreToolUse hook denies `--record`, `UI_STRATEGY=cyPrompt` and `git push` outright. Both are pure
+decision functions under `src/core/hooks/` with their own node tests; the scripts only read the hook
+JSON from stdin.
+
+**Repo-level config** ([`CLAUDE.md`](CLAUDE.md), [`.mcp.json`](.mcp.json), `.claude/skills/` = the five
+MIT `cypress-io/ai-toolkit` skills copied in, pinned by `skills-lock.json`): open Claude Code in a fresh
+clone and the skills, hooks, subagents and MCP servers are already there. Cypress Cloud MCP
+(`https://mcp.cypress.io/mcp`, OAuth via `/mcp`) and the Cloud CLI both need a Cypress Cloud org admin
+to enable them on the Integrations page first — until then the fixtures above are the demo. The GitHub
+server is the read-only Actions toolset, authenticated with a `GH_MCP_PAT` environment variable that is
+never committed.
+
+**CI.** [`claude-ci-triage.yml`](.github/workflows/claude-ci-triage.yml) fires when *Deterministic suite*
+fails (a push to `main` or a PR against it; `workflow_run` reads the triage file from `main`), downloads the failed jobs' logs and screenshot artifacts, runs the deterministic
+`triage:signals` hint, and asks `claude-code-action@v1` for a `--json-schema` verdict
+`{category, confidence, evidence, summary}`. Flake or cold start at ≥ 0.7 → `gh run rerun --failed`
+(at most twice, because every rerun fires the trigger again); anything else → a PR comment or an issue.
+It needs only the `ANTHROPIC_API_KEY` secret, and a node test pins its trigger to `tests.yml`'s `name:`
+so a rename cannot silently disconnect it.
+
 ## Architecture
 
 Vertical slicing, not layered folders — each slice under `src/features/<slice>/` is independently

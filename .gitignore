@@ -6,3 +6,8 @@ dist/
 docs/*
 !docs/index.html
 .worktrees/
+.claude/audit.jsonl
+.claude/settings.local.json
+.tap-*.json
+ci-artifacts/
+.agents/
