@@ -5,15 +5,17 @@ import {
   STATUS_NOT_CONNECTED_CRASH,
   SESSIONS_NONE_CRASH,
   SPECS_NO_SESSION_CRASH,
-  STATUS_PASSED_CLEAN,
+  SPECS_LIVE_CLEAN,
   STATUS_BAD_JSON_CRASH,
   DOM_AMBIGUOUS_EXIT_1,
 } from './fixtures/tapOutputs';
 
+// The one live call that did NOT abort in libuv teardown on this machine:
+// `specs --json` with a session attached exited 0 with an empty stderr.
 test('a clean exit with JSON on stdout is ok and not flagged as a crash', () => {
-  assert.deepEqual(parseTapOutput(STATUS_PASSED_CLEAN), {
+  assert.deepEqual(parseTapOutput(SPECS_LIVE_CLEAN), {
     kind: 'ok',
-    data: JSON.parse(STATUS_PASSED_CLEAN.stdout),
+    data: JSON.parse(SPECS_LIVE_CLEAN.stdout),
     crashedOnExit: false,
   });
 });
