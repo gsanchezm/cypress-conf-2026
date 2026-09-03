@@ -18,6 +18,14 @@ test('a timeout on the self-naming broken selector is a broken locator, even as 
   );
 });
 
+// Observed live on the integration branch (2026-09-02): MUTATE_DOM renames the
+// real data-testid, cy.get() times out with this exact wording, and the row
+// must read broken-locator (selector drift) rather than product-claim.
+test('a cy.get timeout on a renamed data-testid is a broken locator, not a product claim', () => {
+  const message = 'Timed out retrying after 4000ms: Expected to find element: `[data-testid="address-desktop"]`, but never found it.';
+  assert.equal(classifyFailure(withError('AssertionError', message)), 'broken-locator');
+});
+
 test('an ApiError with a 5xx is infrastructure (Render cold start or backend crash)', () => {
   assert.equal(classifyFailure(withError('ApiError', 'POST /api/checkout failed with 503')), 'infra');
 });

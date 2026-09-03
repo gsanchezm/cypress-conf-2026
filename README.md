@@ -144,6 +144,7 @@ survives a change to the app"*, and that needs the app to change. So now it does
 ```bash
 # (ii) The app changes, the registry does not. After /checkout renders, the real data-testid on the
 #      address input is renamed address-desktop -> address-desktop--renamed-by-demo. Deterministic path: fails.
+#      On stage add --config retries=0: with the CI default (runMode: 2) the five failures take ~1:40, not ~0:35.
 pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --expose MUTATE_DOM=checkout.address
 
 # (iii) Same run, plus the LLM-free healer. Passes; the command log names the tier that healed.
