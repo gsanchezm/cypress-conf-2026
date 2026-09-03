@@ -14,12 +14,21 @@ importers:
       '@bahmutov/cypress-esbuild-preprocessor':
         specifier: ^2.2.8
         version: 2.2.8(esbuild@0.28.2)
+      '@cucumber/gherkin':
+        specifier: ^41.0.0
+        version: 41.0.0
+      '@cucumber/messages':
+        specifier: ^33.0.4
+        version: 33.0.4
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
       cypress:
         specifier: ^15.21.0
         version: 15.21.0
+      cypress-on-fix:
+        specifier: ^1.1.0
+        version: 1.1.0
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
@@ -778,6 +787,9 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  cypress-on-fix@1.1.0:
+    resolution: {integrity: sha512-qGdbC0vZLmR3lYPpWWZvMqgDTeA2v04zu3DBdBmJHbG+BjwlFNYGnL7Y+X4LBrB+AyCCCeCuXhV80UXA90UhWg==}
 
   cypress@15.21.0:
     resolution: {integrity: sha512-6uPy5GUjao97t/QDIwlPyJz4JUqPpFIPq5lNazN95LSA3ynJoYC1sHZ3W+aj4f+K1OFGbMfno0+OX2Gx0OmlPA==}
@@ -3139,6 +3151,12 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  cypress-on-fix@1.1.0:
+    dependencies:
+      debug: 4.4.3
+    transitivePeerDependencies:
+      - supports-color
 
   cypress@15.21.0:
     dependencies:

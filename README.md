@@ -512,7 +512,7 @@ classDiagram
 | **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.expose('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have several country-conditional fields (computed property names for the required-field/tip keys) — reads better as a fluent construction than a function with many optional args. |
 | **Factory** | `UserFactory` (deterministic roster, loaded from `deterministicUsers.json`) | Centralizes how test data is built per slice. |
-| **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. |
+| **Observer** | `ReportingSubject` + `Observer` (per spec) and `RunObserver` (per run), wired on `after:spec` / `after:run` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. `TestRailObserver` is the run-level subscriber — see [TestRail](#testrail). |
 | **Decorator** | `BrokenSelectorSource` wraps any `SelectorSource` | Breaks exactly one locator key while passing every other through untouched — the broken-selector demo is a wiring choice in the composition root, not a code change. (Kept as the registry-only variant - row iv of the matrix in [the demo section](#break-the-app-not-the-json--three-healers-one-renamed-attribute).) |
 | **Decorator** | `A11yFallbackSelectorSource` wraps any `SelectorSource` | Appends harvested a11y fallback tiers to a key's candidates; `locate()` picks the first tier that matches exactly one element at command run-time. Composes outside `BrokenSelectorSource`. |
 | **Adapter** *(minor)* | Cucumber step-definition layer | Thin adapter between Cucumber's step matching and our Facade interface. |
@@ -638,3 +638,204 @@ AssertionError.
 - **Raw evidence** — `AFTER_SPEC_DUMP=<path> pnpm exec cypress run …` appends every raw `after:spec`
   payload as one JSON line; it is what the mapper was designed from and what an offline triage agent
   can replay.
+- **TestRail** — one run per `cypress run`, three bulk requests, opt-in via `TESTRAIL_URL`
+  (`TestRailObserver`, a run-level Observer) — see [TestRail](#testrail).
+
+## TestRail
+
+The reporting Observer has a second, run-level seam. `after:spec` keeps feeding `ConsoleObserver`
+and `GithubActionsSummaryObserver` one spec at a time; `after:run` fires once per `cypress run` and
+hands a `RunSummary` (every `TestResult` of the run plus browser, timestamps, `--expose` labels,
+screenshots and retry counts) to any `RunObserver`. `TestRailObserver` is the first one. It reports
+the whole run in **three HTTP requests** — the shape TestRail's own docs recommend against the
+180 req/min Cloud rate limit:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Cy as cypress run
+    participant Subject as ReportingSubject
+    participant TR as TestRailObserver
+    participant API as TestRail API v2
+
+    Cy->>Subject: after:spec × N (TestResult[])
+    Cy->>Subject: after:run (RunMetadata)
+    Subject->>TR: onRunComplete(RunSummary)
+    TR->>TR: read @C tags from the .feature files (gherkin pickles)
+    TR->>API: POST add_run/{project} (include_all:false, case_ids)
+    TR->>API: POST add_results_for_cases/{run} (bulk)
+    TR-->>API: POST add_attachment_to_result/{result} (failures, TESTRAIL_ATTACH=1)
+    TR->>API: POST close_run/{run}
+```
+
+Nothing in a test changes. Adding the observer touched `cypress.config.ts` (subscribe + `after:run`),
+the three `.feature` files (tags) and new files under `src/core/reporting/testrail/`.
+
+### Configuration
+
+Read from `process.env` in Cypress's Node process — never `Cypress.env()` (deprecated in 15, removed
+in 16) and never `--expose`, which is public browser-side config and must not carry an API key.
+
+| Variable | Required | Meaning |
+|---|---|---|
+| `TESTRAIL_URL` | yes (the switch) | `https://<instance>.testrail.io`. Unset → the observer is not subscribed at all. |
+| `TESTRAIL_USER` | yes | Your TestRail login (email). |
+| `TESTRAIL_API_KEY` | yes | My Settings → API Keys → Add Key (shown once). |
+| `TESTRAIL_PROJECT_ID` | yes | The number in the project URL (`/projects/overview/<id>`). |
+| `TESTRAIL_SUITE_ID` | multi-suite projects only | The number in `/suites/view/<id>`; omit for single-suite projects. |
+| `TESTRAIL_ATTACH` | no | `1` uploads each failed scenario's screenshot(s) to its result (needs "edit test results" enabled in Site Settings). |
+| `TESTRAIL_DRY_RUN` | no | `1` prints every payload with pino instead of sending it; only `TESTRAIL_URL` is needed. |
+
+```bash
+# Real push
+TESTRAIL_URL=https://acme.testrail.io TESTRAIL_USER=you@acme.example TESTRAIL_API_KEY=... TESTRAIL_PROJECT_ID=1 \
+  pnpm exec cypress run --browser chrome --spec cypress/e2e/auth/auth.feature
+
+# Dry run - what would be sent, without an account
+TESTRAIL_URL=https://example.testrail.io TESTRAIL_DRY_RUN=1 pnpm exec cypress run --browser chrome --spec cypress/e2e/auth/auth.feature
+```
+
+A reporting failure (bad key, unknown case id, network) is logged at `error` level and never changes
+the Cypress exit code: the run's verdict is the tests', not the reporter's. TestRail returns `429`
+with `Retry-After` under load; the client sleeps for it and retries up to three times. `cypress open`
+never reports (Cypress hands `after:run` no results there).
+
+### Mapping scenarios to cases
+
+Every Scenario and every Scenario Outline **row** carries a `@C<id>` tag, where `<id>` is the number
+in TestRail's `/cases/view/<id>`:
+
+```gherkin
+  @C1001
+  Scenario: A standard customer logs in successfully
+
+  Scenario Outline: A standard customer sees pizza prices localized for their market
+    ...
+    @C1003
+    Examples: United States
+      | market        | currency   |
+      | United States | US dollars |
+```
+
+Rows get their own `Examples:` block because Gherkin puts tags on blocks, not rows. Titles do not
+change: the preprocessor numbers rows across all blocks, so Cypress still reports
+`... (example #1)` … `(example #5)`. The mapper (`caseMap.ts`) expands the same gherkin pickles the
+preprocessor builds tests from, so it reproduces those titles exactly and reads the most specific tag
+(Examples › Scenario › Feature); as a fallback it strips ` (example #N)`. Untagged scenarios are
+skipped, never guessed. `pending`/`skipped` results are not submitted — they stay **Untested** in
+TestRail, which is the truth; a scenario that passed after a retry is reported as **Retest**
+(`retries: { runMode: 2 }` is configured, so this applies to headless runs).
+
+**The ids in this repo (`C1001`–`C1012`) are placeholders.** To make them real:
+
+1. Start the 30-day TestRail Cloud trial (`https://content.testrail.com/trial`, no credit card),
+   enable the API under Admin → Site Settings → API, and create an API key under My Settings → API Keys.
+2. Create a project in single-suite mode and 12 cases with the scenario titles (auth 2, catalog 5,
+   checkout 5). Note each case's id.
+3. Replace the `@C` tags in `cypress/e2e/**/*.feature` with those ids and set `TESTRAIL_PROJECT_ID`.
+   No code changes. `pnpm test:unit:node` checks the three files still map 12 distinct ids.
+
+Each GitHub Actions matrix job is its own `cypress run`, so it would create its own TestRail run; to
+have one run per workflow, open it in a setup job (`add_run`), pass its id to the slices and close it
+in a final job — a documented extension, not built here. No secrets are configured in
+`.github/workflows/tests.yml`; add `TESTRAIL_*` as repository secrets/variables when the trial exists.
+
+### Why not a reporter package
+
+- `cypress-testrail-reporter` — last published 2022-07-19, a **Mocha reporter**: it needs Cypress's
+  single reporter slot, which mochawesome already occupies (so `cypress-multi-reporters` on top),
+  posts one request per test (the 180 req/min limit is one large suite away), and depends on
+  `deasync`. It declares no Cypress 15/16 support.
+- `cypress-testrail` (boxblinkracer) — last release 2024-02-04; a node-events plugin that its own
+  README says needs `cypress-on-fix` next to the cucumber preprocessor.
+- `@cypress/testrail` does not exist. `trcli parse_cucumber` (Gurock's official CLI) matches by
+  **feature name** and auto-creates BDD cases, ignoring `@C` tags.
+
+The observer is ~500 lines across ten files (none over 100), pure where it counts, and unit-tested
+with a fake `fetch` that asserts the exact request sequence, the 429 retry and the status mapping
+(`src/core/reporting/testrail/*.node.test.ts`).
+
+### One handler per event — the trap
+
+Cypress stores **one** handler per node event: the last `on('after:spec', …)` wins and the earlier
+one is dropped without a warning. `addCucumberPreprocessorPlugin` registers `before:run`, `after:run`,
+`before:spec`, `after:spec` and `after:screenshot`. This config registers `before:run`, `after:spec`
+and `after:run` — so until this change the preprocessor's `before:run`/`after:spec` never ran. Nobody
+noticed because no cucumber report is enabled and those handlers return early; enable
+`json.enabled` and the report silently never appears. Every dead TestRail reporter plugin sits on the
+same slot. The fix is one line, `const on = onFix(cypressOn)` (`cypress-on-fix`, 46 lines: fan one
+slot out to every listener, awaited in registration order). Proof:
+`src/core/reporting/cypressOnFix.node.test.ts`, and live with `DEBUG=cypress-on-fix` (verbatim from
+the auth slice, 2026-09-02 — the preprocessor registered first, then `cypress.config.ts`):
+
+```
+2026-09-03T00:32:46.791Z cypress-on-fix the only listener so far
+2026-09-03T00:32:46.791Z cypress-on-fix there are already 1 listeners
+2026-09-03T00:32:46.791Z cypress-on-fix registering after:spec
+2026-09-03T00:32:46.791Z cypress-on-fix there are already 1 listeners
+2026-09-03T00:32:46.791Z cypress-on-fix registering after:run
+2026-09-03T00:32:46.791Z cypress-on-fix there are already 1 listeners
+2026-09-03T00:32:48.879Z cypress-on-fix proxy before:run to 2 listeners
+2026-09-03T00:32:55.685Z cypress-on-fix proxy after:spec to 2 listeners
+2026-09-03T00:32:55.702Z cypress-on-fix proxy after:run to 2 listeners
+```
+
+Each `there are already 1 listeners` is a second handler on a slot bare Cypress would have
+overwritten (`file:preprocessor`'s `the only listener so far` is the one event this config owns
+alone); the `proxy … to 2 listeners` lines are both handlers firing at run time. The `registering
+before:run` line of that block was lost to stderr interleaving in the capture; its answer, and the
+`proxy before:run to 2 listeners` two seconds later, were not.
+
+### Dry-run output (auth slice, 2026-09-02)
+
+Captured from `TESTRAIL_URL=https://example.testrail.io TESTRAIL_DRY_RUN=1 pnpm exec cypress run --browser chrome --spec cypress/e2e/auth/auth.feature`
+(colour stripped; the `subscribed` line prints before the run banner, the rest after Cypress's
+results table because `after:run` fires last):
+
+```
+[18:57:58.533] INFO: TestRail: observer subscribed
+    url: "https://example.testrail.io"
+    projectId: 0
+    dryRun: true
+    attachScreenshots: false
+
+  2 passing (4s)
+
+[18:58:06.956] INFO: TestRail dry-run: POST add_run/0
+    method: "add_run/0"
+    body: {
+      "name": "cypress-conf-2026 auth 2026-09-03T00:58:02.989Z (chrome 152.0.7977.65) [apiUrl=https://omnipizza-backend.onrender.com]",
+      "description": "Cypress 15.21.0 on chrome 152.0.7977.65\npassed: 2, failed: 0, pending: 0, skipped: 0\nstarted 2026-09-03T00:58:02.989Z, finished 2026-09-03T00:58:06.894Z\napiUrl=https://omnipizza-backend.onrender.com",
+      "include_all": false,
+      "case_ids": [
+        1001,
+        1002
+      ]
+    }
+[18:58:06.960] INFO: TestRail dry-run: POST add_results_for_cases/0
+    method: "add_results_for_cases/0"
+    body: {
+      "results": [
+        {
+          "case_id": 1001,
+          "status_id": 1,
+          "comment": "passed in 2210 ms on chrome 152.0.7977.65 - Cypress 15.21.0",
+          "elapsed": "2s"
+        },
+        {
+          "case_id": 1002,
+          "status_id": 1,
+          "comment": "passed in 1674 ms on chrome 152.0.7977.65 - Cypress 15.21.0",
+          "elapsed": "2s"
+        }
+      ]
+    }
+[18:58:06.961] INFO: TestRail dry-run: POST close_run/0
+    method: "close_run/0"
+    body: {}
+[18:58:06.961] INFO: TestRail: run reported and closed
+    runId: 0
+    reported: 2
+    unmapped: 0
+    dryRun: true
+```
