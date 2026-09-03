@@ -64,10 +64,10 @@ add-to-cart through natural language, since its whole premise is exercising the 
 cy.prompt work for Auth/Catalog, to keep the free-tier prompt budget small). Every `checkout.feature`
 scenario can run through `DeterministicCheckoutUiStrategy` (the default — `LocatorProxy` + `cy.get()`)
 or `CyPromptCheckoutUiStrategy` (Cypress's AI-native `cy.prompt()`, one batched call per business
-action), selected via `Cypress.env('UI_STRATEGY')`:
+action), selected via `Cypress.expose('UI_STRATEGY')`:
 
 ```bash
-pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
+CYPRESS_RECORD_KEY=<key> pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose UI_STRATEGY=cyPrompt --browser chrome --record
 ```
 
 **The prompt text is not in the TypeScript.** It lives in
@@ -86,14 +86,41 @@ directions and throws on either mismatch. A `node:test` case reads the shipped `
 typo'd heading or placeholder fails during `pnpm test:unit:node` rather than during a billed Cloud run
 — which is the only place `cy.prompt` can execute at all.
 
-Locally this needs `cypress open`/`cypress run` while logged into Cypress Cloud; in CI it's
-`.github/workflows/cy-prompt-suite.yml` (`workflow_dispatch` only, never on push/PR, to avoid burning
-Cloud quota on every commit). Free-tier budget: 100 prompts/hour. Each scenario makes exactly 2
-`cy.prompt()` calls (`completeCheckout` batches 10 steps, `assertOrderConfirmation` batches 2), so a
-full run is 10 calls - **but whether Cypress Cloud's hourly limit counts `cy.prompt()` calls or
-individual batched steps is unverified from this sandbox**. If it's steps, a full run costs 60, not 10,
-and two runs plus a retry could exhaust the free tier mid-demo. Confirm which it is (Cypress Cloud
-dashboard, or spec §14) before relying on repeated runs close together.
+Locally this needs `cypress open`/`cypress run` while logged into Cypress Cloud, or `cypress run
+--record` with the project's record key; in CI it's `.github/workflows/cy-prompt-suite.yml`
+(`workflow_dispatch` only, never on push/PR). **What a run costs** — verified against the Cypress
+Cloud FAQ and pricing page on 2026-09-02, replacing an earlier "100 prompts/hour" claim that was
+wrong (and that slide 18 of the deck still repeats):
+
+- Since **2026-08-01** `cy.prompt` is metered per **execution**: every `cy.prompt()` command that
+  runs — open or run mode, cache hit or not — counts as one, however many steps it batches. Attempts
+  that fail on authentication, network or a malformed prompt do not count.
+- The free **Starter** plan includes **100 executions per month** (and 500 recorded test results per
+  month); Team starts at 9k executions a year. Over the limit on Starter, self-healing and new prompt
+  creation switch off for the rest of the billing cycle — no surprise bill, just a suite that quietly
+  stops being AI.
+- This suite makes exactly **2 calls per scenario × 5 markets = 10 executions per run**, asserted
+  offline by `src/core/prompts/checkoutBudget.node.test.ts` from `checkout.prompt.md` and
+  `checkout.feature`. **That is 10 runs per month on Starter, rehearsals included** — and a Cypress
+  retry re-runs the scenario's `cy.prompt()` calls, so a flaky market costs extra.
+- The "100 prompts / 500 steps per hour" figures are per-user caps that apply **only to runs not
+  recording to Cloud**; `cy-prompt-suite.yml` records, so the monthly quota is what governs it.
+- Generated code is cached **in Cypress Cloud** — there is no local cache folder — and shared across
+  machines and CI. Editing any step in `checkout.prompt.md` invalidates the cache and forces a fresh AI
+  call on the next run; placeholder *values* never reach the model and never invalidate it. Freeze the
+  prompt text before rehearsing. A section may not exceed 50 steps (Cypress's per-call limit);
+  `parsePromptDocument` throws above that.
+
+**The exact first run** — never executed end to end as of 2026-09-02 (see the next paragraph) — is
+the repo owner's to trigger, and costs 10 executions plus 5 test results from the monthly quota
+either way:
+
+```bash
+# Local, recording:
+CYPRESS_RECORD_KEY=<key> pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose UI_STRATEGY=cyPrompt --browser chrome --record
+# Or in CI:
+gh workflow run cy-prompt-suite.yml
+```
 
 This sandbox could not log into Cypress Cloud to exercise `cy.prompt`'s actual AI resolution against the
 live app. What was verified here: `tsc` is clean, and a throwaway diagnostic spec (since deleted) proved
@@ -367,7 +394,7 @@ classDiagram
 | **Proxy** | `LocatorProxy` wraps `locators/*.json` | Dot-path selector lookup with caching; throws a clear error on a missing key instead of a silent `undefined`. Replaces classic POM. |
 | **Template Method** | `BaseApiClient.request()`, `AtomicScenario` | Fixes the algorithm skeleton; slices fill in only the specific steps. |
 | **Facade** | `AuthFacade`, `CatalogFacade`, `CheckoutFacade` | One narrow entrypoint per slice, hides API+data+locator/strategy wiring from step definitions. |
-| **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.env('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
+| **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.expose('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have several country-conditional fields (computed property names for the required-field/tip keys) — reads better as a fluent construction than a function with many optional args. |
 | **Factory** | `UserFactory` (deterministic roster, loaded from `deterministicUsers.json`) | Centralizes how test data is built per slice. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. |

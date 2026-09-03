@@ -127,3 +127,14 @@ test('the shipped checkout prompt document declares the sections and placeholder
   const confirm = preparePrompt(markdown, 'assertOrderConfirmation', { expectedTotalText: '$12.99' });
   assert.equal(confirm.steps.length, 2);
 });
+
+// Cypress rejects a cy.prompt() call with more than 50 steps (Cloud FAQ,
+// "Per-prompt limits"). Failing here costs nothing; failing there costs a
+// billed execution.
+test('rejects a section with more than 50 steps rather than sending cy.prompt a call it will refuse', () => {
+  const steps = Array.from({ length: 51 }, (_, index) => `- step ${index + 1}`).join('\n');
+  assert.throws(
+    () => parsePromptDocument(`## big\n\n${steps}\n`),
+    /section "big" declares 51 steps; cy\.prompt accepts at most 50 per call/,
+  );
+});

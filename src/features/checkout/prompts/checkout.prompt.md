@@ -13,9 +13,10 @@ the model.
 
 **One `cy.prompt()` call per section, never per click.** The batching is deliberate: it preserves the
 multi-step form `cy.prompt`'s own design is built around, and it fixes each scenario's cost at exactly
-two calls no matter how many fields the form grows. See §8 of
-`docs/superpowers/specs/2026-08-19-cypress-conf-2026-framework-design.md` for the free-tier
-prompt-budget rationale (100/hour; 5 scenarios × 2 calls = 10 calls per run).
+two calls no matter how many fields the form grows. Each call is one billed execution (Cypress Cloud,
+since 2026-08-01): 5 scenarios × 2 calls = 10 executions per run against the Starter plan's 100 per
+month — `src/core/prompts/checkoutBudget.node.test.ts` asserts that number from this file. A section
+may not exceed 50 steps; `parsePromptDocument` throws above that.
 
 ## completeCheckout
 

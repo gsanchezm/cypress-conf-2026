@@ -1,3 +1,5 @@
+import { CY_PROMPT_MAX_STEPS_PER_CALL } from './promptBudget';
+
 // A Map, not a Record: section names come from a markdown file anyone can
 // edit, and `'constructor' in {}` is true. On a plain object a section
 // innocently named `constructor` or `toString` would be reported as a
@@ -44,7 +46,15 @@ export function parsePromptDocument(markdown: string): PromptDocument {
     if (document.has(name)) {
       throw new Error(`Prompt document: section declared more than once: ${name}`);
     }
-    return document.set(name, stepsIn(body));
+    // Cypress refuses a cy.prompt() call above this many steps; catching it
+    // here is free, catching it there costs a billed execution.
+    const steps = stepsIn(body);
+    if (steps.length > CY_PROMPT_MAX_STEPS_PER_CALL) {
+      throw new Error(
+        `Prompt document: section "${name}" declares ${steps.length} steps; cy.prompt accepts at most ${CY_PROMPT_MAX_STEPS_PER_CALL} per call`,
+      );
+    }
+    return document.set(name, steps);
   }, new Map<string, string[]>());
 }
 
