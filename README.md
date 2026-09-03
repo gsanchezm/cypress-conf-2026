@@ -19,6 +19,7 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
 | `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
 | Assertion-budget refactor (1 API claim + 1 UI claim per scenario) | ✅ Done — re-verified live 2026-08-21, 12/12 (auth 2, catalog 5, checkout 5) |
+| Foundations: enriched Observer (error/attempts/screenshots/labels + cause), cy.prompt budget guards, CI `check` job + opt-in recording, `pnpm warmup` | ✅ Done — verified live 2026-09-02, 12/12 deterministic; cy.prompt still never executed (owner's trigger) |
 
 The description above is the framework's design contract, and it's a live-verified one — Auth, Catalog
 and Checkout (all 5 markets) all pass under real `cypress run` executions against the live app, not
