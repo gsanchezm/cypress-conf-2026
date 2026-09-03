@@ -172,12 +172,14 @@ healer knows what a market is, what direction the text runs, or which script it 
 |---|---|---|---|
 | i | *(none)* | 5/5 pass, `All specs passed!` (00:24) | file not created — nothing healed, nothing mutated |
 | ii | `MUTATE_DOM=checkout.address` | 5/5 **fail**, `1 of 1 failed (100%)` (00:33), every scenario `Timed out retrying after 4000ms: Expected to find element: [data-testid="address-desktop"], but never found it` | 5× `[mutate-dom] checkout.address: renamed data-testid "address-desktop" -> "address-desktop--renamed-by-demo" on 1 element(s); the registry still says [data-testid="address-desktop"]` |
-| iii | `MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y` | 5/5 pass, `All specs passed!` (00:24) | 5× `[mutate-dom] …` + 5× `[heal] checkout.address: registry [data-testid="address-desktop"] matched no single element; healed via id [id="field-address"]` — US, MX, CH, JP and SA alike |
-| iv | `BREAK_LOCATOR=checkout.address,HEAL_LOCATORS=a11y` | 5/5 pass, `All specs passed!` (00:23) | 5× `[heal] checkout.address: broken [data-cy-broken-locator="checkout.address"] matched no single element; healed via id [id="field-address"]` |
+| iii | `MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y` | 5/5 pass, `All specs passed!` (00:22) | 5× `[mutate-dom] …` + 5× `[heal] checkout.address: registry [data-testid="address-desktop"] matched no single element; healed via id [id="field-address"]` — US, MX, CH, JP and SA alike |
+| iv | `BREAK_LOCATOR=checkout.address,HEAL_LOCATORS=a11y` | 5/5 pass, `All specs passed!` (00:22) | 5× `[heal] checkout.address: broken [data-cy-broken-locator="checkout.address"] matched no single element; healed via id [id="field-address"]` |
 
 React did not restore the renamed attribute in (ii): all five scenarios failed on the address step,
 and the 4 s timeout in the error is `cy.get`'s own — the deterministic path really did lose the
-element. The full logs of each row are kept locally under `docs/superpowers/reports/` (git-ignored).
+element. The full logs of each row are kept locally under `docs/superpowers/reports/` (git-ignored),
+together with the `demo-trail.log` snapshots of rows (iii) and (iv)
+(`2026-09-02-healing-demo-trail-{iii,iv}.log`), so the heal lines quoted above can be re-read.
 
 Harvested tiers for `checkout.address` (`src/features/checkout/locators/checkout.fallbacks.json`):
 
