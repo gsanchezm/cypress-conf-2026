@@ -1,11 +1,13 @@
 import { rm } from 'node:fs/promises';
 import { defineConfig } from 'cypress';
+import onFix from 'cypress-on-fix';
 import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
 import { addCucumberPreprocessorPlugin } from '@badeball/cypress-cucumber-preprocessor';
 import { createEsbuildPlugin } from '@badeball/cypress-cucumber-preprocessor/esbuild';
 import { ReportingSubject } from './src/core/reporting/ReportingSubject';
 import { ConsoleObserver } from './src/core/reporting/ConsoleObserver';
 import { GithubActionsSummaryObserver } from './src/core/reporting/GithubActionsSummaryObserver';
+import { isCompletedRun, toRunMetadata } from './src/core/reporting/runSummary';
 import type { TestResult } from './src/core/reporting/Observer';
 
 export default defineConfig({
@@ -16,7 +18,15 @@ export default defineConfig({
     baseUrl: 'https://omnipizza-frontend.onrender.com',
     specPattern: ['cypress/e2e/**/*.feature'],
     supportFile: 'cypress/support/e2e.ts',
-    async setupNodeEvents(on, config) {
+    async setupNodeEvents(cypressOn, config) {
+      // Cypress keeps ONE handler per node event: the last on('after:spec', ...) wins and every
+      // earlier one is dropped, silently. addCucumberPreprocessorPlugin registers before:run,
+      // after:run, before:spec, after:spec and after:screenshot; this file registers three of
+      // those too. Without this proxy the preprocessor's handlers never ran - unnoticed so far
+      // only because no cucumber report is enabled, so they return early. cypress-on-fix fans one
+      // Cypress slot out to every listener, awaited in registration order.
+      // Proof: src/core/reporting/cypressOnFix.node.test.ts. Live: DEBUG=cypress-on-fix cypress run.
+      const on = onFix(cypressOn);
       await addCucumberPreprocessorPlugin(on, config);
       // The .md text loader is what lets cy.prompt's natural-language steps
       // live in a markdown file instead of TypeScript string literals: the
@@ -63,6 +73,14 @@ export default defineConfig({
           slice,
         }));
         reportingSubject.notify(testResults);
+      });
+
+      // Run-level seam: fires once per `cypress run`, after the last spec, and Cypress awaits the
+      // promise. `results` is undefined under `cypress open` and has no `runs` when Cypress could
+      // not start the run - both are "nothing to report".
+      on('after:run', async (results) => {
+        if (!isCompletedRun(results)) return;
+        await reportingSubject.notifyRunComplete(toRunMetadata(results, config.expose));
       });
 
       return config;
