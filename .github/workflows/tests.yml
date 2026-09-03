@@ -29,6 +29,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
+          # Cypress 16 requires Node ^22 || ^24 || >=26 (20 and 25 dropped).
+          # lts/* resolves to 24.x today and to 26.x once that line goes LTS -
+          # both inside the range, so no pin is needed.
           node-version: lts/*
           cache: pnpm
 
@@ -39,7 +42,11 @@ jobs:
         run: pnpm run typecheck
 
       - name: Run ${{ matrix.slice }} slice
-        run: pnpm exec cypress run --spec "cypress/e2e/${{ matrix.slice }}/**"
+        # Chrome, explicitly, even though cypress.config.ts sets
+        # defaultBrowser: Cypress 16 deprecates Electron as a test browser
+        # and only Chrome/Chromium/Edge get the native network path. Chrome
+        # is preinstalled on ubuntu-latest.
+        run: pnpm exec cypress run --browser chrome --spec "cypress/e2e/${{ matrix.slice }}/**"
 
       - name: Upload mochawesome report
         if: always()
