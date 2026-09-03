@@ -8,6 +8,7 @@ import { ReportingSubject } from './src/core/reporting/ReportingSubject';
 import { ConsoleObserver } from './src/core/reporting/ConsoleObserver';
 import { GithubActionsSummaryObserver } from './src/core/reporting/GithubActionsSummaryObserver';
 import { isCompletedRun, toRunMetadata } from './src/core/reporting/runSummary';
+import { createTestRailObserver } from './src/core/reporting/testrail/createTestRailObserver';
 import type { TestResult } from './src/core/reporting/Observer';
 
 export default defineConfig({
@@ -74,6 +75,11 @@ export default defineConfig({
         }));
         reportingSubject.notify(testResults);
       });
+
+      // TestRail is opt-in: subscribed only when TESTRAIL_URL is set (process.env, Node-side - no
+      // Cypress.env/expose involved). TESTRAIL_DRY_RUN=1 prints the payloads instead of sending.
+      const testRailObserver = createTestRailObserver(process.env, config.projectRoot);
+      if (testRailObserver) reportingSubject.subscribeRun(testRailObserver);
 
       // Run-level seam: fires once per `cypress run`, after the last spec, and Cypress awaits the
       // promise. `results` is undefined under `cypress open` and has no `runs` when Cypress could
