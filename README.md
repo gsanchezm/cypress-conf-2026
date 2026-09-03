@@ -19,6 +19,7 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
 | `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
 | Assertion-budget refactor (1 API claim + 1 UI claim per scenario) | ✅ Done — re-verified live 2026-08-21, 12/12 (auth 2, catalog 5, checkout 5) |
+| Cypress 16 upgrade (branch `feat/e-cypress16`, never merged before the talk) | ✅ Green on 16.0.0 in Chrome, 12/12, zero test changes — see [Cypress 16](#cypress-16) for what changed, what is still open upstream, and why the talk stays on 15.21.x |
 
 The description above is the framework's design contract, and it's a live-verified one — Auth, Catalog
 and Checkout (all 5 markets) all pass under real `cypress run` executions against the live app, not
@@ -64,7 +65,7 @@ add-to-cart through natural language, since its whole premise is exercising the 
 cy.prompt work for Auth/Catalog, to keep the free-tier prompt budget small). Every `checkout.feature`
 scenario can run through `DeterministicCheckoutUiStrategy` (the default — `LocatorProxy` + `cy.get()`)
 or `CyPromptCheckoutUiStrategy` (Cypress's AI-native `cy.prompt()`, one batched call per business
-action), selected via `Cypress.env('UI_STRATEGY')`:
+action), selected via `Cypress.expose('UI_STRATEGY')`:
 
 ```bash
 pnpm exec cypress run --spec cypress/e2e/checkout/checkout.feature --expose UI_STRATEGY=cyPrompt --browser chrome --record --key <your key>
@@ -367,7 +368,7 @@ classDiagram
 | **Proxy** | `LocatorProxy` wraps `locators/*.json` | Dot-path selector lookup with caching; throws a clear error on a missing key instead of a silent `undefined`. Replaces classic POM. |
 | **Template Method** | `BaseApiClient.request()`, `AtomicScenario` | Fixes the algorithm skeleton; slices fill in only the specific steps. |
 | **Facade** | `AuthFacade`, `CatalogFacade`, `CheckoutFacade` | One narrow entrypoint per slice, hides API+data+locator/strategy wiring from step definitions. |
-| **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.env('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
+| **Strategy** | (a) `CheckoutCountryStrategy` — per-country required-field/tip API key mapping, keyed by `CountryCode`. (b) `CheckoutUiStrategy` — one interface scoped at business-action granularity (`completeCheckout`/`assertOrderConfirmation`, matching `checkout.feature`'s `When` steps), with `DeterministicCheckoutUiStrategy` (`LocatorProxy` + `cy.get()`) and `CyPromptCheckoutUiStrategy` (`cy.prompt()`) implementations, selected via `Cypress.expose('UI_STRATEGY')`. | (a) 5 genuinely different required-field/tip rules (CH/JP reuse the same DOM field but different API keys). (b) Lets a step definition invoke the same checkout action via hardcoded locators or `cy.prompt()` without knowing which — scoped per business action, not per click, so `cy.prompt`'s multi-step batching isn't thrown away. |
 | **Builder** | `CheckoutRequestBuilder` | Checkout payloads have several country-conditional fields (computed property names for the required-field/tip keys) — reads better as a fluent construction than a function with many optional args. |
 | **Factory** | `UserFactory` (deterministic roster, loaded from `deterministicUsers.json`) | Centralizes how test data is built per slice. |
 | **Observer** | `ReportingSubject` + `Observer`, wired on `after:spec` | Decouples "a spec finished" from "who cares" — `ConsoleObserver` and `GithubActionsSummaryObserver` are both genuine subscribers; mochawesome is wired as Cypress's native `reporter` config, not a third Observer. |
@@ -422,7 +423,7 @@ call `any`, turning a compile error into a runtime one — it solved a problem J
 in the composition root keep go-to-definition and typechecking working).
 
 **Deliberately not built** (YAGNI/KISS): a Repository layer (`ApiClient` + `Facade` already cover it),
-Singleton (`Cypress.env()` is already a single config source), Command (no undo/replay requirement),
+Singleton (`Cypress.expose()` is already a single config source), Command (no undo/replay requirement),
 and Chain of Responsibility for checkout validation (folded into `CheckoutCountryStrategy` instead —
 each country strategy composes its own required-field/tip rule, no chain needed).
 
@@ -456,6 +457,91 @@ instead — `workflow_dispatch`-only (never on push/PR, to avoid burning Cloud q
 `--browser chrome` (Chromium-only constraint), needs the `CYPRESS_RECORD_KEY` repo secret and the
 `projectId` already set in `cypress.config.ts`. It never gates the deterministic pipeline — see Status
 above for what "structurally verified" means here versus a live-confirmed AI-resolution run.
+
+## Cypress 16
+
+Cypress 16.0.0 shipped on 2026-09-01. This branch (`feat/e-cypress16`) upgrades the framework to it
+so the question "does this survive a major?" has a measured answer rather than a hopeful one. It is
+deliberately **not** merged to `main` before the talk — see the recommendation at the end.
+
+### What changed
+
+Two dependency lines, one config file, one CI flag and a temporary pnpm exclusion. **No test, step
+definition, facade, strategy or support file changed** — `git diff main -- cypress/e2e src
+cypress/support` is empty.
+
+| File | Change |
+|---|---|
+| `package.json` | `cypress` `^15.21.0` → `16.0.0`; `@badeball/cypress-cucumber-preprocessor` `^26.0.0` → `28.0.0` (exact pins on purpose: a day-one major should not float into 16.0.1 unnoticed). Plus `engines.node` = Cypress 16's own `^22.0.0 \|\| ^24.0.0 \|\| >=26.0.0`. |
+| `cypress.config.ts` | `defaultBrowser: 'chrome'`; the old `allowCypressEnv STAYS ON` comment rewritten (the option no longer exists and preprocessor 28 no longer calls `Cypress.env()`); `keystrokeDelay` left at 16's new default of 0 ms — see below. |
+| `.github/workflows/tests.yml` | `--browser chrome` (Electron is deprecated as a test browser in 16 and stays on the legacy network path). |
+| `pnpm-workspace.yaml` | `minimumReleaseAgeExclude` for `@badeball/cypress-cucumber-preprocessor@28.0.0`: pnpm 11 refuses lockfile entries younger than 24 h, and 28.0.0 was published 2026-09-02T11:15Z. Deletable after 2026-09-03T11:15Z. |
+
+Why the two packages move together: 26.x of the preprocessor called `Cypress.env()` internally and
+its peer range excluded `^16`, so it could not start on 16 at all; 27.0.0 (2026-08-27) stopped calling
+`Cypress.env()` on Cypress ≥ 15.17 and reads its overrides from `--expose`, and 28.0.0 (2026-09-02) is
+the first release whose peer range admits 16. Everything this framework passes in (`UI_STRATEGY`,
+`BREAK_LOCATOR`, `LOG_LEVEL`, `apiUrl`) already travelled through `Cypress.expose()` / `--expose`, which
+is the whole reason the test code did not move: `Cypress.env()` is gone in 16, and `--env` still
+exists but only reaches Node (`config.env`, readable from a test solely through the async `cy.env()`).
+Removed config keys such as `allowCypressEnv` or `execTimeout` are warned about once at startup
+(`ALLOW_CYPRESS_ENV_REMOVED` / `EXEC_TIMEOUT_REMOVED`), not rejected — this branch simply does not set
+them. A visible side effect: every 15.21.0 baseline log opens with the `allowCypressEnv configuration
+option is enabled` warning that 26.x forced on this repo; none of the 16.0.0 logs prints a warning of
+any kind.
+
+### keystrokeDelay
+
+16 changed `cy.type()`'s default delay between keystrokes from 10 ms to 0. This framework's one
+typing-sensitive spot is `fillField` — it types into controlled React inputs and guards the result
+with `.should('have.value', …)`, and the checkout phone field already normalises a leading `+`. So
+the decision was made by running, not by reading: `checkout.feature` twice on 16.0.0 in Chrome, five
+markets each, at the default 0 ms. Result: 10/10 — the default stays; nothing to restore.
+`visibilityStrategy` (now `'modern'`, `Element.checkVisibility()`) needed nothing: every `be.visible`
+guard behaved as on 15.21.
+
+### Durations (same machine, same day, Chrome 152, `stats.duration` per spec from mochawesome)
+
+| Slice | 15.21.0 (Chrome) | 16.0.0 (Chrome) | Ratio |
+|---|---|---|---|
+| auth (2 scenarios) | 5936 ms | 3798 ms | 0.64 |
+| catalog (5) | 7570 ms | 6652 ms | 0.88 |
+| checkout (5, run 1 / run 2) | 22690 ms | 19380 / 17954 ms | 0.82 (mean 18667 ms) |
+
+For reference, the 2026-08-21 re-verification on 15.21.0 in **Electron** on the same machine measured
+auth 2.4–3.9 s, catalog 5.2–6.6 s, checkout 19.8–23.5 s. On this machine 16.0.0 in Chrome was not
+slower than 15.21.0 in Chrome on any slice (auth 0.64x, catalog 0.88x, checkout 0.82x on the mean of
+the two runs), and the 16.0.0 Chrome numbers land where the Electron ones did: auth inside the
+Electron reference range, checkout below it, catalog 50 ms above the top of its range. Single runs
+against a free-tier backend carry run-to-run noise of this size (the two 16.0.0 checkout runs
+themselves differ by 1.4 s), so the honest reading is "no slowdown", not "a 20 % speed-up". The
+#34760 threshold set in advance (checkout more than 1.5x the baseline) was never approached, so the
+one-off `--config forceHttp1=true` diagnostic was not run; `forceHttp1` is deprecated on arrival and
+is not set in this repo.
+
+Each checkout run places 10 real orders on the free-tier backend; the evidence for this section cost
+5 checkout runs in total (one 15.21.0 baseline, two keystrokeDelay runs, two final runs — 50 orders).
+
+### Open upstream on 2026-09-02
+
+- [cypress-io/cypress#34771](https://github.com/cypress-io/cypress/issues/34771) — headless Electron
+  on Windows produces 1264x712 screenshots/videos instead of 1280x720 (Electron 41 frameless-window
+  insets). Fix [PR #34773](https://github.com/cypress-io/cypress/pull/34773) is open; no 16.0.1 date.
+  This repo sidesteps it with Chrome, which is also why the preprocessor's own 28.0.0 release
+  partially disabled its failed-screenshot tests on 16.
+- [cypress-io/cypress#34760](https://github.com/cypress-io/cypress/issues/34760) — filed by a Cypress
+  engineer: response-stage CDP interception on the new native network path leaves the browser's HTTP
+  cache inert, so every navigation re-downloads static assets (one real suite: 58 s vs 27 s with
+  `forceHttp1: true`). The proposed fix is request-stage-only interception.
+
+### Recommendation
+
+Present the talk on **15.21.x** and show this branch as a PR diff (plus the job summary) in the
+"Cypress 16" segment. Reasons, all dated 2026-09-02: 16.0.0 is a day-one release; 28.0.0 of the
+preprocessor is a peer-range bump with thinner coverage on 16 than on 15; #34771 and #34760 are open
+with no 16.0.1 announced; and the pending `cy.prompt` verification should not share a run with a
+major upgrade — if something fails, you want to know which of the two it was. Re-check for a 16.0.1
+tag before 2026-10-20 and, if it exists, re-run Task 4 of the plan on it.
 
 ## Reporting
 
