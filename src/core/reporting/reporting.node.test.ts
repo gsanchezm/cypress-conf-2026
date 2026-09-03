@@ -15,7 +15,14 @@ const sampleResult: TestResult = {
   slice: 'auth',
 };
 
-test('ReportingSubject notifies every subscribed observer with the same results', () => {
+function summaryFileWith(results: TestResult[][]): string {
+  const summaryFile = join(mkdtempSync(join(tmpdir(), 'gha-summary-')), 'summary.md');
+  const observer = new GithubActionsSummaryObserver(summaryFile);
+  results.forEach((batch) => observer.onSpecComplete(batch));
+  return readFileSync(summaryFile, 'utf8');
+}
+
+test('ReportingSubject notifies every subscribed observer', () => {
   const received: TestResult[][] = [];
   const subject = new ReportingSubject();
   subject.subscribe({ onSpecComplete: (results) => received.push(results) });
@@ -24,19 +31,27 @@ test('ReportingSubject notifies every subscribed observer with the same results'
   subject.notify([sampleResult]);
 
   assert.equal(received.length, 2);
-  assert.deepEqual(received[0], [sampleResult]);
-  assert.deepEqual(received[1], [sampleResult]);
 });
 
-test('GithubActionsSummaryObserver appends a markdown table row to the summary file', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'gha-summary-'));
-  const summaryFile = join(dir, 'summary.md');
-  const observer = new GithubActionsSummaryObserver(summaryFile);
+test('ReportingSubject hands every observer the same results', () => {
+  const received: TestResult[][] = [];
+  const subject = new ReportingSubject();
+  subject.subscribe({ onSpecComplete: (results) => received.push(results) });
+  subject.subscribe({ onSpecComplete: (results) => received.push(results) });
 
-  observer.onSpecComplete([sampleResult]);
+  subject.notify([sampleResult]);
 
-  const content = readFileSync(summaryFile, 'utf8');
-  assert.match(content, /\| auth \| A standard customer logs in successfully \| passed \| 842ms \|/);
+  assert.deepEqual(received, [[sampleResult], [sampleResult]]);
+});
+
+test('GithubActionsSummaryObserver appends a markdown row with strategy, attempts and cause', () => {
+  const content = summaryFileWith([[sampleResult]]);
+  assert.match(content, /\| auth \| deterministic \| A standard customer logs in successfully \| passed \| 1 \| 842ms \| – \|/);
+});
+
+test('GithubActionsSummaryObserver accumulates the by-strategy table across specs', () => {
+  const content = summaryFileWith([[sampleResult], [{ ...sampleResult, slice: 'catalog' }]]);
+  assert.match(content, /\| deterministic \| 2 \| 2 \| 0 \| 0\.8 s \|\n$/);
 });
 
 test('GithubActionsSummaryObserver is a no-op when no summary path is configured', () => {

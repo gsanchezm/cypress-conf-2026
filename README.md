@@ -459,8 +459,25 @@ above for what "structurally verified" means here versus a live-confirmed AI-res
 
 ## Reporting
 
-- **Console** — enriched, colored, per-slice output during `cypress run` (`ConsoleObserver`).
-- **GitHub Actions job summary** — a markdown table written to `$GITHUB_STEP_SUMMARY`
-  (`GithubActionsSummaryObserver`), local no-op outside CI.
+Every `after:spec` payload is mapped by `src/core/reporting/afterSpecMapper.ts` (pure, tested
+offline, designed from a dumped payload) into `TestResult` rows that carry `error {name, message}`,
+`attempts`, `screenshots` and the run `labels` (`UI_STRATEGY`, `BREAK_LOCATOR`, `HEAL_LOCATORS`,
+read once from `config.expose`). `classifyFailure` turns the error into a cause — `precondition`
+(the arrange step broke, the claim never ran), `product-claim` (an assertion failed),
+`broken-locator` (the selector registry is stale: the self-naming `data-cy-broken-locator`
+attribute is in the message), `infra` (ECONNRESET/timeouts/5xx from Render) or `unknown`. The
+broken-locator check runs before the AssertionError check on purpose: a `cy.get()` timeout *is* an
+AssertionError.
+
+- **Console** — `ConsoleObserver` (pino): one line per test; a failure adds attempts, cause and the
+  error (`❌ [checkout] … · attempts 3 · cause broken-locator · AssertionError: Timed out …`).
+- **GitHub Actions job summary** — `GithubActionsSummaryObserver`: per spec, a heading with the run
+  labels, a totals sentence, a table with `Attempts` and `Cause` columns (`|` in titles escaped), and
+  a `By strategy` table (tests, passed, failed, mean duration) cumulative for the job. One job runs one
+  strategy, so deterministic-vs-`cy.prompt` is two job summaries side by side — not one table
+  pretending to be a benchmark. No-op outside CI.
 - **HTML/JSON** — `mochawesome`, wired as Cypress's native `reporter` (`cypress.config.ts`), written to
   `cypress/reports/mochawesome/` (gitignored).
+- **Raw evidence** — `AFTER_SPEC_DUMP=<path> pnpm exec cypress run …` appends every raw `after:spec`
+  payload as one JSON line; it is what the mapper was designed from and what an offline triage agent
+  can replay.

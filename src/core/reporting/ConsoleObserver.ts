@@ -1,12 +1,7 @@
 import pino from 'pino';
 import type { Observer, TestResult } from './Observer';
-
-const ICONS: Record<TestResult['state'], string> = {
-  passed: '✅',
-  failed: '❌',
-  pending: '⏸️',
-  skipped: '⏭️',
-};
+import { causeOf } from './classifyFailure';
+import { describeResult } from './describeResult';
 
 const LEVEL_BY_STATE: Record<TestResult['state'], 'info' | 'error'> = {
   passed: 'info',
@@ -28,8 +23,15 @@ export class ConsoleObserver implements Observer {
   onSpecComplete(results: TestResult[]): void {
     results.forEach((result) => {
       logger[LEVEL_BY_STATE[result.state]](
-        { slice: result.slice, state: result.state, durationMs: result.durationMs },
-        `${ICONS[result.state]} [${result.slice}] ${result.title} (${result.durationMs}ms)`,
+        {
+          slice: result.slice,
+          state: result.state,
+          durationMs: result.durationMs,
+          attempts: result.attempts ?? 1,
+          cause: causeOf(result),
+          error: result.error,
+        },
+        describeResult(result),
       );
     });
   }
