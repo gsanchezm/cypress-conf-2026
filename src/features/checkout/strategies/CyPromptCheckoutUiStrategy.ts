@@ -13,13 +13,19 @@ import type { CheckoutRequestData, OrderSummary } from '@/core/types';
 export class CyPromptCheckoutUiStrategy implements CheckoutUiStrategy {
   completeCheckout(order: CheckoutRequestData): void {
     const prompt = preparePrompt(checkoutPrompts, 'completeCheckout', {
-      pizzaId: order.items[0]!.pizzaId,
       address: order.address,
-      requiredFieldValue: order.requiredFieldValue,
       name: order.name,
       phone: order.phone,
     });
-    cy.prompt(prompt.steps, { placeholders: prompt.placeholders });
+    const requiredField = preparePrompt(checkoutPrompts, `requiredField${order.countryCode}`, {
+      requiredFieldValue: order.requiredFieldValue,
+    });
+    const markers = prompt.steps.filter((step) => step === '[requiredField]');
+    if (markers.length !== 1) {
+      throw new Error('Checkout prompt must contain exactly one [requiredField] marker');
+    }
+    const steps = prompt.steps.flatMap((step) => step === '[requiredField]' ? requiredField.steps : [step]);
+    cy.prompt(steps, { placeholders: { ...prompt.placeholders, ...requiredField.placeholders } });
   }
 
   assertOrderConfirmation(expected: OrderSummary): void {

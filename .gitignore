@@ -1,8 +1,10 @@
 node_modules/
+.env
 cypress/reports/
 cypress/videos/
 cypress/screenshots/
 dist/
+graphify-out/
 docs/*
 !docs/index.html
 .worktrees/

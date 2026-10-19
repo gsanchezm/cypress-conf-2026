@@ -17,7 +17,8 @@ export interface PreparedPrompt {
 // document's preamble and is discarded by the leading hole.
 const SECTION_BOUNDARY = /^##[ \t]+(?=\S)/m;
 const LIST_ITEM = /^[-*]\s+(.+?)\s*$/;
-const PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
+const PLACEHOLDER = /\{\{([A-Za-z0-9_]+)\}\}/g;
+const LEGACY_PLACEHOLDER = /(?<!\{)\{([A-Za-z0-9_]+)\}(?!\})/g;
 
 // `?? []` makes flatMap drop non-matching lines, so prose is filtered out by
 // the same pass that extracts the steps - no second filter, no type guard.
@@ -64,7 +65,7 @@ export function parsePromptDocument(markdown: string): PromptDocument {
 // This check is the point of moving prompt text out of TypeScript at all.
 // Inline, a renamed placeholder was a compile error. In a .md that a
 // non-developer can edit, it is invisible: cy.prompt would receive the
-// literal "{addres}", hand it to the model, and the AI would improvise
+// literal "{{addres}}", hand it to the model, and the AI would improvise
 // something plausible - a silently wrong test rather than a failing one.
 export function preparePrompt(
   markdown: string,
@@ -80,6 +81,11 @@ export function preparePrompt(
   }
   if (steps.length === 0) {
     throw new Error(`Prompt document: section "${section}" declares no steps`);
+  }
+
+  const legacy = steps.flatMap((step) => [...step.matchAll(LEGACY_PLACEHOLDER)].map((token) => token[1]!));
+  if (legacy.length > 0) {
+    throw new Error(`Prompt document: use double braces for cy.prompt placeholders: ${legacy.join(', ')}`);
   }
 
   const referenced = placeholdersIn(steps);

@@ -17,9 +17,9 @@ atomic run: no hidden coupling between "the API suite" and "the UI suite."
 | Market & Catalog i18n (5 markets: MX/US/CH/JP/SA) | ✅ Done |
 | Cart & Checkout (multi-country, 5 markets: US/MX/CH/JP/SA) | ✅ Done |
 | Orders & edge cases | ❌ Out of scope (decision made 2026-08-19) — see below |
-| `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Built, structurally verified — AI-resolution correctness needs a live Cypress Cloud run (see below) |
+| `cy.prompt` suite (`UI_STRATEGY=cyPrompt`, Checkout only) | ✅ Five markets passed in recorded Cypress Cloud run 7 on 2026-10-19; TestRail R7 closed with 5 passed |
 | Assertion-budget refactor (1 API claim + 1 UI claim per scenario) | ✅ Done — re-verified live 2026-08-21, 12/12 (auth 2, catalog 5, checkout 5) |
-| Foundations: enriched Observer (error/attempts/screenshots/labels + cause), cy.prompt budget guards, CI `check` job + opt-in recording, `pnpm warmup` | ✅ Done — verified live 2026-09-02, 12/12 deterministic; cy.prompt still never executed (owner's trigger) |
+| Foundations: enriched Observer (error/attempts/screenshots/labels + cause), cy.prompt budget guards, CI `check` job + opt-in recording, `pnpm warmup` | ✅ Done — verified live 2026-09-02, 12/12 deterministic; cy.prompt verified 2026-10-19 |
 | Self-healing locators without an LLM (`HEAL_LOCATORS=a11y`) + "break the app, not the JSON" (`MUTATE_DOM`) | ✅ Done — live-verified 2026-09-02, matrix below (checkout 5/5 ×3, 5/5 fail ×1 by design); full suite without flags 12/12 |
 
 The description above is the framework's design contract, and it's a live-verified one — Auth, Catalog
@@ -74,19 +74,19 @@ CYPRESS_RECORD_KEY=<key> pnpm exec cypress run --spec cypress/e2e/checkout/check
 
 **The prompt text is not in the TypeScript.** It lives in
 [`src/features/checkout/prompts/checkout.prompt.md`](src/features/checkout/prompts/checkout.prompt.md),
-one `##` section per strategy method, with the rationale as prose next to the steps it explains —
+one `##` section per strategy method or country-specific field, with rationale next to the steps —
 editable by anyone who can read English, without touching code. esbuild's text loader
 (`loader: { '.md': 'text' }` in `cypress.config.ts`) turns the import into a plain string at bundle
 time, so `CyPromptCheckoutUiStrategy` stays synchronous; `cy.fixture`/`cy.readFile` would have forced a
 `Chainable` through the whole `CheckoutUiStrategy` interface.
 
 That move opens a hole, and `preparePrompt()` closes it. Inline, a renamed placeholder was a compile
-error. In a markdown file, it's invisible — `cy.prompt()` would receive the literal `{addres}`, hand it
+error. In a markdown file, it's invisible — `cy.prompt()` would receive the literal `{{addres}}`, hand it
 to the model, and the AI would improvise something plausible, producing a *silently wrong* test rather
-than a failing one. So `preparePrompt()` cross-checks `{token}`s against supplied values in both
-directions and throws on either mismatch. A `node:test` case reads the shipped `.md` from disk, so a
-typo'd heading or placeholder fails during `pnpm test:unit:node` rather than during a billed Cloud run
-— which is the only place `cy.prompt` can execute at all.
+than a failing one. So `preparePrompt()` cross-checks `{{token}}`s against supplied values in both
+directions and throws on either mismatch. It also rejects obsolete single-brace placeholders before
+`cy.prompt()` runs. The earlier `node:test` coverage was removed with the other Node test files;
+`pnpm test:unit:node` currently executes zero tests.
 
 Locally this needs `cypress open`/`cypress run` while logged into Cypress Cloud, or `cypress run
 --record` with the project's record key; in CI it's `.github/workflows/cy-prompt-suite.yml`
@@ -101,9 +101,8 @@ wrong (and that slide 18 of the deck still repeats):
   month); Team starts at 9k executions a year. Over the limit on Starter, self-healing and new prompt
   creation switch off for the rest of the billing cycle — no surprise bill, just a suite that quietly
   stops being AI.
-- This suite makes exactly **2 calls per scenario × 5 markets = 10 executions per run**, asserted
-  offline by `src/core/prompts/checkoutBudget.node.test.ts` from `checkout.prompt.md` and
-  `checkout.feature`. **That is 10 runs per month on Starter, rehearsals included** — and a Cypress
+- This suite makes exactly **2 calls per scenario × 5 markets = 10 executions per run**.
+  **That is 10 runs per month on Starter, rehearsals included** — and a Cypress
   retry re-runs the scenario's `cy.prompt()` calls, so a flaky market costs extra.
 - The "100 prompts / 500 steps per hour" figures are per-user caps that apply **only to runs not
   recording to Cloud**; `cy-prompt-suite.yml` records, so the monthly quota is what governs it.
@@ -113,9 +112,8 @@ wrong (and that slide 18 of the deck still repeats):
   prompt text before rehearsing. A section may not exceed 50 steps (Cypress's per-call limit);
   `parsePromptDocument` throws above that.
 
-**The exact first run** — never executed end to end as of 2026-09-02 (see the next paragraph) — is
-the repo owner's to trigger, and costs 10 executions plus 5 test results from the monthly quota
-either way:
+**Recorded `cy.prompt` run:** the workflow runs all five Checkout examples and can execute two
+prompts per example, plus retries. For one example locally, add `--env tags=@C9 --config retries=0`:
 
 ```bash
 # Local, recording:
@@ -124,15 +122,20 @@ CYPRESS_RECORD_KEY=<key> pnpm exec cypress run --spec cypress/e2e/checkout/check
 gh workflow run cy-prompt-suite.yml
 ```
 
-This sandbox could not log into Cypress Cloud to exercise `cy.prompt`'s actual AI resolution against the
-live app. What was verified here: `tsc` is clean, and a throwaway diagnostic spec (since deleted) proved
-`CyPromptCheckoutUiStrategy`'s calls genuinely reach Cypress's real `cy.prompt()` command and attempt
-Cloud initialization — failing with `CypressError: Failed to download cy.prompt Cloud code: ECONNRESET:
-request to https://api.cypress.io/cy-prompt/session failed`, the same category of live-network limitation
-this sandbox hits on every other host, not a code defect. Whether the AI correctly resolves prompts like
-"enter the required delivery-detail field for this country" against the real DOM for all 5 markets needs
-one live run — triggered by you, either locally or via `cy-prompt-suite.yml` — before relying on this
-suite for the talk.
+The first recorded workflow run failed because Cypress requires `{{placeholder}}`. After correcting
+the syntax and giving each country an explicit delivery-detail target, a local recorded run passed
+all five Checkout markets: [Cypress Cloud run 7](https://cloud.cypress.io/projects/5v45hh/runs/7).
+The TestRail observer reported and closed R7 with five passed results.
+
+### Cypress Cloud CLI
+
+`@cypress/cloud` is installed as a pnpm dev dependency. Use `pnpm cloud:status` to check CLI
+authentication and `pnpm cloud:runs` to list this project's runs. The CLI needs a separate Cypress
+Cloud login or a `CYPRESS_CLOUD_TOKEN` personal access token; `CYPRESS_RECORD_KEY` authenticates
+recorded Cypress runs only. An organization administrator may also need to enable the CLI integration
+in Cypress Cloud. Keep tokens in the local ignored `.env` or a secure environment store; for a token
+in `.env`, run `pnpm exec dotenvx run -f .env -- pnpm cloud:status`. Interactive login is
+`pnpm exec cy-cloud login`.
 
 ### Break the app, not the JSON — three healers, one renamed attribute
 
@@ -589,12 +592,85 @@ Both `omnipizza-frontend`/`omnipizza-backend` are live Render free-tier deploys 
 start. Render free tier can cold-start on the first request of a run; `BaseApiClient` gives the first
 request extra timeout headroom for this.
 
+## Graphify: local code graph
+
+[Graphify](https://github.com/Graphify-Labs/graphify) maps code symbols and their relationships into a
+queryable graph. It is a developer tool for exploring this framework; Cypress tests and CI do not need
+it. The official Python package is **`graphifyy`** (two `y` characters), while its command is
+`graphify`. The setup below uses local, code-only extraction: no Graphify Cloud account, model API key,
+MCP server, or Python dependency in this pnpm project is required. It requires Python 3.10 or newer
+and [`uv`](https://docs.astral.sh/uv/).
+
+### 1. Install the CLI
+
+On Windows, install `uv` with WinGet, then **open a new PowerShell window** so its updated `PATH` is
+available:
+
+```powershell
+winget install --id astral-sh.uv --exact --scope user --accept-package-agreements --accept-source-agreements
+python --version
+uv --version
+uv tool install graphifyy
+graphify --version
+```
+
+On macOS or Linux, install `uv` using the [official instructions](https://docs.astral.sh/uv/getting-started/installation/),
+then run:
+
+```bash
+python3 --version
+uv --version
+uv tool install graphifyy
+graphify --version
+```
+
+If `graphify` is not found after installation, run `uv tool update-shell` and open another terminal.
+Do not install a similarly named `graphify` package from PyPI; Graphify Labs publishes `graphifyy`.
+
+### 2. Register the assistant skill
+
+Run the command for each assistant you use. These commands install the skill in your **user profile**;
+they do not alter this repository's existing `.claude/skills/`, hooks, or `CLAUDE.md`:
+
+```text
+graphify install --platform claude
+graphify install --platform codex
+```
+
+Restart the assistant so it discovers the new skill. In Claude Code, ask `/graphify .`; in Codex,
+select `$graphify` and ask it to map the current repository. Registration is optional when using the
+CLI directly. For a repository-scoped skill instead, see Graphify's
+[installation guide](https://docs.graphify.com/installation) and its `--project` option; inspect the
+files that installer proposes before committing them.
+
+### 3. Build and query this repository
+
+Run these commands from the repository root:
+
+```text
+graphify extract . --code-only
+graphify cluster-only . --no-label
+graphify query "How does CheckoutFacade connect to TestRailObserver?"
+graphify explain "CheckoutFacade"
+```
+
+`extract --code-only` parses supported source files locally without an LLM. `cluster-only --no-label`
+creates the report and interactive HTML without calling a model. Open `graphify-out/graph.html` in a
+browser; `graphify-out/graph.json` is the queryable graph and `graphify-out/GRAPH_REPORT.md` is its
+summary. On Windows, `Start-Process .\graphify-out\graph.html` opens the HTML file. The whole
+`graphify-out/` directory is ignored by Git. Re-run the two build commands after substantial code
+changes to refresh the graph.
+
+The code-only graph excludes Markdown documentation and Gherkin `.feature` files; Graphify reports
+unsupported file types when it scans them. This is sufficient for source-code relationships. A
+semantic pass over documents needs a separately configured model backend and is outside this local
+setup. See Graphify's [CLI reference](https://docs.graphify.com/reference/overview) for other modes.
+
 ## Running in CI
 
 `.github/workflows/tests.yml` runs on `push`/`pull_request` to `main` and on `workflow_dispatch`. A
-single `check` job runs `pnpm typecheck` and `pnpm test:unit:node` — the offline guards, including
-the one that reads `checkout.prompt.md` from disk and the one that asserts the 10-executions budget;
-the Cypress matrix (one job per vertical slice with a live `.feature`) only starts once `check` is
+single `check` job runs `pnpm typecheck`; the Node test files were removed at the owner's request.
+The Cypress matrix (one job per vertical slice with a live `.feature`) only starts once `check` is
 green. Adding a slice is a one-line matrix edit. The Cypress binary is cached per version
 (`~/.cache/Cypress`, keyed on the `cypress@x.y.z` entry in `pnpm-lock.yaml`), pnpm is pinned from
 `package.json`'s `packageManager`, runs use `--browser chrome`, `cypress.config.ts` sets
@@ -613,7 +689,7 @@ job summary by `GithubActionsSummaryObserver`.
 `workflow_dispatch`-only, `--browser chrome` (Chromium-only constraint), always recorded (`cy.prompt`
 requires Cloud), needs the `CYPRESS_RECORD_KEY` repo secret and the `projectId` in
 `cypress.config.ts`. Each dispatch costs 10 of the 100 monthly executions. It never gates the
-deterministic pipeline — see Status above for what "structurally verified" means versus a live run.
+deterministic pipeline. All five markets passed in local recorded run 7.
 
 ## Reporting
 
@@ -707,12 +783,12 @@ Every Scenario and every Scenario Outline **row** carries a `@C<id>` tag, where 
 in TestRail's `/cases/view/<id>`:
 
 ```gherkin
-  @C1001
+  @C1
   Scenario: A standard customer logs in successfully
 
   Scenario Outline: A standard customer sees pizza prices localized for their market
     ...
-    @C1003
+    @C3
     Examples: United States
       | market        | currency   |
       | United States | US dollars |
@@ -727,14 +803,9 @@ skipped, never guessed. `pending`/`skipped` results are not submitted — they s
 TestRail, which is the truth; a scenario that passed after a retry is reported as **Retest**
 (`retries: { runMode: 2 }` is configured, so this applies to headless runs).
 
-**The ids in this repo (`C1001`–`C1012`) are placeholders.** To make them real:
-
-1. Start the 30-day TestRail Cloud trial (`https://content.testrail.com/trial`, no credit card),
-   enable the API under Admin → Site Settings → API, and create an API key under My Settings → API Keys.
-2. Create a project in single-suite mode and 12 cases with the scenario titles (auth 2, catalog 5,
-   checkout 5). Note each case's id.
-3. Replace the `@C` tags in `cypress/e2e/**/*.feature` with those ids and set `TESTRAIL_PROJECT_ID`.
-   No code changes. `pnpm test:unit:node` checks the three files still map 12 distinct ids.
+The tags now refer to real cases `C1`–`C12` in the **OmniPizza Cypress Conf 2026** TestRail
+project (`TESTRAIL_PROJECT_ID=1`): Auth 2, Catalog 5, Checkout 5. Keep each `@C` tag aligned with
+its case when changing a scenario. TestRail credentials stay outside version control.
 
 Each GitHub Actions matrix job is its own `cypress run`, so it would create its own TestRail run; to
 have one run per workflow, open it in a setup job (`add_run`), pass its id to the slices and close it

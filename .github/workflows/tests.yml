@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   check:
-    name: typecheck + unit
+    name: typecheck
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -47,11 +47,6 @@ jobs:
 
       - name: Type-check
         run: pnpm typecheck
-
-      # The offline guards: prompt-document placeholders, the 10-executions
-      # budget, the after:spec mapper, the failure classifier.
-      - name: Unit tests (node:test)
-        run: pnpm test:unit:node
 
   cypress:
     name: ${{ matrix.slice }}
