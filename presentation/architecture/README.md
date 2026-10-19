@@ -1,6 +1,6 @@
 # Cypress Conf 2026 architecture diagrams
 
-Five 16:9 slides explain the current integration and the proposed agentic demo. Each slide has an editable SVG and a 1600 × 900 PNG for PowerPoint, Keynote, or Google Slides. `architecture-flow.pdf` combines the five PNGs in order. Diagram labels are in English to match the talk assets; the narration below can be adapted to Spanish.
+Five original 16:9 diagrams explain the current integration and the proposed agentic demo. Each has an editable SVG and a 1600 × 900 PNG for PowerPoint, Keynote, or Google Slides. A sixth diagram of the agents was authored with Archify and exported as a clean PNG for the deck. `architecture-flow.pdf` combines the original five PNGs in order. Diagram labels are in English to match the talk assets; the narration below can be adapted to Spanish.
 
 [Contact sheet](contact-sheet.png) · [Five-page PDF](architecture-flow.pdf)
 
@@ -11,6 +11,7 @@ Five 16:9 slides explain the current integration and the proposed agentic demo. 
 | 3. Two UI adaptation paths | Separate deterministic locator fallback from Cloud-backed `cy.prompt`. | [SVG](03-healing-paths.svg) · [PNG](03-healing-paths.png) |
 | 4. CI communication map | Walk through automatic verification, manual Cloud recording, and failure-only Claude triage. | [SVG](04-ci-and-triage.svg) · [PNG](04-ci-and-triage.png) |
 | 5. Target agentic demo loop | Introduce the planned TestRail case reader and strict issue gate, clearly labeled as proposed. | [SVG](05-proposed-agentic-loop.svg) · [PNG](05-proposed-agentic-loop.png) |
+| 6. Agent architecture | Separate agent skills, Claude adapters, the test harness, and runtime `cy.prompt`. | [Interactive Archify diagram](../../docs/agent-architecture.html) · [slide PNG](06-agent-workflow-archify.png) |
 
 ## What is implemented today
 
@@ -34,6 +35,8 @@ powershell -ExecutionPolicy Bypass -File presentation/architecture/render_png.ps
 ```
 
 `generate.py` uses the Python standard library. The PNG exporter uses installed Chrome or Edge in headless mode; it does not access a network service. The SVGs remain editable in vector software or by editing the generator. To rebuild the combined PDF:
+
+The Archify diagram has its own [candidate JSON](../../.archify/architecture-agent-workflow-20261019/candidate.json). After finalizing it with Archify, run `python presentation/architecture/export_archify.py` to refresh the slide PNG and copy its standalone HTML to `docs/agent-architecture.html` for GitHub Pages.
 
 ```powershell
 python -c "from PIL import Image; from pathlib import Path; p=Path('presentation/architecture'); images=[Image.open(f).convert('RGB') for f in sorted(p.glob('0[1-5]-*.png'))]; images[0].save(p/'architecture-flow.pdf', save_all=True, append_images=images[1:])"

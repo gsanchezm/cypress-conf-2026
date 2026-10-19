@@ -46,11 +46,54 @@ def grid(cards, columns=2, gap=28):
 def diagram(name):
     raw = (ARCH / name).read_bytes()
     encoded = base64.b64encode(raw).decode("ascii")
-    return f'<img alt="{text(name)}" src="data:image/svg+xml;base64,{encoded}" style="display: block; width: 100%; height: 100%; object-fit: contain;"/>'
+    mime = "image/png" if name.lower().endswith(".png") else "image/svg+xml"
+    return f'<img alt="{text(name)}" src="data:{mime};base64,{encoded}" style="display: block; width: 100%; height: 100%; object-fit: contain;"/>'
 
 
-def code(lines):
-    return f'<pre style="margin: 0; background: #080B08; border: 1px solid var(--line); border-left: 8px solid var(--green); padding: 38px 46px; color: var(--ink); font: 26px/1.6 JetBrains Mono,monospace; white-space: pre-wrap; overflow: hidden;">{text(lines)}</pre>'
+CODE_TOKEN = re.compile(
+    r"(?P<placeholder>\{\{[A-Za-z_][A-Za-z_0-9]*\}\})"
+    r"|(?P<comment>//[^\n]*|#[^\n]*)"
+    r"|(?P<string>'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\")"
+    r"|(?P<flag>--[A-Za-z][A-Za-z-]*)"
+    r"|(?P<word>\b[A-Za-z_][A-Za-z_0-9]*\b)"
+    r"|(?P<number>\b\d+\b)"
+)
+CODE_COLORS = {
+    "placeholder": "#B7F56B",
+    "comment": "#719A75",
+    "string": "#D9F59A",
+    "flag": "#7EE9C4",
+    "function": "#72E7B2",
+    "keyword": "#38F443",
+    "number": "#E5D98A",
+}
+CODE_KEYWORDS = {"AtomicScenario", "arrangeViaApi", "hydrateUi", "assertUi", "const", "let", "return", "pnpm", "cy", "prompt"}
+
+
+def highlighted_line(line, language):
+    if language == "markdown" and line.startswith("## "):
+        return f'<span style="color: {CODE_COLORS["keyword"]}; font-weight: 700;">{text(line)}</span>'
+
+    parts = []
+    cursor = 0
+    for match in CODE_TOKEN.finditer(line):
+        parts.append(text(line[cursor:match.start()]))
+        kind = match.lastgroup
+        token = match.group()
+        if language == "markdown" and kind == "comment":
+            kind = "keyword" if token == "#" else None
+        if kind == "word":
+            kind = "keyword" if token in CODE_KEYWORDS else "function" if line[match.end():].startswith("(") else None
+        color = CODE_COLORS.get(kind)
+        parts.append(f'<span style="color: {color};">{text(token)}</span>' if color else text(token))
+        cursor = match.end()
+    parts.append(text(line[cursor:]))
+    return "".join(parts)
+
+
+def code(lines, language="typescript"):
+    highlighted = "\n".join(highlighted_line(line, language) for line in lines.split("\n"))
+    return f'<pre style="margin: 0; background: #060B07; border: 1px solid #31583B; border-left: 9px solid #38F443; box-shadow: inset 0 0 0 1px #102A16, 0 18px 44px #0009; padding: 34px 44px; color: #F1F8EF; font: 26px/1.46 JetBrains Mono,monospace; white-space: pre-wrap; overflow: hidden;">{highlighted}</pre>'
 
 
 def make_new_slides():
@@ -85,13 +128,25 @@ def make_new_slides():
         card("Human-owned boundary", ["The owner authorizes Cloud and external writes", "A denied oracle edit is not a repair"], small=True),
     ]), "Deterministic hooks enforce the boundary before a model decides.")
 
-    slides["Official Skills"] = shell("Official Skills", "Five Cypress skills, five jobs", "Nombra los cinco skills oficiales copiados de cypress-io/ai-toolkit. Son instrucciones especializadas para el asistente, no cinco agentes autónomos.", grid([
-        card("cypress-tap", ["Red → green in an open cypress open session", "Inspect the failing DOM and command"], small=True),
-        card("cypress-cloud-cli", ["Inspect runs, tests, screenshots", "Read Test Replay timelines"], small=True),
-        card("cypress-author", ["Create or repair Cypress tests", "Within repository guardrails"], small=True),
-        card("cypress-explain", ["Review and explain tests", "Read-only reasoning"], small=True),
-        card("cypress-docs", ["Search official Cypress docs", "Ground API and feature claims"], small=True),
-    ], 3, 24), "Skills guide the assistant; hooks and repository rules still apply.")
+    slides["Agent Architecture"] = f'''<section data-label="Agent Architecture" data-speaker-notes="Este mapa de Archify separa al asistente del runner: Claude, Codex y Copilot siguen AGENTS.md; skills guían al asistente; hooks y subagentes son adaptadores de Claude; Cypress ejecuta las pruebas y cy.prompt es una estrategia opcional de runtime." style="position: relative; background: #080e1d; color: #F1F8EF; font-family: Archivo,sans-serif; overflow: hidden;">
+  {diagram("06-agent-workflow-archify.png")}
+  <div style="position: absolute; left: 65px; top: 40px; background: #080e1de8; padding: 10px 24px 14px 0;"><span style="color: #38F443; font: 700 22px JetBrains Mono,monospace; letter-spacing: 2px;">AGENT ARCHITECTURE</span><h2 style="margin: 6px 0 0; font-size: 52px; line-height: 1;">One harness, optional assistants</h2></div>
+  <a href="agent-architecture.html" target="_blank" rel="noopener" style="position: absolute; right: 78px; bottom: 42px; color: #9BF9B0; font: 700 22px JetBrains Mono,monospace; text-decoration: underline; background: #080e1de8; padding: 10px 14px;">Explore the interactive map ↗</a>
+</section>'''
+
+    slides["Official Skills"] = shell("Official Skills", "Five skills, five moments", "Los skills son instrucciones para el asistente. cypress-tap inspecciona la sesión abierta y el DOM real; cloud-cli consulta evidencia grabada; author crea o arregla tests; explain revisa sin editar; docs busca la fuente oficial. Son cinco capacidades, no cinco agentes autónomos.", grid([
+        card("cypress-tap", ["When: a local spec is red", "Output: live DOM + failing command", "Action: red → green in cypress open"], small=True),
+        card("cypress-cloud-cli", ["When: a recorded run fails", "Output: tests, screenshots, Replay timeline", "Action: inspect remote evidence"], small=True),
+        card("cypress-author", ["When: a test needs creation or repair", "Output: Cypress test changes", "Boundary: preserve the oracle"], small=True),
+        card("cypress-explain", ["When: a test needs review", "Output: read-only explanation", "Action: clarify behavior and risks"], small=True),
+        card("cypress-docs", ["When: an API or feature is uncertain", "Output: official Cypress references", "Action: verify before changing code"], small=True),
+    ], 3, 20), "A skill changes how the assistant works; it is not a Cypress test command.")
+
+    slides["Skills vs cy.prompt"] = shell("Skills vs cy.prompt", "Two different instruction layers", "Contrasta tiempos y destinatarios. Los skills de cypress-io/ai-toolkit guían al asistente cuando escribe, explica o diagnostica. checkout.prompt.md contiene pasos de UI del test; preparePrompt valida y rellena placeholders; cy.prompt consume esos pasos durante la corrida grabada y usa Cypress Cloud. El contrato Gherkin y las aserciones permanecen versionados.", grid([
+        card("Agent skill", ["Audience: coding assistant", "Time: authoring or diagnosis", "Input: SKILL.md + tools", "Result: inspect, explain, or edit code"], small=True),
+        card("checkout.prompt.md", ["Audience: Cypress strategy", "Time: test execution", "Input: UI steps + {{placeholders}}", "Result: prepared runtime instructions"], small=True),
+        card("cy.prompt()", ["Audience: Cypress Cloud AI", "Time: optional recorded run", "Input: prepared steps + current UI", "Result: browser actions and confirmation"], small=True),
+    ], 3, 24), "Skills guide the builder. cy.prompt drives the browser during an opted-in test run.")
 
     slides["Subagents and Graphify"] = shell("Subagents and Graphify", "Diagnose, repair, understand", "Distingue subagentes de la ruta CI: cy-triage y cy-fixer son herramientas locales con permisos distintos. Graphify es un mapa estático local, snapshot de 634 nodos, 1,368 aristas y 24 comunidades; no llama a una API de pago para esta extracción.", grid([
         card("@agent-cy-triage", ["Read-only evidence review", "JSON verdict: cause, confidence, evidence"], small=True),
@@ -116,9 +171,9 @@ def make_new_slides():
         card("Recorded evidence", ["Cypress Cloud project 5v45hh", "Run 8: five markets passed", "Cloud caches generated commands"], small=True),
     ]), "Dynamic values use {{placeholders}}; element targets must be explicit.")
 
-    slides["Prompts as Markdown"] = shell("Prompts as Markdown", "Prompt text is versioned", "Corrige el relato anterior: Cypress requiere {{token}} y no permite placeholders en targets. El campo del país usa una frase estática específica por mercado; preparePrompt detecta tokens faltantes antes de llamar a cy.prompt. Los tests Node de presupuesto fueron retirados a petición del dueño.", code("checkout.prompt.md · excerpt\n\n## completeCheckout\n- Add the Margherita pizza to the cart from the catalog page\n- Enter {{address}} into the address field\n- [requiredField]\n- Click the cash payment option\n- Confirm the order\n\n## requiredFieldMX\n- Enter {{requiredFieldValue}} into the colonia (neighborhood) field"), "Country-specific target, runtime-only value; preparePrompt checks placeholder names.")
+    slides["Prompts as Markdown"] = shell("Prompts as Markdown", "Prompt text is versioned", "Corrige el relato anterior: Cypress requiere {{token}} y no permite placeholders en targets. El campo del país usa una frase estática específica por mercado; preparePrompt detecta tokens faltantes antes de llamar a cy.prompt. Los tests Node de presupuesto fueron retirados a petición del dueño.", code("checkout.prompt.md · excerpt\n\n## completeCheckout\n- Add the Margherita pizza to the cart from the catalog page\n- Enter {{address}} into the address field\n- [requiredField]\n- Click the cash payment option\n- Confirm the order\n\n## requiredFieldMX\n- Enter {{requiredFieldValue}} into the colonia (neighborhood) field", "markdown"), "Country-specific target, runtime-only value; preparePrompt checks placeholder names.")
 
-    slides["Demo Backup: Commands"] = shell("Demo Backup: Commands", "Rehearsed locator mutation", "Estos son comandos PowerShell de respaldo para un caso, C9. La mutación cambia el data-testid real en el DOM; el registro sigue intacto. El primer comando falla con retries 0 y el segundo pasa usando el fallback cosechado. No correr ambos en paralelo contra la app compartida.", code("# Fail: app DOM changes; registry keeps the old selector\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address' --config 'retries=0'\n\n# Pass: same mutation, harvested a11y fallback enabled\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y' `\n  --config 'retries=0'"), "Deterministic healing is live-verified; cy.prompt's response to this mutation is untested.")
+    slides["Demo Backup: Commands"] = shell("Demo Backup: Commands", "Rehearsed locator mutation", "Estos son comandos PowerShell de respaldo para un caso, C9. La mutación cambia el data-testid real en el DOM; el registro sigue intacto. El primer comando falla con retries 0 y el segundo pasa usando el fallback cosechado. No correr ambos en paralelo contra la app compartida.", code("# Fail: app DOM changes; registry keeps the old selector\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address' --config 'retries=0'\n\n# Pass: same mutation, harvested a11y fallback enabled\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y' `\n  --config 'retries=0'", "powershell"), "Deterministic healing is live-verified; cy.prompt's response to this mutation is untested.")
 
     slides["TestRail Bulk Reporting"] = shell("TestRail Bulk Reporting", "One run, three bulk requests", "TestRailObserver es RunObserver opcional, suscrito a after:run cuando TESTRAIL_URL existe. Lee @C del feature, mapea resultados, usa add_run, add_results_for_cases y close_run. Adjuntar screenshots es opcional y agregaría peticiones. Si TestRail falla, lo registra pero el exit code de Cypress no cambia.", grid([
         card("after:spec", ["Normalize Cypress results", "Collect cases and attempts"], small=True),
@@ -197,13 +252,28 @@ def main():
         "Asserts the API contract itself: status, schema, business rule.",
         "Creates the API state and makes at most one contract claim."
     )
+    contact_old = (
+        '<span style="font-weight: 700;">Gilberto Sánchez · Mexitester</span>\n'
+        '      <span>linkedin.com/in/gilberto-sanchez-mares-26001858</span>\n'
+        '      <span>gilsanchezts@outlook.com</span>\n'
+        '      <span>gsanchezm.github.io/OmniPizza</span>'
+    )
+    contact_new = (
+        '<span style="font-weight: 700;">Gilberto Sánchez · Mexitester</span>\n'
+        '      <span>github.com/gsanchezm/cypress-conf-2026</span>\n'
+        '      <span>gsanchezm.github.io/OmniPizza</span>\n'
+        '      <span>linkedin.com/in/gilberto-sanchez-mares-26001858</span>\n'
+        '      <span>gilsanchezts@outlook.com</span>'
+    )
+    assert preserved["Thank You"].count(contact_old) == 1
+    preserved["Thank You"] = preserved["Thank You"].replace(contact_old, contact_new)
 
     order = [
         "Title", "Speaker", "Agenda", "The Problem", "The Oath",
         "OmniPizza", "OmniPizza Desktop", "OmniPizza Mobile + API",
         "System Architecture", "Anatomy", "AtomicScenario", "Code: AtomicScenario",
         "Assertion Budget", "Claims vs Guards", "Hydration", "Checkout Hydration",
-        "Limits of Injection", "Six-Level Case Ladder", "Guardrails", "Official Skills",
+        "Limits of Injection", "Six-Level Case Ladder", "Guardrails", "Agent Architecture", "Official Skills", "Skills vs cy.prompt",
         "Subagents and Graphify", "Demo Time", "Live Demo Route", "Two Strategies",
         "cy.prompt Basics", "Prompts as Markdown", "Demo Backup: Commands",
         "TestRail Bulk Reporting", "Cloud CLI", "CI and Reporting", "Demo Backup: Results",

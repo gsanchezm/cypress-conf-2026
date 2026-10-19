@@ -7,6 +7,7 @@ dist/
 graphify-out/
 docs/*
 !docs/index.html
+!docs/agent-architecture.html
 .worktrees/
 .claude/audit.jsonl
 .claude/settings.local.json

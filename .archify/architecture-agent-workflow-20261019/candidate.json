@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Agent architecture around the Cypress harness",
+    "locale": "en",
+    "output": ".archify/architecture-agent-workflow-20261019/agent-workflow.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/gsanchezm/cypress-conf-2026",
+      "provider": "github",
+      "revision": "f10777c07dff767020ae7b9b74cb16cc3fbfde81"
+    }
+  },
+  "components": [
+    {"id":"human","type":"external","label":"Human","sublabel":"requests diagnosis or repair","pos":[40,270],"size":[130,70],"sources":[{"path":"AGENTS.md","line":9,"end_line":16}]},
+    {"id":"agent","type":"frontend","label":"Coding agent","sublabel":"Claude · Codex · Copilot","pos":[270,270],"size":[170,70],"sources":[{"path":"AGENTS.md","line":19,"end_line":25}]},
+    {"id":"contract","type":"security","label":"Repository rules","sublabel":"AGENTS.md + oracle policy","pos":[540,270],"size":[170,70],"sources":[{"path":"AGENTS.md","line":7,"end_line":17}]},
+    {"id":"harness","type":"backend","label":"Cypress harness","sublabel":"AtomicScenario + pnpm","pos":[810,270],"size":[170,70],"sources":[{"path":"src/core/ui/AtomicScenario.ts","line":19,"end_line":34},{"path":"package.json","line":6,"end_line":21}]},
+    {"id":"app","type":"external","label":"OmniPizza","sublabel":"live API + Web UI","pos":[1080,270],"size":[150,70],"sources":[{"path":"cypress.config.ts","line":25,"end_line":28}]},
+    {"id":"skills","type":"backend","label":"Five Cypress skills","sublabel":"instructions for the agent","pos":[270,70],"size":[170,70],"sources":[{"path":"CLAUDE.md","line":59,"end_line":67}]},
+    {"id":"subagents","type":"backend","label":"Triage + fixer","sublabel":"Claude-specific roles","pos":[270,470],"size":[170,70],"sources":[{"path":".claude/agents/cy-triage.md","line":1,"end_line":12},{"path":".claude/agents/cy-fixer.md","line":1,"end_line":13}]},
+    {"id":"hooks","type":"security","label":"Guard hooks","sublabel":"oracle + shell checks","pos":[540,470],"size":[170,70],"sources":[{"path":".claude/settings.json","line":2,"end_line":16}]},
+    {"id":"prompt","type":"backend","label":"cy.prompt strategy","sublabel":"runtime UI instructions","pos":[810,470],"size":[170,70],"sources":[{"path":"src/features/checkout/strategies/CyPromptCheckoutUiStrategy.ts","line":8,"end_line":35}]},
+    {"id":"cloud","type":"cloud","label":"Cypress Cloud","sublabel":"optional AI + recording","pos":[1080,470],"size":[150,70],"sources":[{"path":".github/workflows/cy-prompt-suite.yml","line":37,"end_line":43}]}
+  ],
+  "connections": [
+    {"from":"human","to":"agent","label":"asks for help","variant":"emphasis"},
+    {"from":"agent","to":"contract","label":"follows rules","variant":"emphasis"},
+    {"from":"contract","to":"harness","label":"runs allowed tools","variant":"emphasis"},
+    {"from":"harness","to":"app","label":"API + browser","variant":"emphasis"},
+    {"from":"agent","to":"skills","label":"reads guidance"},
+    {"from":"agent","to":"subagents","label":"delegates in Claude","variant":"dashed"},
+    {"from":"contract","to":"hooks","label":"enforced in Claude","variant":"dashed"},
+    {"from":"harness","to":"prompt","label":"opt-in strategy","variant":"dashed"},
+    {"from":"prompt","to":"cloud","label":"executes AI steps","variant":"dashed"}
+  ],
+  "cards": [
+    {"dot":"emerald","title":"Skills guide the assistant","items":["tap inspects the live DOM; author edits tests; explain reviews; docs verifies APIs; cloud-cli reads recorded evidence.","The versioned .feature and assert* methods remain the oracle."]},
+    {"dot":"violet","title":"cy.prompt runs inside a test","items":["checkout.prompt.md supplies runtime UI steps and placeholders.","It is optional and Cloud-backed; the default suite runs without a model."]}
+  ]
+}

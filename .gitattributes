@@ -1,0 +1,2 @@
+.archify/**/*.html -whitespace
+docs/agent-architecture.html -whitespace

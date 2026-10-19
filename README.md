@@ -256,9 +256,11 @@ versioned tests through the [provider-neutral contract](AGENTS.md); Claude's hoo
 are an adapter, not a runtime dependency. GitHub Copilot also reads
 [its repository instructions](.github/copilot-instructions.md). The
 [interactive architecture map](.archify/architecture-agent-neutral-20261019/provider-neutral.html)
-shows the executable core and optional integrations. Its source links point to baseline commit
-`817141f`; the portability additions in this working tree are documented here. Three layers, each demonstrable
-offline, without a model:
+shows the executable core and optional integrations. Its source links point to commit `f10777c`.
+The [agent architecture map](docs/agent-architecture.html)
+shows where the five Cypress skills, Claude-specific hooks and subagents, the shared agent contract,
+and the optional `cy.prompt` runtime strategy sit around the deterministic harness. Three layers,
+each demonstrable offline, without a model:
 
 | Layer | Files | Demo without a model |
 |---|---|---|
