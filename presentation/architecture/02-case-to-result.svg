@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8AA9C9"/></marker></defs>
+<rect width="1600" height="900" fill="#080B08"/>
+<rect x="0" y="0" width="1600" height="8" fill="#7FE990"/>
+<text x="74" y="76" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700" text-anchor="start">One case, two contracts</text>
+<text x="76" y="113" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">The Gherkin tag identifies the TestRail case; the Cypress scenario remains the executable contract</text>
+<rect x="1415" y="44" width="130" height="34" rx="17" fill="#233145" stroke="#7FE990" stroke-width="2"/>
+<text x="1480.0" y="68" fill="#7FE990" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">CURRENT</text>
+<path d="M74 137 L1526 137" stroke="#35513B" stroke-width="2" fill="none"/>
+<rect x="70" y="186" width="315" height="168" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="186" width="8" height="168" rx="4" fill="#FFD070" stroke="#FFD070" stroke-width="2"/>
+<text x="97" y="228" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">TestRail case C9</text>
+<text x="97" y="265" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Checkout / Mexico</text>
+<text x="97" y="296" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Human-readable case</text>
+<text x="97" y="327" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">No pre-run read today</text>
+<rect x="460" y="186" width="400" height="168" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="460" y="186" width="8" height="168" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="487" y="228" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">checkout.feature</text>
+<text x="487" y="265" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">@C9 on Mexico Examples row</text>
+<text x="487" y="296" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Cucumber compiles this row</text>
+<text x="487" y="327" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Scenario selects MX test data</text>
+<rect x="955" y="186" width="565" height="168" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="955" y="186" width="8" height="168" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="982" y="228" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">AtomicScenario</text>
+<text x="982" y="265" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">arrangeViaApi → hydrateUi → assertUi</text>
+<text x="982" y="296" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">One API claim + one rendered UI claim</text>
+<polyline points="385,269 460,269" stroke="#FFD070" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="9 8"/>
+<text x="422" y="249" fill="#FFD070" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">same C9</text>
+<polyline points="860,269 955,269" stroke="#57DBB3" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="70" y="435" width="435" height="155" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="435" width="8" height="155" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="97" y="477" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">1  API arrange</text>
+<text x="97" y="514" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Create and assert an API order</text>
+<text x="97" y="545" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Keep its computed total as oracle</text>
+<rect x="582" y="435" width="435" height="155" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="582" y="435" width="8" height="155" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="609" y="477" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">2  UI hydrate</text>
+<text x="609" y="514" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Log in; complete a second order</text>
+<text x="609" y="545" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Live frontend + backend interaction</text>
+<rect x="1090" y="435" width="430" height="155" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1090" y="435" width="8" height="155" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="1117" y="477" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">3  UI claim</text>
+<text x="1117" y="514" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Compare confirmation total</text>
+<text x="1117" y="545" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">against the API-derived total</text>
+<polyline points="505,512 582,512" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1017,512 1090,512" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="70" y="657" width="1450" height="145" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="657" width="8" height="145" rx="4" fill="#FFD070" stroke="#FFD070" stroke-width="2"/>
+<text x="97" y="699" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">After the run: TestRailObserver</text>
+<text x="97" y="736" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="400" text-anchor="start">after:spec collects results; after:run reads @C tags, maps passed/failed cases, calls add_run → add_results_for_cases → close_run.</text>
+<text x="97" y="767" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="400" text-anchor="start">Requires TESTRAIL_URL; pending/skipped tests are not submitted. Publishing errors are logged without changing the Cypress exit code.</text>
+<polyline points="1305,590 1305,636 1260,636 1260,657" stroke="#FFD070" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

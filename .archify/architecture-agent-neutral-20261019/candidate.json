@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Provider-neutral Cypress harness",
+    "locale": "en",
+    "output": ".archify/architecture-agent-neutral-20261019/provider-neutral.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/gsanchezm/cypress-conf-2026",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "817141f99f894563ed61d049802dc1b4b6d02c54"
+    }
+  },
+  "components": [
+    {"id":"agents","type":"external","label":"Coding agent","sublabel":"Claude · Codex · Copilot","pos":[40,270],"size":[150,70],"sources":[{"path":"README.md","line":254,"end_line":257}]},
+    {"id":"contract","type":"security","label":"Repository contract","sublabel":"rules + local guards","pos":[290,270],"size":[170,70],"sources":[{"path":"CLAUDE.md","line":7,"end_line":23}]},
+    {"id":"ci","type":"cloud","label":"GitHub Actions","sublabel":"deterministic suite","pos":[560,270],"size":[150,70],"sources":[{"path":".github/workflows/tests.yml","line":1,"end_line":26}]},
+    {"id":"runner","type":"backend","label":"Cypress runner","sublabel":"API arrange · UI hydrate","pos":[810,270],"size":[160,70],"sources":[{"path":"cypress.config.ts","line":16,"end_line":29}]},
+    {"id":"app","type":"external","label":"OmniPizza","sublabel":"live API + Web UI","pos":[1070,270],"size":[150,70],"sources":[{"path":"cypress.config.ts","line":25,"end_line":28}]},
+    {"id":"testrail","type":"external","label":"TestRail","sublabel":"optional after:run observer","pos":[810,70],"size":[160,70],"sources":[{"path":"cypress.config.ts","line":86,"end_line":97}]},
+    {"id":"triage","type":"backend","label":"CI triage","sublabel":"log-based verdict","pos":[560,470],"size":[150,70],"sources":[{"path":".github/workflows/claude-ci-triage.yml","line":1,"end_line":38},{"path":"scripts/triage-signals.ts","line":1,"end_line":10}]},
+    {"id":"claude","type":"external","label":"Claude adapter","sublabel":"optional enrichment","pos":[290,470],"size":[170,70],"sources":[{"path":".github/workflows/claude-ci-triage.yml","line":5,"end_line":7}]},
+    {"id":"cloud","type":"cloud","label":"Cypress Cloud","sublabel":"optional recording / cy.prompt","pos":[1070,470],"size":[150,70],"sources":[{"path":".github/workflows/tests.yml","line":8,"end_line":13}]}
+  ],
+  "connections": [
+    {"from":"agents","to":"contract","label":"follow rules"},
+    {"from":"contract","to":"ci","label":"run checks"},
+    {"from":"ci","to":"runner","label":"execute slices","variant":"emphasis"},
+    {"from":"runner","to":"app","label":"HTTP + browser","variant":"emphasis"},
+    {"from":"runner","to":"testrail","label":"publish results","variant":"dashed"},
+    {"from":"ci","to":"triage","label":"failed logs"},
+    {"from":"claude","to":"triage","label":"enrich if configured","variant":"dashed"},
+    {"from":"runner","to":"cloud","label":"record if enabled","variant":"dashed"}
+  ],
+  "cards": [
+    {"dot":"emerald","title":"Model-free default","items":["The versioned Cypress suite and TestRail observer run without an agent.","Log triage produces a JSON verdict even without an API key."]},
+    {"dot":"violet","title":"Optional AI paths","items":["Claude can enrich triage when configured.","cy.prompt is a separate Cloud-backed demonstration."]}
+  ]
+}

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8AA9C9"/></marker></defs>
+<rect width="1600" height="900" fill="#080B08"/>
+<rect x="0" y="0" width="1600" height="8" fill="#7FE990"/>
+<text x="74" y="76" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700" text-anchor="start">System architecture today</text>
+<text x="76" y="113" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Versioned tests, live application, reporting, and an independent failure triage path</text>
+<rect x="1415" y="44" width="130" height="34" rx="17" fill="#233145" stroke="#7FE990" stroke-width="2"/>
+<text x="1480.0" y="68" fill="#7FE990" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">CURRENT</text>
+<path d="M74 137 L1526 137" stroke="#35513B" stroke-width="2" fill="none"/>
+<rect x="70" y="186" width="350" height="154" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="186" width="8" height="154" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="97" y="228" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">GitHub Actions</text>
+<text x="97" y="265" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Push / PR: deterministic suite</text>
+<text x="97" y="296" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Manual: cy.prompt suite</text>
+<rect x="70" y="370" width="350" height="170" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="370" width="8" height="170" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="97" y="412" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Repository</text>
+<text x="97" y="449" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">12 Gherkin cases with @C IDs</text>
+<text x="97" y="480" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Facades, strategies, locators</text>
+<text x="97" y="511" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Cypress + Cucumber</text>
+<rect x="500" y="244" width="490" height="249" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="500" y="244" width="8" height="249" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="527" y="286" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Cypress runner</text>
+<text x="527" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">API arrange → UI hydrate → UI claim</text>
+<text x="527" y="354" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Checkout: deterministic or cy.prompt</text>
+<text x="527" y="385" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">after:spec + after:run events</text>
+<text x="527" y="416" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Mochawesome + GitHub summary</text>
+<rect x="1070" y="175" width="450" height="146" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1070" y="175" width="8" height="146" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="1097" y="217" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">OmniPizza</text>
+<text x="1097" y="254" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Live backend API + frontend UI</text>
+<text x="1097" y="285" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Five market Checkout scenarios</text>
+<rect x="1070" y="353" width="450" height="147" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1070" y="353" width="8" height="147" rx="4" fill="#FFD070" stroke="#FFD070" stroke-width="2"/>
+<text x="1097" y="395" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">TestRail</text>
+<text x="1097" y="432" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">C1–C12 map from Gherkin tags</text>
+<text x="1097" y="463" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Optional run-level result publishing</text>
+<rect x="1070" y="532" width="450" height="147" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1070" y="532" width="8" height="147" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="1097" y="574" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Cypress Cloud</text>
+<text x="1097" y="611" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Optional recording; required by cy.prompt</text>
+<text x="1097" y="642" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Run 8: 5 / 5 Checkout passed</text>
+<polyline points="420,260 460,260 460,303 500,303" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="420,453 460,453 460,420 500,420" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="990,295 1030,295 1030,248 1070,248" stroke="#7FE990" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="990,390 1030,390 1030,426 1070,426" stroke="#FFD070" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="990,449 1010,449 1010,605 1070,605" stroke="#A3C5FF" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="70" y="718" width="1450" height="95" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="718" width="8" height="95" rx="4" fill="#FF7B85" stroke="#FF7B85" stroke-width="2"/>
+<text x="97" y="760" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Separate failure path</text>
+<text x="97" y="797" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" text-anchor="start">Failed Actions run → logs/screenshots → deterministic verdict → optional Claude enrichment → rerun, comment, or issue</text>
+</svg>

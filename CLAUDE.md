@@ -1,6 +1,6 @@
 # Agent harness rules — cypress-conf-2026
 
-The README explains the framework. This file explains how an agent (Claude Code, a subagent, or
+The provider-neutral contract is in `AGENTS.md`. The README explains the framework. This file explains how an agent (Claude Code, a subagent, or
 `claude-code-action` in CI) is allowed to work inside it. Every rule here is the repo owner's.
 
 ## Commands
@@ -68,9 +68,9 @@ The README explains the framework. This file explains how an agent (Claude Code,
 - **MCP** — `.mcp.json` declares `cypress-cloud` (`https://mcp.cypress.io/mcp`, OAuth via `/mcp`,
   read-only, 100 tool calls/hour) and `github` (remote GitHub MCP, Actions toolset, read-only endpoint,
   `GH_MCP_PAT` env var with Actions: read; unset → Claude Code warns and the server stays unusable, never
-  commit a token). **Cloud MCP and the Cloud CLI (`cy-cloud`) both need a Cypress Cloud org admin to
-  enable them on the organization's Integrations page — the owner has NOT done this yet**; until then
-  those tools error out and the recorded fixtures are the demo.
+  commit a token). Cloud MCP and the Cloud CLI (`cy-cloud`) require separate authentication from
+  the Record Key and may need an org admin to enable their integrations. `pnpm cloud:status`
+  currently reports `authenticated: false`; recorded runs still work with the Record Key.
 - **Subagents** — `@agent-cy-fixer` (red→green through tap; edits steps / strategies / locators only, max 5
   iterations, prints a JSON verdict) and `@agent-cy-triage` (read-only; returns `{category, confidence, evidence[]}`).
 - **Hooks** — `.claude/settings.json`: `guard-oracle` (Edit|Write|MultiEdit) denies oracle edits and authored

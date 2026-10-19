@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8AA9C9"/></marker></defs>
+<rect width="1600" height="900" fill="#080B08"/>
+<rect x="0" y="0" width="1600" height="8" fill="#7FE990"/>
+<text x="74" y="76" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700" text-anchor="start">CI communication map</text>
+<text x="76" y="113" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Three distinct paths: automatic verification, manual AI Checkout, and failure-only triage</text>
+<rect x="1415" y="44" width="130" height="34" rx="17" fill="#233145" stroke="#7FE990" stroke-width="2"/>
+<text x="1480.0" y="68" fill="#7FE990" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">CURRENT</text>
+<path d="M74 137 L1526 137" stroke="#35513B" stroke-width="2" fill="none"/>
+<rect x="70" y="182" width="340" height="155" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="182" width="8" height="155" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="97" y="224" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Push / PR</text>
+<text x="97" y="261" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Typecheck</text>
+<text x="97" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Auth + Catalog + Checkout</text>
+<text x="97" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">No Cloud recording by default</text>
+<rect x="508" y="182" width="440" height="155" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="508" y="182" width="8" height="155" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="535" y="224" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Deterministic suite</text>
+<text x="535" y="261" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Mochawesome + screenshots</text>
+<text x="535" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">GitHub job summary</text>
+<text x="535" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Optional TestRail, if configured</text>
+<rect x="1050" y="182" width="470" height="155" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1050" y="182" width="8" height="155" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="1077" y="224" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Success</text>
+<text x="1077" y="261" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Pipeline is green</text>
+<text x="1077" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Triage job is skipped</text>
+<polyline points="410,259 508,259" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="948,259 1050,259" stroke="#7FE990" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="508" y="385" width="440" height="173" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="508" y="385" width="8" height="173" rx="4" fill="#FF7B85" stroke="#FF7B85" stroke-width="2"/>
+<text x="535" y="427" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Failure evidence</text>
+<text x="535" y="464" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Failed job logs + screenshots</text>
+<text x="535" y="495" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Deterministic JSON verdict</text>
+<text x="535" y="526" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Optional Claude enrichment</text>
+<rect x="1050" y="385" width="470" height="173" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1050" y="385" width="8" height="173" rx="4" fill="#FF7B85" stroke="#FF7B85" stroke-width="2"/>
+<text x="1077" y="427" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Current triage actions</text>
+<text x="1077" y="464" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Flake / cold start: capped rerun</text>
+<text x="1077" y="495" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Other: PR comment or GitHub Issue</text>
+<text x="1077" y="526" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">No strict product-bug gate yet</text>
+<polyline points="729,337 729,385" stroke="#FF7B85" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="948,471 1050,471" stroke="#FF7B85" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="70" y="622" width="380" height="145" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="622" width="8" height="145" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="97" y="664" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Manual dispatch</text>
+<text x="97" y="701" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">cy-prompt-suite.yml</text>
+<text x="97" y="732" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">CYPRESS_RECORD_KEY secret</text>
+<rect x="535" y="622" width="440" height="145" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="535" y="622" width="8" height="145" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="562" y="664" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Checkout via cy.prompt</text>
+<text x="562" y="701" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Five country examples</text>
+<text x="562" y="732" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Recorded Chromium run</text>
+<rect x="1050" y="622" width="470" height="145" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1050" y="622" width="8" height="145" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="1077" y="664" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Cypress Cloud</text>
+<text x="1077" y="701" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Run results + Test Replay</text>
+<text x="1077" y="732" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">CLI needs separate auth</text>
+<polyline points="450,696 535,696" stroke="#A3C5FF" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="975,696 1050,696" stroke="#A3C5FF" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -251,14 +251,20 @@ second been swallowed, the run would have passed 5/5.
 
 ## The agentic loop
 
-The framework is operable by an agent without loosening its oracle. Three layers, each demonstrable
+The deterministic suite runs without an LLM. Claude, Codex, and Copilot can work on the same
+versioned tests through the [provider-neutral contract](AGENTS.md); Claude's hooks and subagents
+are an adapter, not a runtime dependency. GitHub Copilot also reads
+[its repository instructions](.github/copilot-instructions.md). The
+[interactive architecture map](.archify/architecture-agent-neutral-20261019/provider-neutral.html)
+shows the executable core and optional integrations. Its source links point to baseline commit
+`817141f`; the portability additions in this working tree are documented here. Three layers, each demonstrable
 offline, without a model:
 
 | Layer | Files | Demo without a model |
 |---|---|---|
 | **Guardrails** (deterministic) | `.claude/settings.json` → `scripts/hooks/*.ts` → `src/core/hooks/*.ts` | `echo '{"tool_name":"Edit","tool_input":{"file_path":"cypress/e2e/auth/auth.feature","old_string":"a","new_string":"b"}}' \| pnpm exec tsx scripts/hooks/guard-oracle.ts` → exit 2, "`auth.feature` is the oracle" |
 | **Loop** (`cypress tap`) | `scripts/tap.ts` → `src/core/tap/{parseTapOutput,freshVerdict}.ts` | `pnpm tap:status` → `{"status":"not connected"}` with exit 0, even though Node 24 on Windows aborts every `cypress tap` call in libuv teardown (`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`, exit `0xC0000409`) after the JSON has already been printed |
-| **Triage** | `.claude/agents/cy-triage.md`, `scripts/{flake-audit,triage-signals}.ts`, `.github/workflows/claude-ci-triage.yml` | `pnpm flake-audit src/core/cloud/fixtures/cy-cloud-test-list.sample.json` → `flakyCount: 1`; `pnpm triage:signals src/core/triage/fixtures/checkout-broken-locator.log` → `"suggested": "selector_drift"` |
+| **Triage** | `scripts/{flake-audit,triage-signals,triage-verdict}.ts`, `.github/workflows/claude-ci-triage.yml` | `pnpm flake-audit src/core/cloud/fixtures/cy-cloud-test-list.sample.json` → `flakyCount: 1`; `pnpm triage:verdict src/core/triage/fixtures/checkout-broken-locator.log` → JSON `selector_drift` verdict |
 
 **Red → green without touching the mouse.** Terminal 1: `pnpm cy:open` (E2E, Chrome). Terminal 2:
 `claude`, then `@agent-cy-fixer fix cypress/e2e/checkout/checkout.feature`. The subagent
@@ -274,21 +280,31 @@ second PreToolUse hook denies `--record`, `UI_STRATEGY=cyPrompt` and `git push` 
 decision functions under `src/core/hooks/` with their own node tests; the scripts only read the hook
 JSON from stdin.
 
-**Repo-level config** ([`CLAUDE.md`](CLAUDE.md), [`.mcp.json`](.mcp.json), `.claude/skills/` = the five
+**Use another agent.** Open the repository in Codex or GitHub Copilot and give it the same task:
+“Read `AGENTS.md`. Diagnose `cypress/e2e/checkout/checkout.feature` with `pnpm tap:run`; repair only
+the step, hydration strategy, or locator; run `pnpm typecheck` and the affected slice; report the
+verdict.” The test runner and result reporters are the same. Claude's named subagents and automatic
+hooks are conveniences specific to Claude Code; the equivalent instructions and scripts are in the
+repository for other agents. A normal human terminal can run every deterministic command directly.
+
+**Repo-level config** (`AGENTS.md` for the shared rules; [`CLAUDE.md`](CLAUDE.md), [`.mcp.json`](.mcp.json), `.claude/skills/` = the five
 MIT `cypress-io/ai-toolkit` skills copied in, pinned by `skills-lock.json`): open Claude Code in a fresh
-clone and the skills, hooks, subagents and MCP servers are already there. Cypress Cloud MCP
-(`https://mcp.cypress.io/mcp`, OAuth via `/mcp`) and the Cloud CLI both need a Cypress Cloud org admin
-to enable them on the Integrations page first — until then the fixtures above are the demo. The GitHub
+clone and the skills, hooks, subagents and MCP servers are already there. Cypress Cloud recording
+works with the Record Key, while the Cloud MCP (`https://mcp.cypress.io/mcp`, OAuth via `/mcp`) and
+Cloud CLI require separate authentication and may need an org admin to enable their integrations.
+`pnpm cloud:status` currently reports `authenticated: false`, so use Cloud's UI or the recorded
+fixtures for inspection until CLI access is configured. The GitHub
 server is the read-only Actions toolset, authenticated with a `GH_MCP_PAT` environment variable that is
 never committed.
 
 **CI.** [`claude-ci-triage.yml`](.github/workflows/claude-ci-triage.yml) fires when *Deterministic suite*
-fails (a push to `main` or a PR against it; `workflow_run` reads the triage file from `main`), downloads the failed jobs' logs and screenshot artifacts, runs the deterministic
-`triage:signals` hint, and asks `claude-code-action@v1` for a `--json-schema` verdict
-`{category, confidence, evidence, summary}`. Flake or cold start at ≥ 0.7 → `gh run rerun --failed`
-(at most twice, because every rerun fires the trigger again); anything else → a PR comment or an issue.
-It needs only the `ANTHROPIC_API_KEY` secret, and a node test pins its trigger to `tests.yml`'s `name:`
-so a rename cannot silently disconnect it.
+fails (a push to `main` or a PR against it; `workflow_run` reads the triage file from `main`). It downloads failed job logs and screenshots and always creates a deterministic JSON verdict with
+`pnpm triage:verdict`. If `ANTHROPIC_API_KEY` is configured, `claude-code-action@v1` can enrich that
+verdict; without the secret the workflow uses the deterministic one. A flake or cold start at ≥ 0.7
+reruns failed jobs (at most twice); other recognized categories produce a PR comment or issue.
+An unknown signal stays in the job summary for human review. The verdict is a diagnosis aid, not a
+strict product-bug proof; a tighter issue gate is a proposal for the talk. `cy.prompt` remains an
+optional Cloud-backed AI demo, while the default Checkout strategy is deterministic.
 
 ## Architecture
 
@@ -453,16 +469,16 @@ The part that **cannot** be shortcut is the checkout form submission itself, bec
 no server fetch to fall back on:
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph works["This works"]
-        direction TB
-        W1["Real UI: fill checkout form,<br/>click place-order, click confirm"] --> W2["/order-success renders:<br/>order-id + order-total present"]
+        direction LR
+        W1["Real UI: fill checkout form<br/>place order + confirm"] --> W2["/order-success:<br/>order-id + order-total rendered"]
     end
 
     subgraph blocked["This does NOT work"]
-        direction TB
-        X1["POST /api/checkout via API<br/>real order created server-side"] --> X2["cy.visit('/order-success') directly"]
-        X2 --> X3["generic shell renders,<br/>order-id/order-total absent from DOM,<br/>omnipizza-order in localStorage is null"]
+        direction LR
+        X1["POST /api/checkout<br/>real order created server-side"] --> X2["Direct cy.visit('/order-success')"]
+        X2 --> X3["Generic shell only:<br/>no order-id or order-total in DOM<br/>omnipizza-order in localStorage is null"]
     end
 ```
 

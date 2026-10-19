@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8AA9C9"/></marker></defs>
+<rect width="1600" height="900" fill="#080B08"/>
+<rect x="0" y="0" width="1600" height="8" fill="#7FE990"/>
+<text x="74" y="76" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700" text-anchor="start">Two UI adaptation paths</text>
+<text x="76" y="113" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">They solve different problems and have different evidence; do not present them as the same healer</text>
+<rect x="1415" y="44" width="130" height="34" rx="17" fill="#233145" stroke="#7FE990" stroke-width="2"/>
+<text x="1480.0" y="68" fill="#7FE990" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">CURRENT</text>
+<path d="M74 137 L1526 137" stroke="#35513B" stroke-width="2" fill="none"/>
+<rect x="70" y="190" width="700" height="136" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="190" width="8" height="136" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="97" y="232" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Deterministic selector healing</text>
+<text x="97" y="269" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Default CheckoutUiStrategy; no model call</text>
+<rect x="830" y="190" width="690" height="136" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="830" y="190" width="8" height="136" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="857" y="232" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Cypress cy.prompt</text>
+<text x="857" y="269" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Opt-in CheckoutUiStrategy; Cloud-backed AI</text>
+<rect x="70" y="366" width="700" height="180" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="366" width="8" height="180" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="97" y="408" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">What changes</text>
+<text x="97" y="445" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">MUTATE_DOM renames a data-testid</text>
+<text x="97" y="476" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">LocatorProxy tries the original selector</text>
+<text x="97" y="507" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">A11y fallback requires one unique match</text>
+<rect x="830" y="366" width="690" height="180" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="830" y="366" width="8" height="180" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="857" y="408" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">How it runs</text>
+<text x="857" y="445" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Natural-language steps in checkout.prompt.md</text>
+<text x="857" y="476" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Country-specific target + runtime values</text>
+<text x="857" y="507" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Two cy.prompt calls per scenario</text>
+<rect x="70" y="590" width="700" height="157" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="590" width="8" height="157" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="97" y="632" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Demonstrated</text>
+<text x="97" y="669" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Five-market mutation demo and fallback pass</text>
+<text x="97" y="700" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Selected fallback is logged in the run</text>
+<rect x="830" y="590" width="690" height="157" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="830" y="590" width="8" height="157" rx="4" fill="#FFD070" stroke="#FFD070" stroke-width="2"/>
+<text x="857" y="632" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Demonstrated</text>
+<text x="857" y="669" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Five markets passed in recorded Cloud run 8</text>
+<text x="857" y="700" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Healing of this specific DOM mutation is untested</text>
+<polyline points="420,326 420,366" stroke="#57DBB3" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1175,326 1175,366" stroke="#A3C5FF" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="420,546 420,590" stroke="#57DBB3" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1175,546 1175,590" stroke="#A3C5FF" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

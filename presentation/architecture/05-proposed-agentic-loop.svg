@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8AA9C9"/></marker></defs>
+<rect width="1600" height="900" fill="#080B08"/>
+<rect x="0" y="0" width="1600" height="8" fill="#7FE990"/>
+<text x="74" y="76" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700" text-anchor="start">Target agentic demo loop</text>
+<text x="76" y="113" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Planned connection for the talk; these boxes are not yet an implemented end-to-end pipeline</text>
+<rect x="1415" y="44" width="130" height="34" rx="17" fill="#233145" stroke="#FFD070" stroke-width="2"/>
+<text x="1480.0" y="68" fill="#FFD070" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">PROPOSED</text>
+<path d="M74 137 L1526 137" stroke="#35513B" stroke-width="2" fill="none"/>
+<rect x="70" y="213" width="260" height="169" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="70" y="213" width="8" height="169" rx="4" fill="#FFD070" stroke="#FFD070" stroke-width="2"/>
+<text x="97" y="255" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Read case</text>
+<text x="97" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">TestRail get_case</text>
+<text x="97" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">Validate ID + criteria</text>
+<circle cx="302" cy="200" r="21" fill="#FFD070"/>
+<text x="302" y="208" fill="#080B08" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" text-anchor="middle">1</text>
+<polyline points="330,298 370,298" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="370" y="213" width="260" height="169" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="370" y="213" width="8" height="169" rx="4" fill="#57DBB3" stroke="#57DBB3" stroke-width="2"/>
+<text x="397" y="255" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Map</text>
+<text x="397" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">Allowlisted @C tag</text>
+<text x="397" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">One versioned scenario</text>
+<circle cx="602" cy="200" r="21" fill="#57DBB3"/>
+<text x="602" y="208" fill="#080B08" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" text-anchor="middle">2</text>
+<polyline points="630,298 670,298" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="670" y="213" width="260" height="169" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="670" y="213" width="8" height="169" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="697" y="255" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Execute</text>
+<text x="697" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">Cypress + OmniPizza</text>
+<text x="697" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">API / UI assertions</text>
+<circle cx="902" cy="200" r="21" fill="#7FE990"/>
+<text x="902" y="208" fill="#080B08" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" text-anchor="middle">3</text>
+<polyline points="930,298 970,298" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="970" y="213" width="260" height="169" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="970" y="213" width="8" height="169" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="997" y="255" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Collect</text>
+<text x="997" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">Result + screenshot</text>
+<text x="997" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">Run URLs + retries</text>
+<circle cx="1202" cy="200" r="21" fill="#A3C5FF"/>
+<text x="1202" y="208" fill="#080B08" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" text-anchor="middle">4</text>
+<polyline points="1230,298 1270,298" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1270" y="213" width="260" height="169" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1270" y="213" width="8" height="169" rx="4" fill="#FFD070" stroke="#FFD070" stroke-width="2"/>
+<text x="1297" y="255" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Report</text>
+<text x="1297" y="292" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">TestRail result</text>
+<text x="1297" y="323" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="400" text-anchor="start">Close the run</text>
+<circle cx="1502" cy="200" r="21" fill="#FFD070"/>
+<text x="1502" y="208" fill="#080B08" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" text-anchor="middle">5</text>
+<rect x="160" y="496" width="400" height="185" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="160" y="496" width="8" height="185" rx="4" fill="#A3C5FF" stroke="#A3C5FF" stroke-width="2"/>
+<text x="187" y="538" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Classify</text>
+<text x="187" y="575" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Deterministic signals first</text>
+<text x="187" y="606" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Optional agent enrichment</text>
+<text x="187" y="637" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Evidence + confidence</text>
+<rect x="625" y="496" width="400" height="185" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="625" y="496" width="8" height="185" rx="4" fill="#FFD070" stroke="#FFD070" stroke-width="2"/>
+<text x="652" y="538" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Policy gate</text>
+<text x="652" y="575" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Reachable app + valid locator</text>
+<text x="652" y="606" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Failed business claim + repeat</text>
+<text x="652" y="637" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Deduplicate case/signature</text>
+<rect x="1090" y="496" width="350" height="185" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
+<rect x="1090" y="496" width="8" height="185" rx="4" fill="#7FE990" stroke="#7FE990" stroke-width="2"/>
+<text x="1117" y="538" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Publish</text>
+<text x="1117" y="575" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Confirmed bug → Issue</text>
+<text x="1117" y="606" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Other failure → diagnosis</text>
+<text x="1117" y="637" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Link evidence</text>
+<polyline points="1400,382 1400,448 360,448 360,496" stroke="#FFD070" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="560,589 625,589" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1025,589 1090,589" stroke="#8AA9C9" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="90" y="762" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">Already built: @C mapping, Cypress execution, TestRail result writer, Cloud recording, CI triage.</text>
+<text x="90" y="797" fill="#FFD070" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" text-anchor="start">To build: case preflight, a single-case orchestration job, strict issue gate, and controlled product regression.</text>
+</svg>

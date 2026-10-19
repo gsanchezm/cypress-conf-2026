@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="7e1bc985-0351-4fcd-8ec4-2748ab0abe87"></script>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<style>/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("416d130e-f0be-4b18-9451-ba2c88886c53") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("bc2237d2-c599-4d92-a232-a1333eac6088") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7b3ae086-5c82-4ee4-867c-b16e0f2cd108") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("416d130e-f0be-4b18-9451-ba2c88886c53") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("bc2237d2-c599-4d92-a232-a1333eac6088") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7b3ae086-5c82-4ee4-867c-b16e0f2cd108") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("416d130e-f0be-4b18-9451-ba2c88886c53") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("bc2237d2-c599-4d92-a232-a1333eac6088") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7b3ae086-5c82-4ee4-867c-b16e0f2cd108") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("416d130e-f0be-4b18-9451-ba2c88886c53") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("bc2237d2-c599-4d92-a232-a1333eac6088") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7b3ae086-5c82-4ee4-867c-b16e0f2cd108") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("416d130e-f0be-4b18-9451-ba2c88886c53") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("bc2237d2-c599-4d92-a232-a1333eac6088") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7b3ae086-5c82-4ee4-867c-b16e0f2cd108") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 900;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("416d130e-f0be-4b18-9451-ba2c88886c53") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 900;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("bc2237d2-c599-4d92-a232-a1333eac6088") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 900;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7b3ae086-5c82-4ee4-867c-b16e0f2cd108") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("42ee3673-5d27-4bce-8dc7-d111f329460c") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("c0e278c3-a2ea-47ff-9a48-1ebb20a56b51") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("e9314c7e-936a-4b9a-9e40-288680fad689") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("e1db2fd8-0b7d-4ad5-97c9-090b3b71bbc1") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("d0084589-e29e-487a-909d-1dff7c69326d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("e05cdc21-750a-4239-9271-02d932d8a24c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("42ee3673-5d27-4bce-8dc7-d111f329460c") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("c0e278c3-a2ea-47ff-9a48-1ebb20a56b51") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("e9314c7e-936a-4b9a-9e40-288680fad689") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("e1db2fd8-0b7d-4ad5-97c9-090b3b71bbc1") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("d0084589-e29e-487a-909d-1dff7c69326d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("e05cdc21-750a-4239-9271-02d932d8a24c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("42ee3673-5d27-4bce-8dc7-d111f329460c") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("c0e278c3-a2ea-47ff-9a48-1ebb20a56b51") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("e9314c7e-936a-4b9a-9e40-288680fad689") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("e1db2fd8-0b7d-4ad5-97c9-090b3b71bbc1") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("d0084589-e29e-487a-909d-1dff7c69326d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("e05cdc21-750a-4239-9271-02d932d8a24c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<script src="0d947f45-41bd-468d-9087-d4d9d42c53eb"></script>
+<style>
+:root { --type-title: 72px; --type-subtitle: 42px; --type-body: 32px; --type-small: 26px; --pad: 100px; --green: #3FF23F; --green-dim: #2BB32B; --bg: #0B0E0A; --panel: #141A13; --line: #263524; --ink: #F2F7F0; --mut: #9DAE9A; }
+body { margin: 0; background: #0B0E0A; }
+a { color: #3FF23F; } a:hover { color: #8CFF8C; }
+@keyframes riseIn { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes arrowPulse { 0%, 100% { opacity: 0.35; transform: translateX(-8px); } 50% { opacity: 1; transform: translateX(8px); } }
+@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 0 rgba(63,242,63,0); } 50% { box-shadow: 0 0 60px rgba(63,242,63,0.35); } }
+@keyframes lineGrow { from { width: 0; } to { width: 100%; } }
+@keyframes chargeFill { from { width: 0; } to { width: 100%; } }
+@keyframes chargeGlow { 0% { text-shadow: 0 0 0 rgba(63,242,63,0); opacity: 0.25; letter-spacing: 12px; } 60% { opacity: 1; } 100% { text-shadow: 0 0 40px rgba(63,242,63,0.9), 0 0 90px rgba(63,242,63,0.45); opacity: 1; letter-spacing: 0; } }
+@keyframes emblemBreathe { 0% { opacity: 0.12; filter: brightness(0.6); } 100% { opacity: 0.32; filter: brightness(1.25) drop-shadow(0 0 40px rgba(63,242,63,0.5)); } }
+@keyframes cellBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+</style>
+</helmet>
+<x-import component-from-global-scope="deck-stage" from="9a4371e4-d91f-40f2-ba9e-ece5b16fd92f#/deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+
+<section data-label="Title" data-speaker-notes="Bienvenida. Presenta el título con el juramento de Linterna Verde. Gancho: la voluntad detrás del anillo = la precisión detrás de tus tests." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; overflow: hidden;">
+  <div style="position: absolute; right: -140px; top: 50%; transform: translateY(-50%); width: 820px; height: 1100px; display: flex; align-items: center; justify-content: center;">
+    <img src="73ddbb17-0ef6-4fc4-824c-ab64fca470db" alt="Green Lantern emblem" style="width: 780px; opacity: 0.9;">
+  </div>
+  <div style="position: relative; padding: 0 var(--pad); max-width: 1120px; display: flex; flex-direction: column; gap: 40px;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <div style="width: 56px; height: 8px; background: var(--green);"></div>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--green); letter-spacing: 3px;">CYPRESS CONFERENCE 2026</span>
+    </div>
+    <h1 style="margin: 0; font-size: 108px; line-height: 1.02; font-weight: 900; letter-spacing: -2px;"><span style="color: var(--ink);">In Brightest Day,</span> <span style="color: var(--green);">Atomic Tests</span></h1>
+    <p style="margin: 0; font-size: var(--type-subtitle); line-height: 1.3; color: var(--mut); font-weight: 500; max-width: 980px;">A Green Lantern Architecture for Cypress API + Web</p>
+    <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--green-dim);">Gilberto Sánchez · Mexitester</p>
+  </div>
+</section>
+
+<section data-label="Speaker" data-speaker-notes="Preséntate: quién eres, tu rol, tu marca Mexitester. Menciona LinkedIn y correo. 1 minuto máximo." style="background: #0B0E14; color: var(--ink); font-family: Archivo, sans-serif; display: flex; overflow: hidden;">
+  <img src="118f9e6f-d8b5-4b50-ab0b-86106fe57d5a" alt="Gilberto Sanchez Mares — Cypress Conf 2026 speaker" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
+  <div style="position: absolute; left: 60px; bottom: 48px; display: flex; gap: 32px; align-items: center; background: rgba(6,8,6,0.72); border-left: 6px solid var(--green); padding: 18px 32px; font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--ink);">
+    <span style="color: var(--green); font-weight: 700;">AKA Mexitester</span>
+    <span style="color: var(--mut);">in/gilberto-sanchez-mares</span>
+    <span style="color: var(--mut);">gilsanchezts@outlook.com</span>
+  </div>
+</section>
+
+<section data-label="Agenda" data-speaker-notes="Recorre la agenda rápido: 4 actos. Arquitectura atómica, hidratación, cy.prompt y demo en vivo." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 64px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Agenda</h2>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 0;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px 80px; align-content: start;">
+    <div style="display: flex; gap: 28px; align-items: baseline;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 40px; color: var(--green); font-weight: 700;">01</span><div><p style="margin: 0; font-size: var(--type-body); font-weight: 700;">The problem: flaky suites</p><p style="margin: 6px 0 0; font-size: var(--type-small); color: var(--mut);">Why UI-only E2E hurts</p></div></div>
+    <div style="display: flex; gap: 28px; align-items: baseline;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 40px; color: var(--green); font-weight: 700;">02</span><div><p style="margin: 0; font-size: var(--type-body); font-weight: 700;">Atomic architecture</p><p style="margin: 6px 0 0; font-size: var(--type-small); color: var(--mut);">AtomicScenario + assertion budget</p></div></div>
+    <div style="display: flex; gap: 28px; align-items: baseline;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 40px; color: var(--green); font-weight: 700;">03</span><div><p style="margin: 0; font-size: var(--type-body); font-weight: 700;">Hydration strategies</p><p style="margin: 6px 0 0; font-size: var(--type-small); color: var(--mut);">Injection vs real UI — and its limits</p></div></div>
+    <div style="display: flex; gap: 28px; align-items: baseline;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 40px; color: var(--green); font-weight: 700;">04</span><div><p style="margin: 0; font-size: var(--type-body); font-weight: 700;">Recharging with cy.prompt()</p><p style="margin: 6px 0 0; font-size: var(--type-small); color: var(--mut);">Natural-language tests, prompts in Markdown</p></div></div>
+    <div style="display: flex; gap: 28px; align-items: baseline;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 40px; color: var(--green); font-weight: 700;">05</span><div><p style="margin: 0; font-size: var(--type-body); font-weight: 700;">Live demo</p><p style="margin: 6px 0 0; font-size: var(--type-small); color: var(--mut);">Broken selector: deterministic vs AI</p></div></div>
+    <div style="display: flex; gap: 28px; align-items: baseline;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 40px; color: var(--green); font-weight: 700;">06</span><div><p style="margin: 0; font-size: var(--type-body); font-weight: 700;">CI, reporting, takeaways</p><p style="margin: 6px 0 0; font-size: var(--type-small); color: var(--mut);">Master your willpower… and your suite</p></div></div>
+  </div>
+  </div>
+</section>
+
+<section data-label="The Problem" data-speaker-notes="Dolores clásicos de E2E: todo pasa por la UI, tests encadenados, fallos que no dicen dónde. Pregunta a la audiencia quién ha sufrido un 'retry hasta que pase'." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; gap: 80px; padding: 0 var(--pad); box-sizing: border-box;">
+  <div style="flex: 0 0 560px; display: flex; flex-direction: column; gap: 36px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900; line-height: 1.05;">The Problem</h2>
+    <p style="margin: 0; font-size: var(--type-body); line-height: 1.4; color: var(--mut);">When every test drives every step through the UI, the suite pays for it three ways.</p>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 28px;">
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 36px 44px; display: flex; flex-direction: column; gap: 10px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;"><div style="display: flex; align-items: center; gap: 18px;"><svg width="40" height="40" sc-camel-view-box="0 0 24 24" fill="none" stroke="#3FF23F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2.5"></path><path d="M9 2h6"></path><path d="M12 2v3"></path></svg><span style="font-size: var(--type-body); font-weight: 700; color: var(--green);">Slow</span></div><span style="font-size: var(--type-small); color: var(--mut); line-height: 1.4;">Login, navigate, add to cart, fill forms — for every single scenario.</span></div>
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 36px 44px; display: flex; flex-direction: column; gap: 10px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both, glowPulse 3s ease-in-out 2.1s infinite;"><div style="display: flex; align-items: center; gap: 18px;"><svg width="40" height="40" sc-camel-view-box="0 0 24 24" fill="none" stroke="#3FF23F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"></path></svg><span style="font-size: var(--type-body); font-weight: 700; color: var(--green);">Flaky</span></div><span style="font-size: var(--type-small); color: var(--mut); line-height: 1.4;">Every UI step is a chance for timing, rendering, or selector failure.</span></div>
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 36px 44px; display: flex; flex-direction: column; gap: 10px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.80s both, glowPulse 3s ease-in-out 3.0s infinite;"><div style="display: flex; align-items: center; gap: 18px;"><svg width="40" height="40" sc-camel-view-box="0 0 24 24" fill="none" stroke="#3FF23F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><path d="M1 1l22 22"></path></svg><span style="font-size: var(--type-body); font-weight: 700; color: var(--green);">Blurry failures</span></div><span style="font-size: var(--type-small); color: var(--mut); line-height: 1.4;">A red test says "checkout broke" — not whether it was the API, the state, or the DOM.</span></div>
+  </div>
+</section>
+
+<section data-label="The Oath" data-speaker-notes="Slide de quote. Lee el juramento adaptado y aterriza la tesis: la precisión de la voluntad = la precisión del test. Transición al concepto atómico." style="background: #060806; color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; overflow: hidden;">
+  <img src="8cc6a537-078f-48f9-bc73-d48356fa79e0" alt="Green Lantern" style="position: absolute; right: 0; top: 0; height: 1080px; opacity: 0.85;">
+  <div style="position: absolute; inset: 0; background: linear-gradient(90deg, #060806 52%, rgba(6,8,6,0.4) 75%, rgba(6,8,6,0) 100%);"></div>
+  <div style="position: relative; padding: 0 var(--pad); max-width: 1150px; display: flex; flex-direction: column; gap: 44px;">
+    <div style="width: 72px; height: 8px; background: var(--green);"></div>
+    <p style="margin: 0; font-size: 62px; line-height: 1.2; font-weight: 800; font-style: normal;"><span style="color: var(--ink);">"In brightest day, in blackest night,</span> <span style="color: var(--green);">no flaky test shall escape my sight."</span></p>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45; max-width: 900px;">A ring's power lies in the precision of the will behind it — and so do your tests.</p>
+  </div>
+</section>
+
+<section data-label="Anatomy" data-speaker-notes="Define test atómico: pequeño, independiente, la API hace el trabajo pesado, la UI valida solo lo que importa. Estas 3 propiedades son la base de todo lo que sigue." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 70px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Anatomy of an Atomic Test</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut);">One test, one run, two truths: the API contract and the rendered DOM.</p>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 0;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px;">
+    <div style="border-top: 8px solid var(--green); background: var(--panel); padding: 44px; display: flex; flex-direction: column; gap: 18px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;"><span style="font-size: var(--type-subtitle); font-weight: 800;">Small</span><span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">One scenario proves one behavior. No 40-step journeys.</span></div>
+    <div style="border-top: 8px solid var(--green); background: var(--panel); padding: 44px; display: flex; flex-direction: column; gap: 18px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both, glowPulse 3s ease-in-out 2.1s infinite;"><span style="font-size: var(--type-subtitle); font-weight: 800;">Independent</span><span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">No hidden coupling between "the API suite" and "the UI suite" — or between tests.</span></div>
+    <div style="border-top: 8px solid var(--green); background: var(--panel); padding: 44px; display: flex; flex-direction: column; gap: 18px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.80s both, glowPulse 3s ease-in-out 3.0s infinite;"><span style="font-size: var(--type-subtitle); font-weight: 800;">API-heavy</span><span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">The API does the heavy lifting; the UI validates only what matters.</span></div>
+  </div>
+  </div>
+</section>
+
+<section data-label="OmniPizza" data-speaker-notes="Habla de OmniPizza: la plataforma que desarrollaste como sistema bajo prueba. Deploy real e independiente, 5 mercados con i18n real (moneda, campos de dirección, RTL). Muestra los links." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; gap: 80px; padding: 0 var(--pad); box-sizing: border-box;">
+  <div style="flex: 0 0 640px; display: flex; flex-direction: column; gap: 36px;">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); letter-spacing: 3px;">SYSTEM UNDER TEST</span>
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">OmniPizza</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45;">A real, independently deployed pizza platform I built to test against — not a demo sandbox.</p>
+    <div style="display: flex; flex-direction: column; gap: 14px; font-family: 'JetBrains Mono', monospace; font-size: 24px;">
+      <span style="color: var(--green);">gsanchezm.github.io/OmniPizza</span>
+      <span style="color: var(--mut);">UI · omnipizza-frontend.onrender.com</span>
+      <span style="color: var(--mut);">API · omnipizza-backend.onrender.com/api/docs</span>
+    </div>
+    <div style="display: flex; gap: 14px;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--bg); background: var(--green); padding: 8px 18px; font-weight: 700;">5 markets</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); border: 1px solid var(--green); padding: 8px 18px;">MX · US · CH · JP · SA</span>
+    </div>
+  </div>
+  <div style="flex: 1; position: relative; height: 660px;">
+    <div style="position: absolute; right: -24px; bottom: -24px; width: 200px; height: 200px; background: var(--green);"></div>
+    <div style="position: relative; width: 100%; height: 100%; border: 1px solid var(--line); overflow: hidden; background: #000;">
+      <img src="7467869d-2e58-4438-aaad-7b7c67fd8c77" alt="OmniPizza login" style="width: 100%; height: 100%; object-fit: cover; object-position: left top;">
+    </div>
+  </div>
+</section>
+
+<section data-label="OmniPizza Desktop" data-speaker-notes="Recorre las pantallas web: checkout con 3 secciones (dirección, contacto, pago) y la página de order-success con tracking en vivo. Señala que /order-success solo se llena desde el click real de confirmar — esto vuelve en el slide de límites de inyección." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 44px;">
+  <div style="display: flex; align-items: baseline; gap: 28px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">OmniPizza · Web</h2>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">the surfaces the checkout slice drives</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; flex: 1; min-height: 0;">
+    <div style="display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">/checkout</span>
+      <div style="flex: 1; min-height: 0; border: 1px solid var(--line); overflow: hidden; background: #000;"><img src="ff915d0d-785d-4a2d-ac97-8fadf0043f6b" alt="Checkout page" style="width: 100%; height: 100%; object-fit: cover; object-position: top;"></div>
+      <span style="font-size: 24px; color: var(--mut);">Address · required market field · payment · place order</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">/order-success</span>
+      <div style="flex: 1; min-height: 0; border: 1px solid var(--line); overflow: hidden; background: #000;"><img src="b53aa50b-d991-481e-a0ad-3533643a00ab" alt="Order success page" style="width: 100%; height: 100%; object-fit: cover; object-position: top;"></div>
+      <span style="font-size: 24px; color: var(--mut);">order-id + order-total — written only by the confirm click</span>
+    </div>
+  </div>
+</section>
+
+<section data-label="OmniPizza Mobile + API" data-speaker-notes="Misma app en móvil: login con selector de mercado, catálogo, tracking. A la derecha la doc Swagger: nota los endpoints marcados '(atomic test setup)' — POST /api/store/market, POST /api/cart, POST /api/session/reset. La API se diseñó para sembrar estado, no solo para servir la UI." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 44px;">
+  <div style="display: flex; align-items: baseline; gap: 28px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">OmniPizza · Mobile + API</h2>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">same platform, one API underneath</span>
+  </div>
+  <div style="display: grid; grid-template-columns: 280px 280px 280px 1fr; gap: 28px; flex: 1; min-height: 0;">
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 0;"><img src="4938cd8b-bed0-4c24-aba2-41526804a4e3" alt="Mobile login" style="max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--line);"></div>
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 0;"><img src="ade84b21-9062-4be6-bae6-a7447e93cd1a" alt="Mobile catalog" style="max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--line);"></div>
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 0;"><img src="ecc1366f-e165-4023-9733-f24168750f6d" alt="Mobile order tracking" style="max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--line);"></div>
+    <div style="display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">/api/docs · OpenAPI 3.1</span>
+      <div style="flex: 1; min-height: 0; border: 1px solid var(--line); overflow: hidden; background: #fff;"><img src="8578ee1f-3779-42b9-b500-f2779ae50a5c" alt="Swagger API docs" style="width: 100%; height: 100%; object-fit: contain; object-position: top;"></div>
+      <span style="font-size: 24px; color: var(--mut); line-height: 1.4;">Endpoints tagged <span style="font-family: 'JetBrains Mono', monospace; color: var(--ink);">(atomic test setup)</span> exist to seed state, not to serve the UI.</span>
+    </div>
+  </div>
+</section>
+
+<section data-label="AtomicScenario" data-speaker-notes="El corazón del framework: Template Method con 3 pasos siempre en el mismo orden. arrangeViaApi prueba el contrato de la API, hydrateUi inyecta ese estado al navegador, assertUi valida el DOM." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 0;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Atomic Scenario: Three Steps</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut);">Every scenario runs the same skeleton, enforced by a Template Method.</p>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 64px;">
+  <div style="display: flex; align-items: stretch; gap: 0;">
+    <div style="flex: 1; position: relative; background: var(--panel); border: 1px solid var(--line); border-top: 8px solid var(--green); padding: 48px 44px; display: flex; flex-direction: column; gap: 20px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both, glowPulse 3s ease-in-out 1.2s infinite;">
+      <span style="position: absolute; right: 28px; top: 8px; font-size: 160px; font-weight: 900; color: var(--green); opacity: 0.1; line-height: 1;">1</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 28px; color: var(--green); font-weight: 700;">arrangeViaApi()</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45; font-weight: 600;">Real HTTP calls</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">Asserts the API contract itself: status, schema, business rule.</span>
+    </div>
+    <div style="align-self: center; font-size: 60px; color: var(--green); padding: 0 24px; font-weight: 900; animation: arrowPulse 1.6s ease-in-out 1s infinite;">→</div>
+    <div style="flex: 1; position: relative; background: var(--panel); border: 1px solid var(--line); border-top: 8px solid var(--green); padding: 48px 44px; display: flex; flex-direction: column; gap: 20px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s both, glowPulse 3s ease-in-out 2.2s infinite;">
+      <span style="position: absolute; right: 28px; top: 8px; font-size: 160px; font-weight: 900; color: var(--green); opacity: 0.1; line-height: 1;">2</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 28px; color: var(--green); font-weight: 700;">hydrateUi()</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45; font-weight: 600;">State into the browser</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">Injects API-produced state (token, session) and/or drives the real UI.</span>
+    </div>
+    <div style="align-self: center; font-size: 60px; color: var(--green); padding: 0 24px; font-weight: 900; animation: arrowPulse 1.6s ease-in-out 1.4s infinite;">→</div>
+    <div style="flex: 1; position: relative; background: var(--panel); border: 1px solid var(--line); border-top: 8px solid var(--green); padding: 48px 44px; display: flex; flex-direction: column; gap: 20px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s both, glowPulse 3s ease-in-out 3.2s infinite;">
+      <span style="position: absolute; right: 28px; top: 8px; font-size: 160px; font-weight: 900; color: var(--green); opacity: 0.1; line-height: 1;">3</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 28px; color: var(--green); font-weight: 700;">assertUi()</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45; font-weight: 600;">One look at the DOM</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">Asserts the rendered DOM reflects that exact state.</span>
+    </div>
+  </div>
+  <div style="display: flex; align-items: center; gap: 24px; animation: riseIn 0.6s ease-out 1.5s both;">
+    <div style="flex: 1; height: 4px; background: var(--line); position: relative; overflow: hidden;"><div style="position: absolute; left: 0; top: 0; height: 100%; background: var(--green); animation: lineGrow 2.4s cubic-bezier(0.4, 0, 0.2, 1) 1.6s both;"></div></div>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut); white-space: nowrap;">same order, every scenario</span>
+  </div>
+  </div>
+</section>
+
+<section data-label="Code: AtomicScenario" data-speaker-notes="Snippet real del repo. Señala: el step definition solo declara los 3 pasos; el logging por fase te dice en cuál fase murió sin leer el stack." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; gap: 70px; padding: 0 var(--pad); box-sizing: border-box;">
+  <div style="flex: 0 0 520px; display: flex; flex-direction: column; gap: 32px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900; line-height: 1.05;">Atomic Scenario in Code</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45;">The step definition declares three steps. The class owns the order — and logs which phase a failure died in.</p>
+  </div>
+  <div style="flex: 1; background: #080B08; border: 1px solid var(--line); border-left: 8px solid var(--green); padding: 48px 56px; font-family: 'JetBrains Mono', monospace; font-size: 27px; line-height: 1.65; overflow: hidden;">
+    <pre style="margin: 0; font-family: inherit;"><code style="font-family: inherit;"><span style="color: #6B7F68;">// checkout.steps.ts</span>
+<span style="color: var(--green);">AtomicScenario</span>.for(<span style="color: #FFD866;">'checkout'</span>).run({
+  <span style="color: #8CFF8C;">arrangeViaApi</span>: () =&gt; facade.seedCartViaApi(order),
+  <span style="color: #8CFF8C;">hydrateUi</span>:     () =&gt; facade.completeCheckoutViaUi(order),
+  <span style="color: #8CFF8C;">assertUi</span>:      () =&gt; facade.assertOrderConfirmation(expected),
+});
+
+<span style="color: #6B7F68;">// AtomicScenario.ts — the skeleton is fixed</span>
+run(steps: AtomicScenarioSteps): <span style="color: #78DCE8;">void</span> {
+  logStep(<span style="color: #FFD866;">`[${this.slice}] atomic scenario`</span>);
+  runAtomicSteps({ ... }); <span style="color: #6B7F68;">// arrange → hydrate → assert</span>
+}</code></pre>
+  </div>
+</section>
+
+<section data-label="Assertion Budget" data-speaker-notes="Regla clave: máximo 2 aserciones por escenario. 1 claim de API + 1 claim de UI. Si un test prueba API y UI en una corrida, tiene exactamente dos cosas que decir. Todo lo demás es otro test disfrazado." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; gap: 90px; padding: 0 var(--pad); box-sizing: border-box;">
+  <div style="flex: 0 0 420px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
+    <span style="font-size: 340px; font-weight: 900; color: var(--green); line-height: 0.9; letter-spacing: -12px;">2</span>
+    <span style="font-size: var(--type-subtitle); font-weight: 800; color: var(--ink);">assertions, max.</span>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 36px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">The Assertion Budget</h2>
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; gap: 24px; align-items: center;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--bg); background: var(--green); padding: 10px 20px; font-weight: 700; white-space: nowrap;">1 API claim</span><span style="font-size: var(--type-small); color: var(--mut);">e.g. the placed order came back <span style="font-family: 'JetBrains Mono', monospace; color: var(--ink);">pending</span></span></div>
+      <div style="display: flex; gap: 24px; align-items: center;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--bg); background: var(--green); padding: 10px 20px; font-weight: 700; white-space: nowrap;">1 UI claim</span><span style="font-size: var(--type-small); color: var(--mut);">e.g. the rendered total is byte-for-byte the API-computed total</span></div>
+    </div>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45; border-left: 6px solid var(--line); padding-left: 28px;">Anything beyond two is a second test wearing the first one's clothes.</p>
+  </div>
+</section>
+
+<section data-label="Claims vs Guards" data-speaker-notes="No todo expect cuenta. Claim = comportamiento del producto, vive en assert*. Precondition = lanza PreconditionError, se lee como 'precondición no cumplida', no como bug del producto. Guard = should de visibilidad para retry-ability." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 64px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Claims, Preconditions, Guards</h2>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 64px;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px;">
+    <div style="background: var(--panel); border: 1px solid var(--green); padding: 44px; display: flex; flex-direction: column; gap: 22px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;">
+      <span style="font-size: var(--type-subtitle); font-weight: 800; color: var(--green);">Claim</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45;">The behavior the scenario exists to prove.</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">expect() / .should() — only inside assert*</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green);">Counts toward the budget</span>
+    </div>
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 44px; display: flex; flex-direction: column; gap: 22px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both, glowPulse 3s ease-in-out 2.1s infinite;">
+      <span style="font-size: var(--type-subtitle); font-weight: 800;">Precondition</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45;">What must hold for the claim to mean anything.</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">precondition() — throws PreconditionError</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">Doesn't count</span>
+    </div>
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 44px; display: flex; flex-direction: column; gap: 22px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.80s both, glowPulse 3s ease-in-out 3.0s infinite;">
+      <span style="font-size: var(--type-subtitle); font-weight: 800;">Guard</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45;">Waiting for the DOM to settle before reading it.</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">.should('be.visible') on a ready marker</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">Doesn't count</span>
+    </div>
+  </div>
+  <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45;">A broken arrange step reads as <span style="color: var(--ink); font-style: italic;">"Precondition not met"</span> — it never masquerades as a product failure.</p>
+  </div>
+</section>
+
+<section data-label="Hydration" data-speaker-notes="Hidratar no es una técnica fija: cada slice usa lo que la app real permite, descubierto contra el DOM real. Auth login = inyección pura. Auth locked-out = UI real (un estado de error no se puede inyectar). Catalog = inyección. Checkout = híbrido." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 60px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Hydration Strategies</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut);">Each slice uses what the live app actually allows — discovered against the real DOM, never assumed.</p>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 0;">
+  <div style="display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: grid; grid-template-columns: 340px 300px 1fr; gap: 32px; align-items: center; background: var(--panel); border: 1px solid var(--line); padding: 26px 40px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both;">
+      <span style="font-size: var(--type-small); font-weight: 700;">Auth · standard login</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--bg); background: var(--green); padding: 6px 16px; font-weight: 700; justify-self: start;">Pure injection</span>
+      <span style="font-size: var(--type-small); color: var(--mut);">Token → localStorage → visit /catalog</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 340px 300px 1fr; gap: 32px; align-items: center; background: var(--panel); border: 1px solid var(--line); padding: 26px 40px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both;">
+      <span style="font-size: var(--type-small); font-weight: 700;">Auth · locked out</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); border: 1px solid var(--green); padding: 6px 16px; justify-self: start;">Pure real UI</span>
+      <span style="font-size: var(--type-small); color: var(--mut);">A failure state can only be reproduced, not injected</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 340px 300px 1fr; gap: 32px; align-items: center; background: var(--panel); border: 1px solid var(--line); padding: 26px 40px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.80s both;">
+      <span style="font-size: var(--type-small); font-weight: 700;">Catalog · 5 markets</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--bg); background: var(--green); padding: 6px 16px; font-weight: 700; justify-self: start;">Pure injection</span>
+      <span style="font-size: var(--type-small); color: var(--mut);">token + countryCode → fresh boot re-derives the market state</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 340px 300px 1fr; gap: 32px; align-items: center; background: var(--panel); border: 1px solid var(--line); padding: 26px 40px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 1.15s both;">
+      <span style="font-size: var(--type-small); font-weight: 700;">Checkout · 5 markets</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--ink); border: 1px solid var(--mut); padding: 6px 16px; justify-self: start;">Hybrid</span>
+      <span style="font-size: var(--type-small); color: var(--mut);">Real login + API-seeded cart + real form submit</span>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section data-label="Checkout Hydration" data-speaker-notes="Camina el flujo híbrido: login UI real, se lee el token, cy.request siembra el carrito por API, visit /checkout, el form se llena por UI real y el submit es real. La retry-ability nativa de Cypress absorbe la rehidratación del store (~2-3s)." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 64px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Checkout Hydration</h2>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 64px;">
+  <div style="display: flex; align-items: center; gap: 0; flex-wrap: wrap; row-gap: 40px;">
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 32px 36px; display: flex; flex-direction: column; gap: 10px; width: 380px; box-sizing: border-box; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">Real UI login</span><span style="font-size: 24px; color: var(--mut); line-height: 1.4;">market picker + submit — exercised once, deliberately</span></div>
+    <span style="font-size: 44px; color: var(--green); padding: 0 20px; font-weight: 900; animation: arrowPulse 1.6s ease-in-out 1s infinite;">→</span>
+    <div style="background: var(--panel); border: 1px solid var(--green); padding: 32px 36px; display: flex; flex-direction: column; gap: 10px; width: 380px; box-sizing: border-box; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both, glowPulse 3s ease-in-out 2.1s infinite;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">Seed cart via API</span><span style="font-size: 24px; color: var(--mut); line-height: 1.4;">cy.request POST /api/cart — no redundant catalog clicks</span></div>
+    <span style="font-size: 44px; color: var(--green); padding: 0 20px; font-weight: 900; animation: arrowPulse 1.6s ease-in-out 1.4s infinite;">→</span>
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 32px 36px; display: flex; flex-direction: column; gap: 10px; width: 380px; box-sizing: border-box; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.80s both, glowPulse 3s ease-in-out 3.0s infinite;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">Real form + submit</span><span style="font-size: 24px; color: var(--mut); line-height: 1.4;">address, required field, payment, place order, confirm</span></div>
+  </div>
+  <div style="display: flex; gap: 28px; align-items: baseline; border-left: 6px solid var(--green); padding-left: 32px;">
+    <p style="margin: 0; font-size: var(--type-body); color: var(--ink); line-height: 1.45;">The cart store rehydrates client-side ~2–3s after first paint.</p>
+    <p style="margin: 0; font-size: var(--type-small); color: var(--mut); line-height: 1.45;">Cypress's built-in retry-ability absorbs the wait — no cy.wait(), no hand-rolled polling.</p>
+  </div>
+  </div>
+</section>
+
+<section data-label="Limits of Injection" data-speaker-notes="Honestidad técnica: /order-success solo se llena desde el click real de confirmar. Orden por API + visit directo = shell genérico, sin order-id ni total. Es el límite duro encontrado para hidratación API-only. Por eso Orders quedó fuera del scope: no había forma honesta de hacerlo atómico." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 60px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">The Limits of Injection</h2>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 60px;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
+    <div style="background: var(--panel); border-top: 8px solid var(--green); padding: 48px; display: flex; flex-direction: column; gap: 26px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;">
+      <span style="font-size: var(--type-subtitle); font-weight: 800; color: var(--green);">This works</span>
+      <span style="font-size: var(--type-body); color: var(--ink); line-height: 1.45;">Real UI: fill the form, click place order, confirm.</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">/order-success renders order-id + order-total — written by the confirm click itself.</span>
+    </div>
+    <div style="background: var(--panel); border-top: 8px solid #E5484D; padding: 48px; display: flex; flex-direction: column; gap: 26px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both;">
+      <span style="font-size: var(--type-subtitle); font-weight: 800; color: #E5484D;">This does not</span>
+      <span style="font-size: var(--type-body); color: var(--ink); line-height: 1.45;">POST /api/checkout, then visit /order-success directly.</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">A generic shell renders — no order-id, no total. There is no server fetch to fall back on.</span>
+    </div>
+  </div>
+  <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45;">When a slice can't honestly assert both API and UI, skip it — don't fake it. Orders stayed out of scope for exactly this reason.</p>
+  </div>
+</section>
+
+<section data-label="Recharging the Ring" data-speaker-notes="Break de sección. Cambio de acto: hasta aquí la arquitectura determinista. Ahora: cuándo recargar el anillo con cy.prompt — tests en lenguaje natural." style="background: #060806; color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; overflow: hidden;">
+  <img src="57d663fa-4e62-4ff1-a614-fb8378a9183d" alt="Green Lantern Corps" style="position: absolute; left: 0; top: 0; height: 1080px; opacity: 0.9;">
+  <div style="position: absolute; inset: 0; background: linear-gradient(270deg, #060806 48%, rgba(6,8,6,0.45) 72%, rgba(6,8,6,0) 100%);"></div>
+  <div style="position: relative; margin-left: auto; padding: 0 var(--pad); max-width: 1000px; display: flex; flex-direction: column; gap: 40px; align-items: flex-start;">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--green); letter-spacing: 3px;">PART TWO</span>
+    <h2 style="margin: 0; font-size: 104px; font-weight: 900; line-height: 1.02;">Recharging<br>the Ring</h2>
+    <p style="margin: 0; font-size: var(--type-subtitle); color: var(--mut); font-weight: 500;">When to reach for <span style="font-family: 'JetBrains Mono', monospace; color: var(--green);">cy.prompt()</span></p>
+  </div>
+</section>
+
+<section data-label="cy.prompt Basics" data-speaker-notes="cy.prompt: pasos en lenguaje natural que la IA de Cypress resuelve contra el DOM real. Regla del framework: un cy.prompt por acción de negocio, nunca por click. 5 escenarios × 2 llamadas = 10 llamadas por corrida — cabe en el free tier de 100/hora." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; gap: 70px; padding: 0 var(--pad); box-sizing: border-box;">
+  <div style="flex: 0 0 560px; display: flex; flex-direction: column; gap: 34px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900; line-height: 1.05;">cy.prompt Basics</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45;">Natural-language steps, resolved by AI against the rendered UI — not against your selector registry.</p>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; gap: 18px; align-items: baseline;"><span style="color: var(--green); font-size: var(--type-body); font-weight: 900;">·</span><span style="font-size: var(--type-small); color: var(--ink);">One batched call per business action, never per click</span></div>
+      <div style="display: flex; gap: 18px; align-items: baseline;"><span style="color: var(--green); font-size: var(--type-body); font-weight: 900;">·</span><span style="font-size: var(--type-small); color: var(--ink);">2 calls per scenario × 5 markets = 10 calls per run</span></div>
+      <div style="display: flex; gap: 18px; align-items: baseline;"><span style="color: var(--green); font-size: var(--type-body); font-weight: 900;">·</span><span style="font-size: var(--type-small); color: var(--ink);">Fits a 100-prompt/hour free tier with room to retry</span></div>
+    </div>
+  </div>
+  <div style="flex: 1; background: #080B08; border: 1px solid var(--line); border-left: 8px solid var(--green); padding: 44px 52px; font-family: 'JetBrains Mono', monospace; font-size: 26px; line-height: 1.65;">
+    <pre style="margin: 0; font-family: inherit;"><code style="font-family: inherit;"><span style="color: #6B7F68;">// CyPromptCheckoutUiStrategy.ts</span>
+completeCheckout(order: CheckoutRequestData): <span style="color: #78DCE8;">void</span> {
+  <span style="color: #78DCE8;">const</span> prompt = preparePrompt(checkoutPrompts,
+    <span style="color: #FFD866;">'completeCheckout'</span>, {
+      pizzaId: order.items[0]!.pizzaId,
+      address: order.address,
+      requiredFieldValue: order.requiredFieldValue,
+      name: order.name,
+      phone: order.phone,
+  });
+  cy.<span style="color: var(--green);">prompt</span>(prompt.steps,
+    { placeholders: prompt.placeholders });
+}</code></pre>
+  </div>
+</section>
+
+<section data-label="Prompts as Markdown" data-speaker-notes="El texto del prompt NO vive en TypeScript: vive en checkout.prompt.md, editable por cualquiera que lea inglés. El paso del campo requerido es el argumento más fuerte: una oración cubre lo que el camino determinista necesita con un mapa de 5 países + 5 locators. preparePrompt cruza tokens contra valores en ambas direcciones y truena en unit test, no en una corrida cobrada." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; gap: 70px; padding: 0 var(--pad); box-sizing: border-box;">
+  <div style="flex: 1; background: #080B08; border: 1px solid var(--line); padding: 44px 52px; font-family: 'JetBrains Mono', monospace; font-size: 25px; line-height: 1.7;">
+    <pre style="margin: 0; font-family: inherit; white-space: pre-wrap;"><code style="font-family: inherit;"><span style="color: #6B7F68;">## completeCheckout</span>
+
+- Add the pizza with id <span style="color: var(--green);">{pizzaId}</span> to the cart
+- Go to the checkout page
+- Enter <span style="color: var(--green);">{address}</span> into the address field
+- Enter <span style="color: var(--green);">{requiredFieldValue}</span> into this country's
+  required delivery-detail field <span style="color: #FFD866;">(zip code,
+  neighborhood, postal code, prefecture, or
+  district, whichever this country uses)</span>
+- Select cash as the payment method
+- Click the place order button
+- Confirm the order</code></pre>
+  </div>
+  <div style="flex: 0 0 560px; display: flex; flex-direction: column; gap: 34px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900; line-height: 1.05;">Prompts as Markdown</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45;">One sentence replaces a five-country strategy map plus five locator keys.</p>
+    <div style="border-left: 6px solid var(--green); padding-left: 28px; display: flex; flex-direction: column; gap: 14px;">
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45;">Editable by anyone who can read English — no code changes.</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">preparePrompt() cross-checks every {token} both ways — a typo fails in a free unit test, not a billed Cloud run.</span>
+    </div>
+  </div>
+</section>
+
+<section data-label="Two Strategies" data-speaker-notes="Patrón Strategy: una interfaz, dos implementaciones. El composition root elige por variable de entorno. El step definition nunca sabe cuál está activa. Mismo feature file, dos motores de UI." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 56px;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">One Interface, Two Strategies</h2>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--mut);">The step definition never knows which one is active — the composition root decides.</p>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 56px;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;">
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 40px 44px; display: flex; flex-direction: column; gap: 18px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--ink); font-weight: 700;">DeterministicCheckoutUiStrategy</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">LocatorProxy + cy.get() — fast, exact, coupled to the selector registry.</span>
+    </div>
+    <div style="background: var(--panel); border: 1px solid var(--green); padding: 40px 44px; display: flex; flex-direction: column; gap: 18px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both, glowPulse 3s ease-in-out 2.1s infinite;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--green); font-weight: 700;">CyPromptCheckoutUiStrategy</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">cy.prompt() — coupled only to the rendered UI, no selectors at all.</span>
+    </div>
+  </div>
+  <div style="background: #080B08; border: 1px solid var(--line); border-left: 8px solid var(--green); padding: 36px 52px; font-family: 'JetBrains Mono', monospace; font-size: 26px; line-height: 1.65; box-sizing: border-box; overflow: hidden;">
+    <pre style="margin: 0; font-family: inherit; white-space: pre-wrap;"><code style="font-family: inherit;"><span style="color: #6B7F68;">// cypress/support/e2e.ts — the composition root</span>
+<span style="color: #78DCE8;">const</span> sc-camel-ui-strategy = Cypress.expose(<span style="color: #FFD866;">'UI_STRATEGY'</span>) === <span style="color: #FFD866;">'cyPrompt'</span>
+  ? <span style="color: #78DCE8;">new</span> CyPromptCheckoutUiStrategy()
+  : <span style="color: #78DCE8;">new</span> DeterministicCheckoutUiStrategy(selectors, checkoutApi);</code></pre>
+  </div>
+  </div>
+</section>
+
+<section data-label="Demo Time" data-speaker-notes="Transición al demo en vivo. Plan: romper un locator con BREAK_LOCATOR y correr las dos estrategias sobre el mismo feature file. Respira, cambia a la terminal." style="background: #060806; color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px; overflow: hidden;">
+  <img src="155761fa-3bab-499c-82d3-3bc8bb0e13e5" alt="Green Lantern emblem" style="position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; animation: emblemBreathe 2.8s ease-in-out 0.2s both;">
+  <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 36px;">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 28px; color: var(--green); letter-spacing: 4px; animation: riseIn 0.6s ease-out 0.1s both;">LIVE DEMO · CHARGING RING</span>
+    <div style="width: 760px; height: 34px; border: 3px solid var(--green); padding: 5px; box-sizing: border-box; position: relative; animation: riseIn 0.6s ease-out 0.3s both;">
+      <div style="position: absolute; right: -16px; top: 50%; transform: translateY(-50%); width: 12px; height: 16px; background: var(--green);"></div>
+      <div style="height: 100%; width: 100%; background: repeating-linear-gradient(90deg, var(--green) 0 40px, transparent 40px 48px); animation: chargeFill 2.4s cubic-bezier(0.3, 0, 0.2, 1) 0.6s both, cellBlink 1.4s ease-in-out 3.2s infinite;"></div>
+    </div>
+    <h2 style="margin: 0; font-size: 140px; font-weight: 900; line-height: 1; text-align: center; color: var(--ink); animation: chargeGlow 2.6s ease-out 0.6s both;">Ring check.</h2>
+    <p style="margin: 0; font-size: var(--type-subtitle); color: var(--mut); text-align: center; animation: riseIn 0.7s ease-out 2.8s both;">Same feature file. One broken selector. Two strategies.</p>
+  </div>
+</section>
+
+<section data-label="Demo Backup: Commands" data-speaker-notes="Respaldo por si falla la red o el Cloud. Explica: BREAK_LOCATOR hace que un locator resuelva a un atributo que ninguna app tiene. Decorator sobre el LocatorProxy, solo cambia el wiring. El selector roto se nombra a sí mismo en el error de Cypress." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 52px;">
+  <div style="display: flex; align-items: baseline; gap: 28px;">
+    <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Demo Backup: Commands</h2>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">in case the live gods disagree</span>
+  </div>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 0;">
+  <div style="display: flex; flex-direction: column; gap: 36px;">
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <span style="font-size: var(--type-small); font-weight: 700; color: #E5484D;">Deterministic path — fails. cy.get() hunts a selector that no longer exists.</span>
+      <div style="background: #080B08; border: 1px solid var(--line); border-left: 8px solid #E5484D; padding: 30px 40px; font-family: 'JetBrains Mono', monospace; font-size: 25px; line-height: 1.6; color: var(--ink);">cypress run --spec cypress/e2e/checkout/checkout.feature \<br>&nbsp;&nbsp;--expose <span style="color: #E5484D;">BREAK_LOCATOR=checkout.address</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <span style="font-size: var(--type-small); font-weight: 700; color: var(--green);">Same feature, same broken key, cy.prompt path — unaffected.</span>
+      <div style="background: #080B08; border: 1px solid var(--line); border-left: 8px solid var(--green); padding: 30px 40px; font-family: 'JetBrains Mono', monospace; font-size: 25px; line-height: 1.6; color: var(--ink);">cypress run --spec cypress/e2e/checkout/checkout.feature \<br>&nbsp;&nbsp;--expose <span style="color: var(--green);">UI_STRATEGY=cyPrompt,BREAK_LOCATOR=checkout.address</span> \<br>&nbsp;&nbsp;--browser chrome --record</div>
+    </div>
+    <p style="margin: 0; font-size: var(--type-small); color: var(--mut); line-height: 1.45;">Nothing in the test code changes between these two commands — only the wiring in the composition root.</p>
+  </div>
+  </div>
+</section>
+
+<section data-label="Demo Backup: Results" data-speaker-notes="Screenshots de respaldo: corre ambos comandos antes de la charla y captura el error 'Expected to find element: [data-cy-broken-locator=checkout.address]' y la corrida verde de cy.prompt. Arrástralos aquí." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 52px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Demo Backup: Expected Results</h2>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; flex: 1; min-height: 0;">
+    <div style="display: flex; flex-direction: column; gap: 20px; min-height: 0;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: #E5484D; font-weight: 700;">✕ deterministic + BREAK_LOCATOR</span>
+      <div style="flex: 1; min-height: 0; position: relative;"><image-slot id="demo-fail-shot" shape="rect" placeholder="Drop the failing-run screenshot"></image-slot></div>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">Expected to find element: [data-cy-broken-locator="checkout.address"]</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px; min-height: 0;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">✓ cyPrompt + same broken key</span>
+      <div style="flex: 1; min-height: 0; position: relative;"><image-slot id="demo-pass-shot" shape="rect" placeholder="Drop the passing-run screenshot"></image-slot></div>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--mut);">5/5 markets green — the prompt never read the registry</span>
+    </div>
+  </div>
+</section>
+
+<section data-label="What the Demo Proves" data-speaker-notes="Honestidad: el demo prueba que el camino determinista está acoplado al registro de selectores y el de prompt solo a la UI renderizada. NO prueba que cy.prompt sobreviva un cambio en la app. En un slide ambas afirmaciones se leen igual — di la diferencia en voz alta." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 60px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">What the Demo Proves</h2>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 60px;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
+    <div style="background: var(--panel); border-top: 8px solid var(--green); padding: 48px; display: flex; flex-direction: column; gap: 24px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;">
+      <span style="font-size: var(--type-subtitle); font-weight: 800; color: var(--green);">Proven</span>
+      <span style="font-size: var(--type-body); color: var(--ink); line-height: 1.45;">The deterministic path is coupled to a selector registry. The prompt path is coupled only to the rendered UI.</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">cy.prompt never reads checkout.locators.json — breaking that file cannot touch it.</span>
+    </div>
+    <div style="background: var(--panel); border-top: 8px solid var(--mut); padding: 48px; display: flex; flex-direction: column; gap: 24px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both;">
+      <span style="font-size: var(--type-subtitle); font-weight: 800; color: var(--mut);">Not proven</span>
+      <span style="font-size: var(--type-body); color: var(--ink); line-height: 1.45;">That cy.prompt survives a change to the app itself.</span>
+      <span style="font-size: var(--type-small); color: var(--mut); line-height: 1.45;">The stronger version renames a real data-testid in the live DOM, forcing the AI to resolve by semantics. Riskier — but it proves what the slide claims.</span>
+    </div>
+  </div>
+  <p style="margin: 0; font-size: var(--type-body); color: var(--mut); line-height: 1.45; border-left: 6px solid var(--green); padding-left: 32px;">On a slide those two claims read identically. Say the difference out loud.</p>
+  </div>
+</section>
+
+<section data-label="CI and Reporting" data-speaker-notes="Dos workflows: el determinista corre en cada push/PR, matriz de un job por slice. El de cy.prompt es solo workflow_dispatch para no quemar cuota de Cloud. Observer pattern: ConsoleObserver y GithubActionsSummaryObserver suscritos a after:spec; mochawesome como reporter nativo." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 60px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">CI and Reporting</h2>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 60px;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px;">
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 44px; display: flex; flex-direction: column; gap: 22px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both, glowPulse 3s ease-in-out 1.2s infinite;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--green); font-weight: 700;">tests.yml</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45;">Deterministic suite on every push / PR. One matrix job per vertical slice — adding a slice is a one-line edit.</span>
+    </div>
+    <div style="background: var(--panel); border: 1px solid var(--line); padding: 44px; display: flex; flex-direction: column; gap: 22px; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both, glowPulse 3s ease-in-out 2.1s infinite;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--green); font-weight: 700;">cy-prompt-suite.yml</span>
+      <span style="font-size: var(--type-small); color: var(--ink); line-height: 1.45;">workflow_dispatch only — never on push, so Cloud quota isn't burned on every commit.</span>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 18px;">
+    <span style="font-size: var(--type-body); font-weight: 700;">One Observer, three audiences</span>
+    <div style="display: flex; gap: 24px;">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); padding: 14px 26px;">ConsoleObserver — colored per-slice output</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); padding: 14px 26px;">GitHub Actions job summary</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); padding: 14px 26px;">mochawesome HTML / JSON</span>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section data-label="Takeaways" data-speaker-notes="Cierra el arco: 4 ideas para llevarse. Termina con el eco del juramento: domina tu voluntad… y tu suite." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 64px;">
+  <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Takeaways</h2>
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 64px;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 36px 60px; align-content: start;">
+    <div style="display: flex; gap: 26px; align-items: baseline; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.10s both;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 36px; color: var(--green); font-weight: 700;">01</span><span style="font-size: var(--type-body); line-height: 1.4;">Arrange via API, hydrate the UI, assert once each — the atomic skeleton scales.</span></div>
+    <div style="display: flex; gap: 26px; align-items: baseline; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 36px; color: var(--green); font-weight: 700;">02</span><span style="font-size: var(--type-body); line-height: 1.4;">Budget your assertions: one API claim, one UI claim. The rest are preconditions and guards.</span></div>
+    <div style="display: flex; gap: 26px; align-items: baseline; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.80s both;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 36px; color: var(--green); font-weight: 700;">03</span><span style="font-size: var(--type-body); line-height: 1.4;">Discover hydration against the real DOM — and respect its hard limits honestly.</span></div>
+    <div style="display: flex; gap: 26px; align-items: baseline; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 1.15s both;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 36px; color: var(--green); font-weight: 700;">04</span><span style="font-size: var(--type-body); line-height: 1.4;">Recharge with cy.prompt where semantics beat selectors — with prompts in Markdown, guarded by unit tests.</span></div>
+  </div>
+  <p style="margin: 0; font-size: var(--type-subtitle); font-weight: 800; color: var(--green);">Master your willpower… and your suite.</p>
+  </div>
+</section>
+
+<section data-label="Thank You" data-speaker-notes="Agradece, deja los links en pantalla y abre preguntas." style="background: #060806; color: var(--ink); font-family: Archivo, sans-serif; display: flex; align-items: center; overflow: hidden;">
+  <img src="6041cdf4-b432-4bd9-892b-2b44ca8c08d0" alt="Green Lantern" style="position: absolute; right: 0; top: 0; height: 1080px; opacity: 0.9;">
+  <div style="position: absolute; inset: 0; background: linear-gradient(90deg, #060806 50%, rgba(6,8,6,0.5) 72%, rgba(6,8,6,0) 100%);"></div>
+  <div style="position: relative; padding: 0 var(--pad); display: flex; flex-direction: column; gap: 44px; max-width: 1100px;">
+    <h2 style="margin: 0; font-size: 120px; font-weight: 900; line-height: 1;">Thank You!</h2>
+    <p style="margin: 0; font-size: var(--type-subtitle); color: var(--mut);">Questions? Let's talk testing — or lanterns.</p>
+    <div style="background: var(--green); color: #06210A; padding: 40px 48px; display: flex; flex-direction: column; gap: 14px; font-family: 'JetBrains Mono', monospace; font-size: 25px; font-weight: 500; max-width: 860px;">
+      <span style="font-weight: 700;">Gilberto Sánchez · Mexitester</span>
+      <span>linkedin.com/in/gilberto-sanchez-mares-26001858</span>
+      <span>gilsanchezts@outlook.com</span>
+      <span>gsanchezm.github.io/OmniPizza</span>
+    </div>
+  </div>
+</section>
+
+</x-import>
+
+</x-dc>
+
+
+</body></html>

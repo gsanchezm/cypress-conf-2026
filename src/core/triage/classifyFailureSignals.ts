@@ -1,7 +1,7 @@
 // Deterministic pre-classification of a Cypress failure from its text (a CI
-// job log, a mochawesome message, a `tap reporter` error). The LLM triage
-// agent (cy-triage, the CI workflow) receives the result as a hint and must
-// either agree or explain why not. The rubric is the one in
+// job log, a mochawesome message, a `tap reporter` error). A human or optional
+// agent can use the result as a hint and must inspect the supporting evidence.
+// The rubric is the one in
 // docs/superpowers/specs/2026-09-02-agentic-loop-design.md §6.7.
 export type TriageCategory = 'regression' | 'flake' | 'selector_drift' | 'env' | 'cold_start';
 

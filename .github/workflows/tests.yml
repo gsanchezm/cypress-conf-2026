@@ -48,6 +48,9 @@ jobs:
       - name: Type-check
         run: pnpm typecheck
 
+      - name: Unit-check deterministic triage
+        run: pnpm test:unit:node
+
   cypress:
     name: ${{ matrix.slice }}
     needs: check

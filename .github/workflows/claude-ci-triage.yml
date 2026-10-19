@@ -1,10 +1,10 @@
-name: Claude CI triage
+name: CI triage
 
 # Fires after the deterministic suite fails on main (workflow_run only
-# triggers from the default branch) and classifies the failure with
-# anthropics/claude-code-action + a JSON schema. Flake or cold start with
+# triggers from the default branch) and classifies the failure from logs.
+# Claude may enrich the verdict when ANTHROPIC_API_KEY exists. Flake or cold start with
 # confidence >= 0.7 -> rerun the failed jobs; anything else -> PR comment or
-# issue with the evidence. Needs the ANTHROPIC_API_KEY repository secret.
+# issue with the evidence. No model secret is required.
 # Never records to Cypress Cloud and never touches the cy.prompt suite.
 
 on:
@@ -25,7 +25,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: claude-ci-triage-${{ github.event.workflow_run.id || inputs.run_id }}
+  group: ci-triage-${{ github.event.workflow_run.id || inputs.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -35,6 +35,7 @@ jobs:
     timeout-minutes: 30
     env:
       RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -93,11 +94,20 @@ jobs:
           if [ ${#logs[@]} -eq 0 ]; then echo '{"suggested":null,"signals":[]}' > ci-artifacts/signals.json; else pnpm triage:signals "${logs[@]}" > ci-artifacts/signals.json; fi
           cat ci-artifacts/signals.json
 
-      - name: Classify the failure with Claude
+      - name: Deterministic verdict
+        run: |
+          shopt -s nullglob
+          logs=(ci-artifacts/logs/*.log)
+          if [ ${#logs[@]} -eq 0 ]; then printf '' | pnpm triage:verdict > ci-artifacts/deterministic-verdict.json; else pnpm triage:verdict "${logs[@]}" > ci-artifacts/deterministic-verdict.json; fi
+          cat ci-artifacts/deterministic-verdict.json
+
+      - name: Optional Claude enrichment
         id: triage
+        if: env.ANTHROPIC_API_KEY != ''
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ env.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             A run of the "Deterministic suite" Cypress workflow failed.
@@ -122,18 +132,30 @@ jobs:
             --allowedTools 'Read,Glob,Grep,Bash(ls:*),Bash(cat:*)'
             --max-turns 25
 
+      - name: Select verdict
+        id: verdict
+        env:
+          MODEL_VERDICT: ${{ steps.triage.outputs.structured_output }}
+        run: |
+          if [ -n "$MODEL_VERDICT" ] && printf '%s\n' "$MODEL_VERDICT" | jq -e '.category and (.confidence | type == "number") and (.evidence | type == "array") and (.summary | type == "string")' > /dev/null; then
+            printf '%s\n' "$MODEL_VERDICT" > ci-artifacts/verdict.json
+          else
+            cp ci-artifacts/deterministic-verdict.json ci-artifacts/verdict.json
+          fi
+          echo "json=$(jq -c . ci-artifacts/verdict.json)" >> "$GITHUB_OUTPUT"
+
       # workflow_run "completed" fires again for every rerun attempt, so the rerun is capped at run_attempt < 3.
       - name: Rerun failed jobs (flake or cold start, confidence >= 0.7, at most two reruns)
         id: rerun
         if: |
-          steps.triage.outputs.structured_output != '' &&
+          steps.verdict.outputs.json != '' &&
           (github.event_name == 'workflow_dispatch' || github.event.workflow_run.run_attempt < 3) &&
-          (fromJSON(steps.triage.outputs.structured_output).category == 'flake' ||
-           fromJSON(steps.triage.outputs.structured_output).category == 'cold_start') &&
-          fromJSON(steps.triage.outputs.structured_output).confidence >= 0.7
+          (fromJSON(steps.verdict.outputs.json).category == 'flake' ||
+           fromJSON(steps.verdict.outputs.json).category == 'cold_start') &&
+          fromJSON(steps.verdict.outputs.json).confidence >= 0.7
         env:
           GH_TOKEN: ${{ github.token }}
-          VERDICT: ${{ steps.triage.outputs.structured_output }}
+          VERDICT: ${{ steps.verdict.outputs.json }}
         run: |
           echo "Rerunning failed jobs of run $RUN_ID: $(echo "$VERDICT" | jq -r '.summary')"
           gh run rerun "$RUN_ID" --failed --repo "$GITHUB_REPOSITORY"
@@ -142,14 +164,15 @@ jobs:
       - name: Report the verdict on the PR or as an issue
         id: report
         if: |
-          steps.triage.outputs.structured_output != '' &&
+          steps.verdict.outputs.json != '' &&
+          fromJSON(steps.verdict.outputs.json).category != null &&
           !((github.event_name == 'workflow_dispatch' || github.event.workflow_run.run_attempt < 3) &&
-            (fromJSON(steps.triage.outputs.structured_output).category == 'flake' ||
-             fromJSON(steps.triage.outputs.structured_output).category == 'cold_start') &&
-            fromJSON(steps.triage.outputs.structured_output).confidence >= 0.7)
+            (fromJSON(steps.verdict.outputs.json).category == 'flake' ||
+             fromJSON(steps.verdict.outputs.json).category == 'cold_start') &&
+            fromJSON(steps.verdict.outputs.json).confidence >= 0.7)
         env:
           GH_TOKEN: ${{ github.token }}
-          VERDICT: ${{ steps.triage.outputs.structured_output }}
+          VERDICT: ${{ steps.verdict.outputs.json }}
           PR_NUMBER: ${{ steps.failure_details.outputs.pr_number }}
           RUN_URL: ${{ steps.failure_details.outputs.run_url }}
           HEAD_BRANCH: ${{ steps.failure_details.outputs.head_branch }}
@@ -158,7 +181,7 @@ jobs:
           confidence=$(echo "$VERDICT" | jq -r '.confidence')
           summary=$(echo "$VERDICT" | jq -r '.summary')
           evidence=$(echo "$VERDICT" | jq -r '.evidence[] | "- " + .')
-          body=$(printf '## Claude CI triage: `%s` (confidence %s)\n\n%s\n\n**Evidence**\n%s\n\n[Failed run](%s)\n' "$category" "$confidence" "$summary" "$evidence" "$RUN_URL")
+          body=$(printf '## CI triage: `%s` (confidence %s)\n\n%s\n\n**Evidence**\n%s\n\n[Failed run](%s)\n' "$category" "$confidence" "$summary" "$evidence" "$RUN_URL")
           if [ -n "$PR_NUMBER" ]; then
             gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$body"
           else
@@ -168,13 +191,13 @@ jobs:
       - name: Job summary
         if: always()
         env:
-          VERDICT: ${{ steps.triage.outputs.structured_output }}
+          VERDICT: ${{ steps.verdict.outputs.json }}
         # The fallback is single-quoted on purpose: a bare `}` inside
         # ${VAR:-...} ends the expansion early and leaves a stray brace.
         run: |
           verdict=${VERDICT:-'{"error":"no verdict produced"}'}
           {
-            echo "## Claude CI triage"
+            echo "## CI triage"
             echo
             echo '```json'
             jq . <<< "$verdict" || printf '%s\n' "$verdict"
