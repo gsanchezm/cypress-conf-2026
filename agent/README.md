@@ -25,7 +25,7 @@ Skills guide a coding agent as it inspects or edits tests. `cy.prompt` is differ
 
 TestRail currently writes results through `TestRailObserver`; it is not an MCP integration. TestRail's official Cloud MCP is listed as a closed beta in its September 2026 support documentation. If available for this account later, a read-only TestRail tool could retrieve case C9 or run R7 for triage, but it must not redefine the versioned test oracle.
 
-The [English speaker guide](../docs/speaker-notes.md) shows how these tools fit into the 38-slide talk and the live demo.
+The [presentation](../docs/index.html) includes English speaker notes for all 38 slides; expanded speaker guides are kept locally outside the repository.
 
 ## Policy and CI
 

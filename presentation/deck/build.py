@@ -8,7 +8,7 @@ template string in docs/index.html. Images and fonts in the manifest stay intact
 import base64
 import json
 import re
-from html import escape
+from html import escape, unescape
 from pathlib import Path
 
 
@@ -22,6 +22,31 @@ SECTION = re.compile(r'<section data-label="([^"]+)"[^>]*>.*?</section>', re.S)
 TEMPLATE = re.compile(r'(<script type="__bundler/template">\s*)(.*?)(\s*</script>)', re.S)
 SPEAKER_SECTION = re.compile(r'^### \d{2} · ([^\n]+)\n(.*?)(?=^### |^## |\Z)', re.M | re.S)
 SPEAKER_LINE = re.compile(r'^\*\*Say:\*\* “([^\n]+)”$', re.M)
+
+
+def load_spoken_notes():
+    if SPEAKER_NOTES.exists():
+        guide = SPEAKER_NOTES.read_text(encoding="utf-8-sig")
+        spoken = {}
+        for label, body in SPEAKER_SECTION.findall(guide):
+            line = SPEAKER_LINE.search(body)
+            assert line, f"Missing Say line for {label}"
+            assert label not in spoken, f"Duplicate speaker notes for {label}"
+            spoken[label] = line.group(1)
+        return spoken
+
+    # The private guide is optional. A clean checkout keeps the English notes
+    # embedded in the published deck, so rebuilding does not need that file.
+    bundle = INDEX.read_text(encoding="utf-8")
+    match = TEMPLATE.search(bundle)
+    assert match, "Bundled template script missing"
+    current_deck = json.loads(match.group(2))
+    spoken = {}
+    for slide in SECTION.finditer(current_deck):
+        line = re.search(r'data-speaker-notes="([^"]*)"', slide.group(0))
+        assert line, f"Missing speaker note in {slide.group(1)}"
+        spoken[slide.group(1)] = unescape(line.group(1))
+    return spoken
 
 
 def text(value):
@@ -289,13 +314,7 @@ def main():
         "What the Demo Proves", "Agentic Boundaries", "Takeaways", "Thank You",
     ]
     resolved = {**preserved, **slides}
-    guide = SPEAKER_NOTES.read_text(encoding="utf-8-sig")
-    spoken = {}
-    for label, body in SPEAKER_SECTION.findall(guide):
-        line = SPEAKER_LINE.search(body)
-        assert line, f"Missing Say line for {label}"
-        assert label not in spoken, f"Duplicate speaker notes for {label}"
-        spoken[label] = line.group(1)
+    spoken = load_spoken_notes()
     assert set(spoken) == set(order), "Speaker guide must cover exactly the slides in the deck"
     for label in order:
         section = resolved[label]

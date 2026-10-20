@@ -93,7 +93,7 @@ For host-specific setup, skill links, and the difference between agent skills an
 
 The [interactive agent architecture](docs/agent-architecture.html) and [architecture diagrams](presentation/architecture/README.md) show the shared roles, CI, Cypress, TestRail, and Cloud paths.
 
-The [English speaker guide](docs/speaker-notes.md) follows all 38 slides and includes the demo runbook, MCP talking points, evidence boundaries, and recovery paths.
+The [presentation](docs/index.html) contains English speaker notes for all 38 slides. Expanded speaker guides are kept locally and excluded from the repository.
 
 ---
 

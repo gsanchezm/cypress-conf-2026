@@ -89,7 +89,7 @@ Wenn eine Anwendungsänderung das DOM modifiziert (demonstriert durch `MUTATE_DO
 - **Verifizierter Status:** Das CLI war am 19. Oktober 2026 authentifiziert und konnte Runs auflisten; dies bestätigt keine MCP-Verbindung des Hosts.
 - **Autonome CI (`ci-triage.yml`):** Analysiert CI-Fehlschläge automatisch. Bei einer Konfidenz ≥ 0.7 für transiente `flake`- oder `cold_start`-Probleme wird automatisch ein Neustart ausgelöst.
 
-Der [englische Leitfaden für Vortragende](docs/speaker-notes.md) folgt allen 38 Folien und enthält das Demo-Runbook.
+Die [Präsentation](docs/index.html) enthält englische Notizen zu allen 38 Folien. Ausführliche Vortragsnotizen bleiben lokal und sind vom Repository ausgeschlossen.
 
 ---
 
