@@ -100,12 +100,12 @@ def make_new_slides():
     slides = {}
 
     agenda = grid([
-        card("01 · World premiere", ["OmniPizza: five markets, Web, Mobile, and OpenAPI", "~6 minutes"], small=True),
-        card("02 · Atomic foundations", ["API arrange, UI hydrate, two-claim budget", "~9 minutes"], small=True),
-        card("03 · Guarded agents", ["Six-rung case ladder, hooks, skills, Graphify", "~5 minutes"], small=True),
-        card("04 · Live demo", ["TestRail, selector healing, cy.prompt, Cloud, triage", "~20 minutes · about half the talk"], small=True),
+        card("01 · World premiere", ["OmniPizza: five markets, Web, Mobile, and OpenAPI"], small=True),
+        card("02 · Atomic foundations", ["API arrange, UI hydrate, two-claim budget"], small=True),
+        card("03 · Guarded agents", ["Six-rung case ladder, hooks, skills, Graphify"], small=True),
+        card("04 · Live demo", ["TestRail, selector healing, cy.prompt, Cloud, triage"], small=True),
     ])
-    slides["Agenda"] = shell("Agenda", "The 40-minute story", "Cuatro actos: OmniPizza 6 min, fundamentos 9 min, agentes con límites 5 min y demo en vivo 20 min. cy.prompt vive dentro del demo.", agenda, "A real system first; then the test architecture; then the agent at work.")
+    slides["Agenda"] = shell("Agenda", "The story", "Cuatro actos: OmniPizza, fundamentos atómicos, agentes con límites y demo en vivo. cy.prompt vive dentro del demo.", agenda, "A real system first; then the test architecture; then the agent at work.")
 
     slides["System Architecture"] = shell("System Architecture", "The system under the test system", "Muestra el mapa actual: GitHub Actions ejecuta Cypress sin LLM; OmniPizza es el sistema bajo prueba; TestRail y Cloud son salidas opcionales. El triage determinista funciona sin clave de modelo.", diagram("01-current-architecture.svg"), "The executable core runs without an LLM; agent adapters are optional.")
 
@@ -154,11 +154,11 @@ def make_new_slides():
         card("Graphify local graph", ["634 nodes · 1,368 edges · 24 communities", "Hubs: SelectorSource, CountryCode, TestResult"], small=True),
     ], 3, 28), "The agent can navigate dependencies without scanning every file or paying for graph extraction.")
 
-    slides["Live Demo Route"] = shell("Live Demo Route", "20 minutes, four scenes", "La mitad de la charla es demo. 1: C9 y su tag. 2: mutación real del DOM y fallback determinista. 3: Checkout con cy.prompt y corrida grabada. 4: TestRail, Cloud, pipeline y diagnóstico. get_case y el issue gate estricto se muestran como futuro, no como algo ya funcionando.", grid([
-        card("1 · Case identity · 4 min", ["Show TestRail C9 and @C9 in Gherkin", "Run the versioned Checkout scenario"], small=True),
-        card("2 · UI change · 6 min", ["MUTATE_DOM breaks a real data-testid", "HEAL_LOCATORS=a11y selects a unique fallback"], small=True),
-        card("3 · AI Checkout · 6 min", ["Switch to CyPromptCheckoutUiStrategy", "Open recorded Cloud run 8: 5/5 passed"], small=True),
-        card("4 · Evidence · 4 min", ["Inspect TestRail R7 and CI artifacts", "Explain deterministic triage and agent roles"], small=True),
+    slides["Live Demo Route"] = shell("Live Demo Route", "Four scenes, one flow", "El demo tiene cuatro escenas. 1: C9 y su tag. 2: mutación real del DOM y fallback determinista. 3: Checkout con cy.prompt y corrida grabada. 4: TestRail, Cloud, pipeline y diagnóstico. get_case y el issue gate estricto se muestran como futuro, no como algo ya funcionando.", grid([
+        card("1 · Case identity", ["Show TestRail C9 and @C9 in Gherkin", "Run the versioned Checkout scenario"], small=True),
+        card("2 · UI change", ["MUTATE_DOM breaks a real data-testid", "HEAL_LOCATORS=a11y selects a unique fallback"], small=True),
+        card("3 · AI Checkout", ["Switch to CyPromptCheckoutUiStrategy", "Open recorded Cloud run 8: 5/5 passed"], small=True),
+        card("4 · Evidence", ["Inspect TestRail R7 and CI artifacts", "Explain deterministic triage and agent roles"], small=True),
     ]), "All live claims refer to behavior already verified; optional CLI access needs separate login.")
 
     slides["Two Strategies"] = shell("Two Strategies", "Same case, two UI engines", "La estrategia se elige en cypress/support/e2e.ts mediante UI_STRATEGY. El step definition y el oráculo no cambian. El fallback determinista y el self-healing de cy.prompt son mecanismos distintos.", grid([
@@ -231,19 +231,19 @@ def main():
         "SYSTEM UNDER TEST", "WORLD PREMIERE · SYSTEM UNDER TEST"
     ).replace(
         "Habla de OmniPizza: la plataforma que desarrollaste como sistema bajo prueba.",
-        "Debut mundial, minuto 1 de 6: presenta OmniPizza como plataforma real bajo prueba."
+        "Debut mundial: presenta OmniPizza como plataforma real bajo prueba."
     )
     preserved["OmniPizza Desktop"] = preserved["OmniPizza Desktop"].replace(
-        "Recorre las pantallas web:", "Debut mundial, minutos 2–4 de 6. Recorre las pantallas web:"
+        "Recorre las pantallas web:", "Debut mundial. Recorre las pantallas web:"
     ).replace(
         "tracking en vivo", "estado del pedido mostrado"
     )
     preserved["OmniPizza Mobile + API"] = preserved["OmniPizza Mobile + API"].replace(
-        "Misma app en móvil:", "Debut mundial, minutos 5–6 de 6. Misma app en móvil:"
+        "Misma app en móvil:", "Debut mundial. Misma app en móvil:"
     )
     preserved["Demo Time"] = preserved["Demo Time"].replace(
         "Plan: romper un locator con BREAK_LOCATOR y correr las dos estrategias sobre el mismo feature file.",
-        "Demo de 20 minutos: C9, mutación del DOM, fallback determinista, cy.prompt grabado, TestRail, Cloud y CI."
+        "Demo en vivo: C9, mutación del DOM, fallback determinista, cy.prompt grabado, TestRail, Cloud y CI."
     ).replace(
         "Same feature file. One broken selector. Two strategies.",
         "C9 · DOM mutation · TestRail · Cloud · bounded agents."

@@ -18,6 +18,6 @@ python presentation/deck/preview.py "Six-Level Case Ladder" "CI and Reporting"
 
 The preview images are written to `presentation/deck/previews/`. This uses local Chrome. The preview strips the deck viewer so each section can be checked at 1920 × 1080; `docs/index.html` should also be opened once to check that the full bundled viewer loads.
 
-The 40-minute pacing is in the Agenda slide: about six minutes for the OmniPizza debut, nine for atomic testing, five for agent guardrails, and twenty for the live demo. The `cy.prompt` material is inside that final block. Speaker notes remain in Spanish and slide labels in English. The new Archify agent diagram separates skills, shared roles and host-specific hooks, the deterministic Cypress runner, and optional runtime `cy.prompt`.
+The Agenda and Live Demo Route slides show the sequence without timing estimates. The `cy.prompt` material is inside the live demo. Speaker notes remain in Spanish and slide labels in English. The Archify agent diagram separates skills, shared roles and host-specific hooks, the deterministic Cypress runner, and optional runtime `cy.prompt`.
 
 Current behavior and proposed work are separated throughout the deck. In particular, TestRail result writing exists, but a pre-run `get_case` reader does not. The Cloud run is verified, but the CLI still needs separate authentication. The current deterministic triage workflow does not yet enforce the proposed strict product-bug issue gate.

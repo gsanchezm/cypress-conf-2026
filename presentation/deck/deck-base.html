@@ -385,7 +385,7 @@ a { color: #3FF23F; } a:hover { color: #8CFF8C; }
   </div>
 </section>
 
-<section data-label="Speaker" data-speaker-notes="Preséntate: quién eres, tu rol, tu marca Mexitester. Menciona LinkedIn y correo. 1 minuto máximo." style="background: #0B0E14; color: var(--ink); font-family: Archivo, sans-serif; display: flex; overflow: hidden;">
+<section data-label="Speaker" data-speaker-notes="Preséntate: quién eres, tu rol, tu marca Mexitester. Menciona LinkedIn y correo." style="background: #0B0E14; color: var(--ink); font-family: Archivo, sans-serif; display: flex; overflow: hidden;">
   <img src="118f9e6f-d8b5-4b50-ab0b-86106fe57d5a" alt="Gilberto Sanchez Mares — Cypress Conf 2026 speaker" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;">
   <div style="position: absolute; left: 60px; bottom: 48px; display: flex; gap: 32px; align-items: center; background: rgba(6,8,6,0.72); border-left: 6px solid var(--green); padding: 18px 32px; font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--ink);">
     <span style="color: var(--green); font-weight: 700;">AKA Mexitester</span>
@@ -632,7 +632,7 @@ run(steps: AtomicScenarioSteps): <span style="color: #78DCE8;">void</span> {
   </div>
 </section>
 
-<section data-label="Checkout Hydration" data-speaker-notes="Camina el flujo híbrido: login UI real, se lee el token, cy.request siembra el carrito por API, visit /checkout, el form se llena por UI real y el submit es real. La retry-ability nativa de Cypress absorbe la rehidratación del store (~2-3s)." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 64px;">
+<section data-label="Checkout Hydration" data-speaker-notes="Camina el flujo híbrido: login UI real, se lee el token, cy.request siembra el carrito por API, visit /checkout, el form se llena por UI real y el submit es real. La retry-ability nativa de Cypress absorbe la rehidratación del store." style="background: var(--bg); color: var(--ink); font-family: Archivo, sans-serif; display: flex; flex-direction: column; padding: var(--pad); box-sizing: border-box; gap: 64px;">
   <h2 style="margin: 0; font-size: var(--type-title); font-weight: 900;">Checkout Hydration</h2>
   <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 64px;">
   <div style="display: flex; align-items: center; gap: 0; flex-wrap: wrap; row-gap: 40px;">
@@ -643,7 +643,7 @@ run(steps: AtomicScenarioSteps): <span style="color: #78DCE8;">void</span> {
     <div style="background: var(--panel); border: 1px solid var(--line); padding: 32px 36px; display: flex; flex-direction: column; gap: 10px; width: 380px; box-sizing: border-box; animation: riseIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.80s both, glowPulse 3s ease-in-out 3.0s infinite;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--green); font-weight: 700;">Real form + submit</span><span style="font-size: 24px; color: var(--mut); line-height: 1.4;">address, required field, payment, place order, confirm</span></div>
   </div>
   <div style="display: flex; gap: 28px; align-items: baseline; border-left: 6px solid var(--green); padding-left: 32px;">
-    <p style="margin: 0; font-size: var(--type-body); color: var(--ink); line-height: 1.45;">The cart store rehydrates client-side ~2–3s after first paint.</p>
+    <p style="margin: 0; font-size: var(--type-body); color: var(--ink); line-height: 1.45;">The cart store rehydrates client-side after first paint.</p>
     <p style="margin: 0; font-size: var(--type-small); color: var(--mut); line-height: 1.45;">Cypress's built-in retry-ability absorbs the wait — no cy.wait(), no hand-rolled polling.</p>
   </div>
   </div>
