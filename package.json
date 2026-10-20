@@ -18,7 +18,11 @@
     "tap:run": "tsx scripts/tap.ts verdict",
     "flake-audit": "tsx scripts/flake-audit.ts",
     "triage:signals": "tsx scripts/triage-signals.ts",
-    "triage:verdict": "tsx scripts/triage-verdict.ts"
+    "triage:verdict": "tsx scripts/triage-verdict.ts",
+    "testrail:bdd:prepare": "tsx scripts/testrail/prepare-bdd.ts",
+    "testrail:bdd:publish": "tsx scripts/testrail/publish-bdd.ts",
+    "testrail:bdd:archive": "tsx scripts/testrail/archive-market-cases.ts",
+    "testrail:bdd:verify": "tsx scripts/testrail/inspect-bdd.ts"
   },
   "repository": {
     "type": "git",

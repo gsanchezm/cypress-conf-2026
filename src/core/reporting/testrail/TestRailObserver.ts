@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import type { RunObserver, RunSummary } from '../RunObserver';
 import { attachmentForm, attachmentMethod, screenshotsForTitle } from './attachments';
 import { loadCaseMap } from './caseMap';
-import { addResultsRequest, addRunRequest, closeRunRequest, mapResults, type MappedResult } from './requests';
+import { addResultsRequest, addRunRequest, closeRunRequest, groupResults, mapResults, type MappedResult } from './requests';
 import { TESTRAIL_STATUS } from './statusMap';
 import type { TestRailClient } from './TestRailClient';
 import type { TestRailConfig } from './TestRailConfig';
@@ -58,18 +58,20 @@ export class TestRailObserver implements RunObserver {
     if (this.config.attachScreenshots) await this.attachFailures(mapped, created, summary);
     await client.postJson(closeRunRequest(run.id));
     logger.info(
-      { runId: run.id, reported: mapped.length, unmapped: summary.results.length - mapped.length, dryRun: this.config.dryRun },
+      { runId: run.id, cases: groupResults(mapped).length, scenarios: mapped.length, unmapped: summary.results.length - mapped.length, dryRun: this.config.dryRun },
       'TestRail: run reported and closed',
     );
   }
 
-  // add_results_for_cases answers with the created results in request order (spec A1), so
-  // created[i] belongs to mapped[i]. Only failures carry screenshots.
+  // add_results_for_cases answers in request order. Each result is one case and may
+  // contain several market scenarios, so attach every failing market to its case result.
   private async attachFailures(mapped: MappedResult[], created: CreatedResult[], summary: RunSummary): Promise<void> {
-    const uploads = mapped.flatMap((entry, index) => {
+    const uploads = groupResults(mapped).flatMap((group, index) => {
       const result = created[index];
-      if (entry.statusId !== TESTRAIL_STATUS.failed || result === undefined) return [];
-      return screenshotsForTitle(entry.test.title, summary.screenshots).map((path) => ({ resultId: result.id, path }));
+      if (result === undefined) return [];
+      return group.entries.flatMap((entry) => entry.statusId === TESTRAIL_STATUS.failed
+        ? screenshotsForTitle(entry.test.title, summary.screenshots).map((path) => ({ resultId: result.id, path }))
+        : []);
     });
     await Promise.all(uploads.map((upload) => this.attach(upload.resultId, upload.path)));
   }

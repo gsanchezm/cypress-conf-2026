@@ -176,14 +176,14 @@ def make_new_slides():
     slides["System Architecture"] = shell("System Architecture", "The system under the test system", "Muestra el mapa actual: GitHub Actions ejecuta Cypress sin LLM; OmniPizza es el sistema bajo prueba; TestRail y Cloud son salidas opcionales. El triage determinista funciona sin clave de modelo.", diagram("01-current-architecture.svg"), "The executable core runs without an LLM; agent adapters are optional.")
 
     rungs = [
-        card("1 · Gherkin", ["checkout.feature", "@C9 tags the Mexico Examples row"], small=True),
+        card("1 · Gherkin", ["checkout.feature", "@C8 tags the outline; @market_mx selects Mexico"], small=True),
         card("2 · Step definition", ["checkout.steps.ts", "Maps market data; calls runCheckoutScenario"], small=True),
         card("3 · Template Method", ["AtomicScenario", "arrangeViaApi → hydrateUi → assertUi"], small=True),
         card("4 · Facade", ["CheckoutFacade", "Keeps domain actions and API contract together"], small=True),
         card("5 · UI strategy", ["Deterministic locator path or cy.prompt", "Only necessary UI actions"], small=True),
         card("6 · Claims", ["assert* methods", "At most one API + one rendered UI claim"], small=True),
     ]
-    slides["Six-Level Case Ladder"] = shell("Six-Level Case Ladder", "Build one case, six rungs", "Recorre C9 de arriba a abajo. El tag @C9 mapea a TestRail pero todavía no existe lectura get_case previa a ejecutar. El escenario versionado decide qué correr; la aserción vive en assert*.", grid(rungs, 3, 24), "The versioned scenario owns execution; TestRail supplies the case identity.")
+    slides["Six-Level Case Ladder"] = shell("Six-Level Case Ladder", "Build one case, six rungs", "Recorre la fila de México en C8. @C8 identifica el caso BDD y @market_mx selecciona esa fila para la ejecución local. El escenario versionado decide qué correr; la aserción vive en assert*.", grid(rungs, 3, 24), "The versioned scenario owns execution; TestRail supplies the case identity.")
 
     slides["Code: AtomicScenario"] = shell("Code: AtomicScenario", "The Template Method in code", "Fragmento abreviado de checkout.steps.ts. AtomicScenario fija el orden arrangeViaApi, hydrateUi y assertUi; el step definition conecta datos y fachadas. El claim API ocurre dentro de arrangeViaApi y el claim UI en assertUi.", code("// checkout.steps.ts · abridged\nAtomicScenario.for('checkout').run({\n  arrangeViaApi: () => {\n    // seedCartViaApi → checkoutViaApi\n    checkoutFacade.assertOrderCreated(order);\n  },\n  hydrateUi: () => {\n    authFacade.loginViaUiWithMarket('standard', market);\n    checkoutFacade.completeCheckoutViaUi(checkoutData);\n  },\n  assertUi: () =>\n    checkoutFacade.assertOrderConfirmation(expectedOrder),\n});"), "The class fixes the phase order; the facade and strategy own the behavior.")
 
@@ -211,7 +211,7 @@ def make_new_slides():
     slides["MCP Evidence"] = shell("MCP Evidence", "Evidence through MCP tools", "MCP ofrece herramientas al asistente. En .mcp.json están declarados Cypress Cloud y GitHub Actions en modo de solo lectura. La autenticación PAT de cy-cloud se comprobó con pnpm cloud:status y se consultaron runs; eso no prueba que el host MCP haya conectado. El token CYPRESS_MCP_TOKEN se configura por separado. El auditor PostToolUse registra llamadas MCP en Claude Code. TestRail hoy publica por HTTP; su MCP oficial para Cloud figura en beta cerrada y aún no es una integración de este repo.", grid([
         card("Cypress Cloud MCP · configured", ["Runs, failed tests, flakes, Replay links", "Remote evidence for cy-triage", "PAT via CYPRESS_MCP_TOKEN or host OAuth"], small=True),
         card("GitHub MCP · configured", ["Actions read-only endpoint", "CI jobs, logs, artifacts", "No issue or workflow writes in this setup"], small=True),
-        card("TestRail MCP · candidate", ["Official Cloud server: closed beta", "Potential read-only C9 and R7 lookup", "Keep .feature and assert* as oracle"], small=True),
+        card("TestRail MCP · candidate", ["Official Cloud server: closed beta", "Potential read-only C8 and R10 lookup", "Keep .feature and assert* as oracle"], small=True),
     ], 3, 24), "MCP gives the agent tools; the versioned tests and CI still decide pass or fail.")
 
     slides["Skills vs cy.prompt"] = shell("Skills vs cy.prompt", "Two different instruction layers", "Contrasta tiempos y destinatarios. Los skills de cypress-io/ai-toolkit guían al asistente cuando escribe, explica o diagnostica. checkout.prompt.md contiene pasos de UI del test; preparePrompt valida y rellena placeholders; cy.prompt consume esos pasos durante la corrida grabada y usa Cypress Cloud. El contrato Gherkin y las aserciones permanecen versionados.", grid([
@@ -226,11 +226,11 @@ def make_new_slides():
         card("Graphify local graph", ["634 nodes · 1,368 edges · 24 communities", "Hubs: SelectorSource, CountryCode, TestResult"], small=True),
     ], 3, 28), "The agent can navigate dependencies without scanning every file or paying for graph extraction.")
 
-    slides["Live Demo Route"] = shell("Live Demo Route", "Four scenes, one flow", "El demo tiene cuatro escenas. 1: C9 y su tag. 2: mutación real del DOM y fallback determinista. 3: Checkout con cy.prompt y corrida grabada. 4: TestRail, Cloud, pipeline y diagnóstico. Cypress Cloud MCP se muestra sólo si el host tiene la conexión activa; el CLI autenticado sirve de ruta reproducible. get_case y el issue gate estricto se muestran como futuro.", grid([
-        card("1 · Case identity", ["Show TestRail C9 and @C9 in Gherkin", "Run the versioned Checkout scenario"], small=True),
+    slides["Live Demo Route"] = shell("Live Demo Route", "Four scenes, one flow", "El demo tiene cuatro escenas. 1: C8 y su fila de México, una ejecución local breve y luego los 12 escenarios. 2: mutación real del DOM y fallback determinista. 3: Checkout con cy.prompt y corrida grabada. 4: TestRail R10, Cloud, pipeline y diagnóstico. Cypress Cloud MCP se muestra sólo si el host tiene la conexión activa; el CLI autenticado sirve de ruta reproducible. get_case y el issue gate estricto se muestran como futuro.", grid([
+        card("1 · Case identity", ["Show TestRail C8 and @market_mx in Gherkin", "Run Mexico locally, then all 12 scenarios"], small=True),
         card("2 · UI change", ["MUTATE_DOM breaks a real data-testid", "HEAL_LOCATORS=a11y selects a unique fallback"], small=True),
         card("3 · AI Checkout", ["Switch to CyPromptCheckoutUiStrategy", "Open recorded Cloud run 8: 5/5 passed"], small=True),
-        card("4 · Evidence", ["Inspect TestRail R7 and CI artifacts", "Query Cloud with MCP or authenticated CLI"], small=True),
+        card("4 · Evidence", ["Inspect current TestRail R10 and CI artifacts", "Query Cloud with MCP or authenticated CLI"], small=True),
     ]), "CLI run listing is verified; an MCP query needs an active host connection.")
 
     slides["Two Strategies"] = shell("Two Strategies", "Same case, two UI engines", "La estrategia se elige en cypress/support/e2e.ts mediante UI_STRATEGY. El step definition y el oráculo no cambian. El fallback determinista y el self-healing de cy.prompt son mecanismos distintos.", grid([
@@ -242,7 +242,7 @@ def make_new_slides():
 
     slides["Prompts as Markdown"] = shell("Prompts as Markdown", "Prompt text is versioned", "Corrige el relato anterior: Cypress requiere {{token}} y no permite placeholders en targets. El campo del país usa una frase estática específica por mercado; preparePrompt detecta tokens faltantes antes de llamar a cy.prompt. Los tests Node de presupuesto fueron retirados a petición del dueño.", code("checkout.prompt.md · excerpt\n\n## completeCheckout\n- Add the Margherita pizza to the cart from the catalog page\n- Enter {{address}} into the address field\n- [requiredField]\n- Click the cash payment option\n- Confirm the order\n\n## requiredFieldMX\n- Enter {{requiredFieldValue}} into the colonia (neighborhood) field", "markdown"), "Country-specific target, runtime-only value; preparePrompt checks placeholder names.")
 
-    slides["Demo Backup: Commands"] = shell("Demo Backup: Commands", "Rehearsed locator mutation", "Estos son comandos PowerShell de respaldo para un caso, C9. La mutación cambia el data-testid real en el DOM; el registro sigue intacto. El primer comando falla con retries 0 y el segundo pasa usando el fallback cosechado. No correr ambos en paralelo contra la app compartida.", code("# Fail: app DOM changes; registry keeps the old selector\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address' --config 'retries=0'\n\n# Pass: same mutation, harvested a11y fallback enabled\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y' `\n  --config 'retries=0'", "powershell"), "Deterministic healing is live-verified; cy.prompt's response to this mutation is untested.")
+    slides["Demo Backup: Commands"] = shell("Demo Backup: Commands", "Rehearsed locator mutation", "Estos son comandos PowerShell de respaldo para la fila de México en C8. La mutación cambia el data-testid real en el DOM; el registro sigue intacto. El primer comando falla con retries 0 y el segundo pasa usando el fallback cosechado. No correr ambos en paralelo contra la app compartida.", code("# Fail: app DOM changes; registry keeps the old selector\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@market_mx' --expose 'MUTATE_DOM=checkout.address' --config 'retries=0'\n\n# Pass: same mutation, harvested a11y fallback enabled\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@market_mx' --expose 'MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y' `\n  --config 'retries=0'", "powershell"), "Deterministic healing is live-verified; cy.prompt's response to this mutation is untested.")
 
     slides["TestRail Bulk Reporting"] = shell("TestRail Bulk Reporting", "One run, three bulk requests", "TestRailObserver publica en after:run. Esta imagen muestra una vista generada con datos reales de la API de TestRail: R7 cerrado, C8–C12 passed. No es una captura de la interfaz web. El flujo usa add_run, add_results_for_cases y close_run; adjuntar screenshots agregaría peticiones.", f'<div style="display: grid; grid-template-columns: 1.55fr 1fr; gap: 28px; height: 100%;">{evidence_panel("testrail-r7-api.png", "TestRail API run R7 closed with cases C8 to C12 passed", "Historical R7 · API snapshot · 5 passed")}{grid([card("after:spec", ["Collect case results"], small=True), card("after:run", ["Map @C tags to IDs"], small=True), card("3 bulk calls", ["Create → submit → close"], small=True)], 1, 14)}</div>', "TestRail reporting does not change the Cypress result.")
 
@@ -305,10 +305,10 @@ def main():
     )
     preserved["Demo Time"] = preserved["Demo Time"].replace(
         "Plan: romper un locator con BREAK_LOCATOR y correr las dos estrategias sobre el mismo feature file.",
-        "Demo en vivo: C9, mutación del DOM, fallback determinista, cy.prompt grabado, TestRail, Cloud y CI."
+        "Demo en vivo: C8, ejecución local, mutación del DOM, fallback determinista, cy.prompt grabado, TestRail, Cloud y CI."
     ).replace(
         "Same feature file. One broken selector. Two strategies.",
-        "C9 · DOM mutation · TestRail · Cloud · bounded agents."
+        "C8 · local run · DOM mutation · TestRail · Cloud · bounded agents."
     )
     preserved["AtomicScenario"] = preserved["AtomicScenario"].replace(
         "Asserts the API contract itself: status, schema, business rule.",

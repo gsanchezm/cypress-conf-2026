@@ -82,8 +82,22 @@ When an application change alters the DOM (demonstrated via `MUTATE_DOM=checkout
 
 ### TestRail Bulk Integration
 - Custom `TestRailObserver` hooks into Cypress's `after:run` event.
+- The 12 Cypress scenarios map to four BDD cases: Auth C1/C2, Catalog C3 (five markets), and Checkout C8 (five markets). Each market keeps its own status inside the grouped case result.
 - Reports complete test runs in **three bulk HTTP requests** (respects 180 req/min Cloud rate limits).
 - TestRail outages never cause passing test suites to exit with a non-zero code.
+
+The versioned `.feature` files remain the source for the BDD cases. `pnpm testrail:bdd:prepare --check` verifies the four generated files in [`testrail/bdd/`](testrail/bdd/); [`testrail/README.md`](testrail/README.md) describes publishing and verification.
+The former per-market cases C4–C7 and C9–C12 are preserved in a Legacy section. The completed [TestRail R10](https://cypressconference2026.testrail.io/index.php?/runs/view/10) records all twelve passing scenarios in four case results.
+
+For a short local demo in PowerShell, run one Checkout market, then the complete suite. These commands do not load `.env` or publish a TestRail run:
+
+```powershell
+pnpm typecheck
+pnpm cy:run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@market_mx' --config 'retries=0'
+pnpm cy:run --browser chrome --spec 'cypress/e2e/**/*.feature'
+```
+
+The expected summaries are one passing Mexico scenario plus four filtered (`pending`) rows for the first Cypress run, and twelve scenarios across three specs for the full run. The tracked [Claude Code demo prompts](presentation/deck/claude-code-demo.md) continue with the controlled DOM mutation and fallback.
 
 ### Cypress Cloud CLI & Autonomous CI
 - **Local Inspection:** Inspect runs, replay timelines, and failure screenshots via `pnpm cloud:runs` and `cy-cloud`. The CLI was authenticated and run listing verified on October 19, 2026; this does not verify MCP host connectivity.
@@ -93,7 +107,7 @@ For host-specific setup, skill links, and the difference between agent skills an
 
 The [interactive agent architecture](docs/agent-architecture.html) and [architecture diagrams](presentation/architecture/README.md) show the shared roles, CI, Cypress, TestRail, and Cloud paths.
 
-The [presentation](docs/index.html) contains English speaker notes for all 39 slides, including an opening video that starts at 00:36. Expanded speaker guides are kept locally and excluded from the repository.
+The [presentation](docs/index.html) contains English speaker notes for all 39 slides, including an opening video that starts at 00:36. The [expanded speaker guide](docs/speaker-notes.md) includes the step-by-step local demo runbook.
 
 ---
 
