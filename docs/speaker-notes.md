@@ -1,329 +1,353 @@
-# Guion del ponente — Cypress Conf 2026
+# Speaker notes — Cypress Conf 2026
 
-Este guion sigue, en orden, las 37 diapositivas de [la presentación](index.html). Los títulos visibles permanecen en inglés. El texto entre comillas es una propuesta de lo que puedes decir en español; adáptalo a tu voz. Los pasos operativos están al final para que puedas dejarlos abiertos en otra pantalla. Evita prometer una duración media: las slides ya no muestran estimaciones de tiempo.
+This guide follows all 38 slides in [the presentation](index.html). Slide titles remain in English. The suggested lines are written for delivery in English; adapt them to your voice. The operational runbook is at the end so you can keep it open on a second screen. The slides contain no timing estimates, so avoid promising an average duration.
 
-## Preparación antes de abrir la presentación
+## Prepare before opening the presentation
 
-1. Abre la presentación, [el mapa interactivo de agentes](agent-architecture.html), OmniPizza Web, la documentación OpenAPI, el proyecto de TestRail y [Cypress Cloud, proyecto 5v45hh](https://cloud.cypress.io/projects/5v45hh). Deja los enlaces cargados para que un cold start de Render no interrumpa la narración.
-2. En el editor abre cypress/e2e/checkout/checkout.feature, src/features/checkout/steps/checkout.steps.ts, src/core/ui/AtomicScenario.ts, src/features/checkout/facade/CheckoutFacade.ts, src/features/checkout/prompts/checkout.prompt.md, AGENTS.md y agent/README.md. Usa zoom legible.
-3. En una terminal ejecuta pnpm warmup y pnpm typecheck. Comprueba pnpm cloud:status; la Record Key graba pruebas, pero el CLI requiere autenticación aparte. Si no hay acceso al CLI, prepara la interfaz web de Cloud.
-4. Oculta .env, credenciales, notificaciones y cualquier terminal que imprima secretos. Mantén separadas la terminal del runner, la de inspección y la ventana del navegador.
-5. Ten a mano la evidencia histórica: [Cloud run 7](https://cloud.cypress.io/projects/5v45hh/runs/7), [Cloud run 8](https://cloud.cypress.io/projects/5v45hh/runs/8), TestRail R7 y el [run determinista de Actions](https://github.com/gsanchezm/cypress-conf-2026/actions/runs/39306055926). Estos registros corresponden a una ejecución anterior; no sustituyen la lectura del resultado de una corrida nueva.
+1. Open the presentation, [interactive agent map](agent-architecture.html), OmniPizza Web, its OpenAPI documentation, the TestRail project, and [Cypress Cloud project 5v45hh](https://cloud.cypress.io/projects/5v45hh). Load the pages in advance so a Render cold start does not interrupt the story.
+2. In your editor, open `cypress/e2e/checkout/checkout.feature`, `src/features/checkout/steps/checkout.steps.ts`, `src/core/ui/AtomicScenario.ts`, `src/features/checkout/facade/CheckoutFacade.ts`, `src/features/checkout/prompts/checkout.prompt.md`, `AGENTS.md`, and `agent/README.md`. Use a readable zoom level.
+3. Run `pnpm warmup` and `pnpm typecheck`. Check `pnpm cloud:status` and `pnpm cloud:runs`; the CLI was authenticated with a PAT on October 19, 2026. Check separately whether your agent host exposes Cypress Cloud MCP tools before planning a live MCP query. Keep the Cloud web UI ready as a fallback.
+4. Hide `.env`, credentials, notifications, and any terminal that might print secrets. Keep the test runner, inspection terminal, and browser in separate windows.
+5. Have historical evidence ready: [Cloud run 7](https://cloud.cypress.io/projects/5v45hh/runs/7), [Cloud run 8](https://cloud.cypress.io/projects/5v45hh/runs/8), TestRail R7, and the [deterministic Actions run](https://github.com/gsanchezm/cypress-conf-2026/actions/runs/39306055926). These records are from earlier executions; inspect the result of any new run separately.
 
-## Acto 1 — problema y OmniPizza
+## Act 1 — the problem and OmniPizza
 
 ### 01 · Title
 
-**Di:** «En el universo de Linterna Verde, el anillo responde a la voluntad de quien lo usa. En pruebas pasa algo parecido: si no sabemos qué comportamiento queremos demostrar, ninguna automatización nos salva. Hoy voy a mostrar una arquitectura donde la API prepara el estado, la interfaz demuestra la experiencia y los agentes ayudan sin cambiar el oráculo».
+**Say:** “In the Green Lantern universe, the ring responds to the will of its bearer. Testing has a similar constraint: if we cannot name the behavior we want to prove, automation cannot save us. Today I will show an architecture in which the API prepares state, the UI proves the user experience, and agents help without changing the oracle.”
 
-**Señala:** El título y la idea de “atomic testing”. No empieces hablando de herramientas individuales; primero establece la promesa de un test con intención clara.
+**Point out:** The title and “atomic testing.” Establish the promise of a test with a clear purpose before discussing individual tools.
 
-**Puente:** «Antes de ver código, les presento el sistema real que vamos a probar».
+**Transition:** “Before looking at code, let me introduce the real system we will test.”
 
 ### 02 · Speaker
 
-**Di:** «Soy Gilberto Sánchez, Mexitester. Trabajo con automatización y calidad de software. Preparé este proyecto para que todo lo que verán sea inspeccionable: el repositorio de Cypress, la aplicación bajo prueba y los resultados».
+**Say:** “I’m Gilberto Sánchez, Mexitester. I work in test automation and software quality. I built this project so you can inspect everything you see: the Cypress repository, the application under test, and the results.”
 
-**Señala:** Tu nombre. Deja los enlaces para el cierre; el repositorio de esta charla aparecerá primero en la última slide.
+**Point out:** Your name. Save the links for the closing slide, where the talk repository appears first.
 
 ### 03 · Agenda
 
-**Di:** «Vamos a recorrer cuatro actos: primero conocer OmniPizza; después construir un escenario atómico; luego ver las reglas, los skills y los roles de agentes; por último vamos al demo con TestRail, cambios reales del DOM, Cypress Cloud y el pipeline. cy.prompt aparece dentro del demo porque es una estrategia de ejecución, no una charla aparte».
+**Say:** “We will move through four acts: meet OmniPizza, build an atomic scenario, examine the rules, skills, MCP tools, and agent roles, then run the demo with TestRail, a real DOM change, Cypress Cloud, and CI. `cy.prompt` appears inside the demo because it is an execution strategy.”
 
-**Señala:** Las cuatro tarjetas en orden. No asignes minutos a las secciones.
+**Point out:** The four cards in order. Do not assign minutes to the sections.
 
 ### 04 · The Problem
 
-**Di:** «Piensen en un test de Checkout que inicia sesión, navega por catálogo, agrega una pizza, visita carrito y finalmente llena el formulario. Si termina rojo, ¿qué se rompió? Podría ser la sesión, una pantalla anterior, un selector, el backend o el total. El camino completo oculta la causa».
+**Say:** “Imagine a Checkout test that logs in, browses the catalog, adds a pizza, visits the cart, and finally fills out a form. When it turns red, what broke? It might be the session, an earlier page, a selector, the backend, or the total. The long journey hides the cause.”
 
-**Haz:** Recorre verbalmente la secuencia de pantallas. Pregunta a la audiencia qué investigarían primero; usa su respuesta para introducir la necesidad de aislar el comportamiento.
+**Do:** Walk through the screens verbally. Ask the audience what they would investigate first, then use their answer to introduce isolation.
 
 ### 05 · The Oath
 
-**Di:** «El juramento es divertido, pero la idea técnica es seria: la precisión de un test viene de limitar lo que prepara, lo que ejecuta y lo que afirma. Si un escenario intenta demostrar todo el viaje de usuario, un solo rojo nos dice demasiado poco».
+**Say:** “The oath is playful, but the technical point is serious: a test becomes precise when we limit what it prepares, executes, and claims. If one scenario tries to prove the whole user journey, one red result tells us too little.”
 
-**Puente:** «Para no quedarnos en teoría, construí un producto con variaciones que sí desafían esta arquitectura».
+**Transition:** “To make this concrete, I built a product with variations that challenge the architecture.”
 
 ### 06 · OmniPizza
 
-**Di:** «OmniPizza es el sistema bajo prueba. Tiene frontend y API desplegados de forma independiente, documentación OpenAPI y cinco mercados. No uso una pantalla estática preparada sólo para que los tests se vean verdes: hay diferencias reales en campos, monedas y dirección de lectura».
+**Say:** “OmniPizza is the system under test. Its frontend and API are deployed independently; it has OpenAPI documentation and five markets. This is not a static page built to make tests pass. Fields, currencies, and reading direction really vary.”
 
-**Haz:** Abre OmniPizza Web si ya cargó. Identifica el selector de mercado. Si la red no responde, usa las capturas de la slide y sigue; volverás al navegador en el demo.
+**Do:** Open OmniPizza Web if it has loaded. Show the market selector. If the network is slow, use the slide screenshots and continue; the browser returns in the demo.
 
 ### 07 · OmniPizza Desktop
 
-**Di:** «Aquí aparece una restricción importante. El formulario de Checkout tiene datos de dirección, contacto y pago. Tras confirmar, la aplicación muestra el identificador y el total de la orden. Esa pantalla de éxito depende del estado generado por la acción real del usuario».
+**Say:** “Here is an important constraint. The Checkout form collects address, contact, and payment details. After submission, the app shows the order ID and total. That confirmation page depends on state created by the real user action.”
 
-**Señala:** La pantalla de Checkout y la de confirmación. Advierte que un POST a la API seguido de una visita directa a /order-success no reconstruye ese estado en el navegador; volverás a esta limitación en la slide 17.
+**Point out:** Checkout and confirmation. An API POST followed by a direct visit to `/order-success` does not rebuild that browser state; return to this limitation on slide 17.
 
 ### 08 · OmniPizza Mobile + API
 
-**Di:** «La vista móvil comparte el backend y las reglas de negocio. A la derecha está OpenAPI; los endpoints etiquetados “atomic test setup” permiten crear sesión o carrito por HTTP. Eso es lo que hace posible preparar el escenario sin repetir clics por pantallas que no estamos probando».
+**Say:** “The mobile view shares the backend and business rules. On the right is OpenAPI. Endpoints tagged ‘atomic test setup’ create a session or cart over HTTP, so we can prepare a scenario without clicking through screens we are not testing.”
 
-**Haz:** En Swagger muestra la etiqueta, no un token ni una respuesta con datos sensibles. Si abres la app móvil, menciona que México requiere colonia y Arabia Saudita distrito con interfaz RTL.
+**Do:** Show the tag in Swagger, without displaying a token or sensitive response. If you open the mobile app, note that Mexico requires a neighborhood and Saudi Arabia a district in an RTL interface.
 
 ### 09 · System Architecture
 
-**Di:** «Este es el sistema alrededor del sistema: GitHub Actions ejecuta Cypress; Cypress habla con la API y el navegador; TestRail recibe resultados cuando está configurado; Cloud recibe una corrida cuando decidimos grabarla. Si falla el pipeline determinista, otro workflow reúne evidencia y emite un veredicto sin llamar a un LLM».
+**Say:** “This is the system around the system: GitHub Actions runs Cypress; Cypress talks to the API and browser; TestRail receives results when configured; Cloud receives a run when we choose to record it. If the deterministic pipeline fails, another workflow collects evidence and produces a verdict without calling an LLM.”
 
-**Señala:** Sigue las flechas de izquierda a derecha y luego la ruta separada de fallos. «Agente» aquí significa apoyo para inspección o reparación, no una dependencia para que el test corra.
+**Point out:** Follow the arrows from left to right, then the separate failure path. Here an agent supports inspection or repair; tests do not depend on one to run.
 
-## Acto 2 — cómo se construye un caso atómico
+## Act 2 — building an atomic case
 
 ### 10 · Anatomy
 
-**Di:** «Un test atómico tiene tres propiedades. Es pequeño porque demuestra un comportamiento; independiente porque no depende de que otro escenario haya pasado; y usa la API para el trabajo de preparación. El navegador se reserva para aquello que realmente queremos observar como usuario».
+**Say:** “An atomic test has three properties. It is small because it demonstrates one behavior. It is independent because it does not require another scenario to pass. It uses the API for setup and reserves the browser for what we actually want to observe as a user.”
 
-**Ejemplo:** «Si estoy probando el total en la confirmación de Checkout, no necesito volver a demostrar en ese mismo escenario que cada enlace del catálogo funciona».
+**Example:** “If I am testing the total on the Checkout confirmation, I do not need to prove every catalog link again in the same scenario.”
 
 ### 11 · AtomicScenario
 
-**Di:** «La regla deja de ser una recomendación y se vuelve estructura. AtomicScenario obliga a pasar por arrangeViaApi, hydrateUi y assertUi en ese orden. Primero preparo y verifico el contrato API; luego llevo el navegador al estado útil y hago la acción necesaria; al final leo lo renderizado».
+**Say:** “The rule becomes structure rather than advice. `AtomicScenario` runs `arrangeViaApi`, `hydrateUi`, and `assertUi` in that order. First I prepare state and verify the API contract. Then I put the browser in a useful state and perform the necessary action. Finally I inspect what the UI rendered.”
 
-**Haz:** Si alguien pregunta dónde se impone el orden, abre src/core/ui/AtomicScenario.ts y señala runAtomicSteps. Aclara que los detalles de cada slice viven en los steps y fachadas.
+**Do:** If asked where order is enforced, open `src/core/ui/AtomicScenario.ts` and show `runAtomicSteps`. The details for each slice live in its steps and facades.
 
 ### 12 · Code: AtomicScenario
 
-**Di:** «Este fragmento resume Checkout, pero el archivo real tiene más detalle. En arrangeViaApi se inicia sesión por API, se siembra el carrito y se coloca una orden API; su estado es el claim de contrato. Después hydrateUi inicia una sesión de UI y envía otro pedido usando el formulario real. Son dos órdenes distintas. Finalmente assertUi compara la confirmación renderizada con el total esperado derivado de la API».
+**Say:** “This excerpt summarizes Checkout; the real file has more detail. In `arrangeViaApi`, the test logs in through the API, seeds a cart, and places an API order. Its status is the contract claim. In `hydrateUi`, it opens a UI session and submits another order through the real form. These are two distinct orders. In `assertUi`, it compares the rendered confirmation with the expected total derived from the API.”
 
-**Señala:** Cada bloque del código en secuencia. No digas que el POST de la primera orden alimenta automáticamente la pantalla de éxito de la segunda.
+**Point out:** Each block in order. Do not say the first order’s POST automatically feeds the second order’s success screen.
 
 ### 13 · Assertion Budget
 
-**Di:** «Nuestro presupuesto es máximo dos claims de negocio por escenario: uno del contrato API y uno de lo que la interfaz presenta. En Checkout, assertOrderCreated valida el estado de la orden creada por API; assertOrderConfirmation valida el resultado visible. Si quiero probar otra regla de negocio, creo otro caso».
+**Say:** “The budget is at most two business claims per scenario: one API contract claim and one UI render claim. In Checkout, `assertOrderCreated` verifies the API order status; `assertOrderConfirmation` verifies the visible result. Another business rule deserves another case.”
 
-**Haz:** En CheckoutFacade.ts muestra que el total positivo se trata como precondición y que la comparación visible se delega a la estrategia UI.
+**Do:** In `CheckoutFacade.ts`, show that a positive total is a precondition and that the visible comparison belongs to the UI strategy.
 
 ### 14 · Claims vs Guards
 
-**Di:** «Un claim responde “¿hizo el producto lo correcto?”. Una precondición responde “¿existe el estado necesario para que esta prueba tenga sentido?”. Un guard espera a que el DOM esté listo. Si falla una precondición no anuncio un bug del total; si un guard reintenta visibilidad, tampoco estoy creando una tercera afirmación de negocio».
+**Say:** “A claim asks, ‘Did the product do the right thing?’ A precondition asks, ‘Is the state needed for this test present?’ A guard waits until the DOM is ready. A failed precondition does not prove a total bug, and a visibility retry does not add a third business claim.”
 
-**Ejemplo:** El token no vacío permite continuar; no es el propósito del caso Checkout. La visibilidad de un campo permite interactuar; el total final sí es el comportamiento a demostrar.
+**Example:** A nonempty token allows the test to continue; it is not the Checkout case’s purpose. A visible field allows interaction; the final total is the behavior being tested.
 
 ### 15 · Hydration
 
-**Di:** «Hidratar no significa inyectar siempre localStorage. Auth, Catalog y Checkout necesitan combinaciones distintas. Algunos estados se pueden crear con la API y visitar directamente; los estados de error requieren interfaz real; Checkout necesita un camino híbrido por la forma en que la app mantiene la confirmación».
+**Say:** “Hydration does not always mean injecting `localStorage`. Auth, Catalog, and Checkout need different combinations. Some state can be created by API before navigating directly. Error states require the real UI. Checkout needs a hybrid path because of how the app holds confirmation state.”
 
-**Señala:** Compara las slices sin convertir una técnica en dogma. El comportamiento del producto decide el límite.
+**Point out:** Compare the slices without treating one technique as a rule for everything. Product behavior sets the boundary.
 
 ### 16 · Checkout Hydration
 
-**Di:** «Aquí está el camino híbrido: el test hace login por UI para entrar al mercado correcto, usa la API para preparar un carrito y deja que el navegador rehidrate su store. Desde allí llena dirección, campo regional y pago, y pulsa confirmar. La capacidad de retry de Cypress espera condiciones de DOM; no metemos un tiempo fijo inventado».
+**Say:** “Here is the hybrid path: the test logs in through the UI to enter the right market, uses the API to prepare a cart, and lets the browser rehydrate its store. It then fills in address, regional field, and payment, and confirms. Cypress retries DOM readiness conditions; we do not insert an invented fixed delay.”
 
-**Haz:** Con el diagrama, sigue cada caja hasta el submit. Señala dónde termina la preparación y dónde empieza el comportamiento que se quiere observar.
+**Do:** Follow each diagram box to submission. Show where setup ends and the behavior under observation begins.
 
 ### 17 · Limits of Injection
 
-**Di:** «Probamos el supuesto de hacer toda la orden por API y después visitar /order-success. El servidor sí crea una orden, pero esa pantalla no vuelve a consultar su detalle y el navegador no tiene el estado de confirmación: aparecen shell y datos vacíos. Por eso el envío del formulario es el tramo que no podemos atajar».
+**Say:** “We tested the idea of creating the whole order by API and then visiting `/order-success`. The server did create an order, but that page does not refetch the details, and the browser lacks confirmation state. We saw a shell with empty data. That is why the form submission cannot be skipped.”
 
-**Puente:** «Ya conocemos el límite. Ahora construyamos un caso desde el requisito hasta la aserción».
+**Transition:** “We know the boundary. Now let us build a case from requirement to assertion.”
 
 ### 18 · Six-Level Case Ladder
 
-**Di:** «Empiezo con México, @C9. Primer peldaño: Gherkin expresa la regla de negocio y el tag identifica el caso de TestRail. Segundo: checkout.steps.ts elige los datos del mercado. Tercero: AtomicScenario ordena fases. Cuarto: CheckoutFacade ejecuta acciones de dominio. Quinto: una estrategia decide cómo operar la UI. Sexto: los métodos assert conservan los dos claims».
+**Say:** “I start with Mexico, `@C9`. First, Gherkin states the business rule and the tag identifies the TestRail case. Second, `checkout.steps.ts` chooses market data. Third, `AtomicScenario` orders the phases. Fourth, `CheckoutFacade` performs domain actions. Fifth, a strategy operates the UI. Sixth, `assert*` methods own the two claims.”
 
-**Haz:** Abre checkout.feature y señala la fila Mexico con @C9; luego navega a runCheckoutScenario en checkout.steps.ts. La etiqueta @C se usa para mapear el resultado al terminar; todavía no hay un lector get_case antes de ejecutar.
+**Do:** Open `checkout.feature`, point to the Mexico row and `@C9`, then navigate to `runCheckoutScenario` in `checkout.steps.ts`. The `@C` tag maps the result after execution; there is no pre-run `get_case` reader yet.
 
-## Acto 3 — agentes, límites y skills
+## Act 3 — agents, boundaries, skills, and MCP
 
 ### 19 · Guardrails
 
-**Di:** «AGENTS.md es el contrato compartido. Ahí están el presupuesto de claims, los archivos que son oráculo y los comandos de trabajo. guard-oracle puede bloquear un intento de cambiar un feature o una aserción; guard-bash puede bloquear comandos reservados. Los scripts son locales y deterministas. Para que bloqueen automáticamente, cada host debe conectarlos a sus hooks; Claude Code ya tiene esa conexión y otros asistentes pueden usar el mismo contrato».
+**Say:** “`AGENTS.md` is the shared contract. It defines the claim budget, oracle files, and working commands. `guard-oracle` can reject edits to a feature or assertion, while `guard-bash` can reject reserved commands. These scripts are local and deterministic. Each host must wire them into its hooks to enforce them automatically; Claude Code has that wiring.”
 
-**Haz:** Muestra AGENTS.md y scripts/hooks. No prometas que un asistente sin hooks configurados bloqueará una edición por sí solo.
+**Do:** Show `AGENTS.md` and `scripts/hooks`. Do not claim an assistant without configured hooks blocks edits on its own.
 
 ### 20 · Agent Architecture
 
-**Di:** «El mapa de Archify separa al humano, al asistente, a las reglas y al runner. Un agente puede leer skills, hacer triage o proponer un arreglo. Cypress sigue siendo quien ejecuta y determina el resultado. Más abajo aparece cy.prompt: es una estrategia dentro del test y usa Cloud, no el mismo agente que edita el repositorio».
+**Say:** “The Archify map separates the human, assistant, rules, and runner. An agent can read skills, triage a failure, or propose a repair. Cypress still executes the tests and determines the result. Farther down, `cy.prompt` is an optional strategy inside a test, backed by Cloud; it is not the assistant editing this repository.”
 
-**Haz:** Abre [el mapa interactivo](agent-architecture.html); sigue el camino central y después las ramas punteadas de roles, guard scripts y cy.prompt. Muestra que el diagrama enlaza sus componentes al código.
+**Do:** Open the [interactive map](agent-architecture.html). Follow the central path, then the branches for roles, guards, and `cy.prompt`. The diagram links to the relevant code.
 
 ### 21 · Official Skills
 
-**Di:** «Estos cinco skills no son cinco bots. Son instrucciones especializadas que el asistente puede consultar según el problema. cypress-tap ve el DOM de una sesión abierta; cloud-cli ve corridas y Replay; author ayuda a crear o reparar; explain explica sin editar; docs contrasta una duda con la documentación oficial».
+**Say:** “These five skills are not five bots. They are specialized instructions the assistant can consult for a task. `cypress-tap` inspects the DOM of an open session; `cypress-cloud-cli` inspects runs and Replay; `cypress-author` helps create or repair tests; `cypress-explain` reviews without editing; and `cypress-docs` checks the official documentation.”
 
-**Haz:** Para cada tarjeta responde “cuándo”, “qué evidencia entrega” y “qué acción guía”. Los archivos SKILL.md se pueden leer desde cualquier asistente con acceso al repo, aunque Claude Code también los detecta mediante su adaptador.
+**Do:** For each card, answer when to use it, what evidence it provides, and what action it guides. Any assistant with repo access can read these `SKILL.md` files, while Claude Code can also discover them through its adapter.
 
-### 22 · Skills vs cy.prompt
+### 22 · MCP Evidence
 
-**Di:** «La diferencia está en quién recibe la instrucción y cuándo. Un skill se entrega al asistente que me ayuda a escribir o diagnosticar el framework. checkout.prompt.md contiene pasos para ejecutar en la interfaz. preparePrompt valida valores y cy.prompt los usa dentro de una corrida grabada. Ninguno reescribe el Gherkin ni decide por su cuenta el oráculo».
+**Say:** “Skills tell the assistant how to work. MCP gives it tools for external systems. This repo declares two connections: Cypress Cloud for runs, failures, and Replay links, and read-only GitHub Actions for logs and artifacts. `cy-cloud` is another path to Cloud through the terminal. I verified that the CLI is authenticated and can list runs; that does not prove this host’s MCP connection. TestRail already receives results over HTTP. Its official Cloud MCP is listed as a closed beta and could add case lookup when available.”
 
-**Ejemplo:** «cypress-tap me ayuda a investigar por qué falla un selector; cy.prompt intenta realizar una acción de Checkout en el navegador». Deja claro que son capas distintas.
+**Do:** Show `.mcp.json` without opening `.env`. Point to `cypress-cloud`, `github`, and then `agent/roles/cy-triage.md`: local artifacts first, then Cloud and Actions. If the host exposes the MCP tool, ask for the latest run of project `5v45hh`. Otherwise use `pnpm cloud:runs` and identify it as CLI evidence.
 
-### 23 · Subagents and Graphify
+### 23 · Skills vs cy.prompt
 
-**Di:** «Tenemos dos roles compartidos. cy-triage es de solo lectura y entrega un veredicto JSON sustentado por evidencia. cy-fixer puede tocar steps, estrategias o locators, pero trabaja un spec a la vez y se detiene tras cinco intentos. Graphify ayuda a encontrar dependencias sin leer manualmente cientos de archivos: el snapshot guardado tiene 634 nodos, 1,368 aristas y 24 comunidades».
+**Say:** “The distinction is who receives an instruction and when. A skill guides the assistant writing or diagnosing the framework. `checkout.prompt.md` contains UI steps for the test. `preparePrompt` validates values, and `cy.prompt` uses those steps during a recorded run. Neither changes Gherkin or decides the oracle on its own.”
 
-**Haz:** Si hay tiempo, abre graphify-out/graph.html y busca SelectorSource, CountryCode y TestResult. No atribuyas estos números a un análisis recién ejecutado: describen el snapshot local.
+**Example:** “`cypress-tap` helps me inspect a broken selector. `cy.prompt` tries to perform a Checkout action in the browser.” These are separate layers.
 
-## Acto 4 — demo en vivo y evidencia
+### 24 · Subagents and Graphify
 
-### 24 · Demo Time
+**Say:** “We have two shared roles. `cy-triage` is read-only and returns an evidence-based JSON verdict. `cy-fixer` may edit steps, strategies, or locators for one spec at a time, stopping after five attempts. Graphify helps find dependencies without manually opening hundreds of files. The saved snapshot contains 634 nodes, 1,368 edges, and 24 communities.”
 
-**Di:** «Ahora vamos a recorrer un caso concreto. Lo importante no es conseguir verde a cualquier precio: primero veremos qué se rompe, luego qué evidencia apunta al selector y por último qué mecanismo recupera el flujo. El feature y los claims permanecen intactos».
+**Do:** If time permits, open `graphify-out/graph.html` and search for `SelectorSource`, `CountryCode`, and `TestResult`. These counts describe a saved local snapshot, not an analysis run on stage.
 
-**Haz:** Cambia a una terminal limpia. Usa un caso @C9 para que la audiencia pueda seguirlo.
+## Act 4 — live demo and evidence
 
-### 25 · Live Demo Route
+### 25 · Demo Time
 
-**Di:** «Las cuatro escenas son: identificar el caso; cambiar realmente un atributo del DOM y usar el fallback; ver la estrategia cy.prompt y su corrida grabada; inspeccionar resultados en TestRail, Cloud y CI. El lector previo de TestRail y un gate de issues para regresiones confirmadas se presentarán al final como trabajo propuesto».
+**Say:** “Let us follow one case. The goal is not to turn it green at any cost. First we will see what breaks, then which evidence points to the selector, and finally which mechanism restores the flow. The feature and claims stay intact.”
 
-**Haz:** Anticipa qué pestañas abrirás. Sigue el [runbook](#runbook-del-demo) y vuelve a esta slide si necesitas reorientar al público.
+**Do:** Switch to a clean terminal. Use `@C9` so the audience can follow one case.
 
-### 26 · Two Strategies
+### 26 · Live Demo Route
 
-**Di:** «La misma definición Gherkin puede usar dos motores UI. La estrategia determinista utiliza LocatorProxy, selectores y un fallback accesible opcional. La estrategia cy.prompt usa pasos en lenguaje natural contra la interfaz renderizada y se graba en Cloud. El step definition no necesita conocer el motor elegido».
+**Say:** “The four scenes are: identify the case; change a real DOM attribute and use a fallback; inspect the `cy.prompt` strategy and its recorded run; then inspect TestRail, Cloud, and CI results. A pre-run TestRail reader and a strict issue gate for confirmed regressions are proposed work.”
 
-**Haz:** Abre cypress/support/e2e.ts y muestra el switch UI_STRATEGY; no cambies el feature durante la demo.
+**Do:** Name the tabs you will open. Follow the [demo runbook](#demo-runbook), and return to this slide if the audience needs orientation.
 
-### 27 · cy.prompt Basics
+### 27 · Two Strategies
 
-**Di:** «En Checkout agrupamos la acción de completar el pedido en una llamada y la verificación de confirmación en otra. Por eso una corrida de cinco mercados invoca hasta diez comandos cy.prompt antes de retries. La corrida grabada número 8 pasó los cinco mercados. Eso demuestra el flujo actual, no el healing de la mutación concreta que hicimos con el camino determinista».
+**Say:** “One Gherkin scenario can use two UI engines. The deterministic strategy uses `LocatorProxy`, selectors, and an optional accessible fallback. The `cy.prompt` strategy uses natural-language steps against the rendered UI and records to Cloud. The step definition does not need to know which engine was selected.”
 
-**Haz:** Abre el run 8 en Cloud; señala los cinco tests y, si está disponible, una línea de tiempo de Test Replay.
+**Do:** Open `cypress/support/e2e.ts` and show the `UI_STRATEGY` switch. Do not edit the feature during the demo.
 
-### 28 · Prompts as Markdown
+### 28 · cy.prompt Basics
 
-**Di:** «El texto de la interacción no está escondido en TypeScript. Aquí se ve el Markdown: una instrucción para dirección, un marcador para el campo regional y la acción de confirmar. Los valores variables usan dobles llaves, como {{address}}; el nombre del elemento al que apuntamos queda estático y cambia por mercado. preparePrompt detecta placeholders faltantes antes de la llamada».
+**Say:** “For Checkout we batch the order action into one call and confirmation verification into another. A five-market run therefore invokes up to ten `cy.prompt` commands before retries. Recorded run 8 passed all five markets. That proves the current flow; it does not prove healing for the specific DOM mutation we tested with the deterministic path.”
 
-**Haz:** Abre checkout.prompt.md y después CyPromptCheckoutUiStrategy.ts. Señala el marcador [requiredField] y cómo se inserta requiredFieldMX. No digas que existe hoy un test Node de presupuesto de prompt.
+**Do:** Open Cloud run 8. Show the five tests and, if available, a Test Replay timeline.
 
-### 29 · Demo Backup: Commands
+The slide image was generated from the five real Cypress Cloud CLI results. Slide 32 contains a real screenshot of the Cypress Cloud Runs page supplied by the owner.
 
-**Di:** «Estos son los dos comandos del experimento repetible. Primero renombro el data-testid del campo de dirección en el DOM vivo y el locator original falla. Después repito exactamente la mutación y habilito HEAL_LOCATORS=a11y. Así puedo atribuir la diferencia al fallback y no a que edité el registro de selectores».
+### 29 · Prompts as Markdown
 
-**Haz:** Ejecuta los comandos secuencialmente desde el [runbook](#escena-2-mutacion-real-y-fallback). Espera el resultado completo de cada uno. Si el backend está frío, muestra la evidencia de respaldo y explica por qué un timeout no prueba selector drift.
+**Say:** “The interaction text is not hidden in TypeScript. Here is the Markdown: an address instruction, a placeholder for the regional field, and the confirmation action. Values use double-brace tokens such as `{{address}}`. The target element’s name remains static for each market. `preparePrompt` detects missing placeholders before the call.”
 
-### 30 · TestRail Bulk Reporting
+**Do:** Open `checkout.prompt.md`, then `CyPromptCheckoutUiStrategy.ts`. Show `[requiredField]` and how `requiredFieldMX` is inserted. Do not claim a Node test for prompt budget still exists.
 
-**Di:** «TestRailObserver escucha after:run. Busca los tags @C del feature, crea un run, manda resultados mapeados en un lote y cierra el run: tres peticiones base para toda la suite. Si decidimos adjuntar screenshots de fallos, eso añade peticiones. Y si TestRail está caído, el error se registra sin convertir un test verde en rojo».
+### 30 · Demo Backup: Commands
 
-**Haz:** En TestRail muestra C9 y R7; si hiciste una corrida nueva con las variables configuradas, enseña ese nuevo run y di explícitamente que es distinto de R7.
+**Say:** “These are two commands for a repeatable experiment. First I rename the address field’s `data-testid` in the live DOM, and the original locator fails. Then I repeat the same mutation with `HEAL_LOCATORS=a11y`. The difference can be attributed to the fallback, rather than an edited selector registry.”
 
-### 31 · Cloud CLI
+**Do:** Run the commands sequentially from [scene 2](#scene-2--real-mutation-and-fallback). Wait for each result. If the backend is cold, show backup evidence and explain why a timeout does not prove selector drift.
 
-**Di:** «El humano y el agente pueden consultar corridas, tests, screenshots y Test Replay con cy-cloud. Pero la Record Key sólo sirve para grabar; el CLI necesita login o token propio. Si el estado de autenticación no está listo, la interfaz web de Cloud muestra la misma evidencia grabada sin fingir que el CLI ya funciona».
+### 31 · TestRail Bulk Reporting
 
-**Haz:** Ejecuta pnpm cloud:status. Si confirma autenticación, ejecuta pnpm cloud:runs; si no, abre el run 8 en la web.
+**Say:** “`TestRailObserver` listens at `after:run`. It reads `@C` tags from the feature, creates a run, submits mapped results in one batch, and closes the run: three base requests for the suite. Attaching failure screenshots would add requests. If TestRail is down, the error is logged without turning a passing Cypress run red.”
 
-### 32 · CI and Reporting
+**Do:** Identify the image as a visualization of real `get_run/7` and `get_results_for_run/7` API data, not a screenshot of the TestRail UI. Show C9 and R7 in TestRail. If you created a new run, identify it separately from R7.
 
-**Di:** «Un push o PR dispara tests.yml: typecheck, pruebas unitarias del triage y la matriz Auth, Catalog, Checkout. El workflow de cy.prompt sólo se lanza manualmente. Cuando falla la suite determinista, ci-triage.yml reúne logs y screenshots y produce JSON sin un proveedor LLM. Con evidencia suficiente de flake o cold start puede reintentar; en los demás casos comenta en PR o abre un issue con el veredicto».
+### 32 · Cloud CLI
 
-**Señala:** La ruta de fallo del diagrama. Aclara que el issue gate que restringe publicaciones a regresiones de producto confirmadas todavía no existe.
+**Say:** “People and agents can inspect runs, tests, screenshots, and Test Replay with `cy-cloud`. The Record Key records tests; the CLI needs its own credential. Its status confirmed PAT authentication, and run listing worked on October 19, 2026. Cypress Cloud MCP needs a separate host connection. CLI login alone does not prove MCP access.”
 
-### 33 · Demo Backup: Results
+**Do:** The slide contains a real Cypress Cloud UI screenshot. Point to run 8 in the first row: five passed, zero failed. Run `pnpm cloud:status` and `pnpm cloud:runs` to compare the data, then open run 8 for tests and Replay.
 
-**Di:** «Si la red de la conferencia no ayuda, no necesito improvisar resultados. Tengo evidencia histórica: un run local grabado en Cloud pasó cinco Checkout y TestRail R7 cerró con cinco casos passed; otro run en Actions y Cloud también pasó los cinco mercados. Los identificadores en pantalla son comprobables, pero pertenecen a esa ejecución anterior».
+### 33 · CI and Reporting
 
-**Haz:** Abre el enlace del run 8 y el run determinista. Evita decir “acabamos de ejecutar esto” si sólo estás mostrando un registro.
+**Say:** “A push or PR starts `tests.yml`: typecheck, triage unit tests, and the Auth, Catalog, Checkout matrix. The `cy.prompt` workflow is manual. When the deterministic suite fails, `ci-triage.yml` gathers logs and screenshots and produces JSON without an LLM provider. With enough evidence of a flake or cold start it may rerun. Otherwise it may comment on a PR or open an issue with the verdict.”
 
-### 34 · What the Demo Proves
+**Point out:** Trace the failure path in the diagram. The proposed gate that restricts issue publication to confirmed product regressions is not implemented yet.
 
-**Di:** «Quiero separar tres afirmaciones. Sí probamos el flujo API y UI de Checkout. Sí probamos que el fallback determinista tolera la mutación ensayada de data-testid. También sabemos que cy.prompt completó cinco mercados con la app actual. Todavía no hemos probado que cy.prompt repare esa mutación específica. Mantener esa frontera hace que la demo sea creíble».
+### 34 · Demo Backup: Results
 
-**Haz:** Señala las columnas Proven y Not yet proven. Distingue cambiar el DOM de cambiar sólo el archivo de locators.
+**Say:** “If conference networking fails, I have historical evidence. A locally recorded Cloud run passed five Checkout tests, and TestRail R7 closed with five passed cases. Another run in Actions and Cloud also passed all five markets. The IDs on screen are verifiable, but they belong to earlier executions.”
 
-## Cierre
+**Do:** Open run 8 and the deterministic Actions run. Do not say “we just ran this” when showing a saved record.
 
-### 35 · Agentic Boundaries
+### 35 · What the Demo Proves
 
-**Di:** «Hoy están implementados los tags TestRail, el publicador de resultados, el runner Cypress, las corridas grabadas, el triage determinista y roles de agente reutilizables. Lo siguiente sería leer get_case antes de ejecutar, permitir una sola selección de escenario y publicar un bug únicamente si se reproduce una regresión de negocio, con evidencia y deduplicación. Esa secuencia completa es propuesta, no un workflow que ya pueda demostrar».
+**Say:** “I want to separate three claims. We have tested the Checkout API and UI flow. We have shown that the deterministic fallback survives the tested `data-testid` mutation. We also know `cy.prompt` completed five markets with the current app. We have not tested whether `cy.prompt` heals that particular mutation. Keeping that boundary makes the demo credible.”
 
-### 36 · Takeaways
+**Do:** Point to “Proven” and “Not yet proven.” Distinguish changing the DOM from changing only the locator file.
 
-**Di:** «Si se llevan cuatro cosas: la API prepara el estado; la UI demuestra lo que renderiza; cada escenario conserva un claim API y uno UI como máximo; y los agentes ayudan bajo reglas verificables. TestRail, Cloud, Graphify y CI nos dan evidencia para entender el fallo en vez de adivinar».
+## Closing
 
-**Puente:** «El código y la app quedan abiertos para que ustedes mismos cuestionen estas decisiones».
+### 36 · Agentic Boundaries
 
-### 37 · Thank You
+**Say:** “Today we have TestRail tags, result publishing, the Cypress runner, recorded runs, deterministic triage, and reusable agent roles. Next we could read `get_case` before execution, allow one selected scenario, and publish a bug only for a reproduced business regression with evidence and deduplication. That full sequence is a proposal, not a workflow I can demonstrate today.”
 
-**Di:** «Gracias. El primer enlace es el repositorio de esta charla; después está OmniPizza. Pueden revisar el caso C9, ejecutar la suite y explorar el diagrama interactivo. Me interesa especialmente discutir dónde pondrían ustedes el límite entre setup API y acción UI».
+### 37 · Takeaways
 
-**Haz:** Deja visibles el repositorio, OmniPizza y tus datos de contacto. Abre preguntas.
+**Say:** “Four ideas to take home: use the API to prepare state; use the UI to prove what users see; keep at most one API claim and one UI claim per scenario; and let agents help under verifiable rules. TestRail, Cloud, Graphify, and CI give us evidence to understand failures.”
 
-## Runbook del demo
+**Transition:** “The code and app are open so you can challenge these decisions yourself.”
 
-Los pasos siguientes son una guía de operación. Mantén el caso @C9 y no ejecutes dos corridas simultáneas contra la app compartida. Los comandos se ejecutan desde la raíz del repositorio en PowerShell. No muestres el contenido de .env en pantalla.
+### 38 · Thank You
 
-### Escena 1 — identidad del caso y ejecución base
+**Say:** “Thank you. The first link is this talk’s repository; OmniPizza follows. You can review case C9, run the suite, and explore the interactive diagram. I would especially like to discuss where you would draw the line between API setup and UI action.”
 
-1. En TestRail abre el caso C9. Di: «Este es el identificador del caso, no una instrucción dinámica para generar código».
-2. En checkout.feature busca @C9, muestra la fila Mexico y lee Given, When y Then. En checkout.steps.ts enseña CHECKOUT_SCENARIOS.Mexico y runCheckoutScenario. En AtomicScenario.ts señala las tres fases.
-3. Ejecuta un caso determinista sin cargar .env si sólo quieres ver Cypress. Si quieres que esta corrida publique un run real en TestRail, usa la segunda variante: las credenciales se cargan en el proceso Node y el observer actuará en after:run.
+**Do:** Leave the repository, OmniPizza, and contact details visible. Open for questions.
 
-       pnpm cy:run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --config 'retries=0'
+## Demo runbook
 
-       node --env-file=.env node_modules/cypress/bin/cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --config 'retries=0'
+These are operational steps. Keep the focus on `@C9`, and do not start two runs against the shared app at once. Run commands from the repository root in PowerShell. Do not show `.env` on screen.
 
-4. Espera el resumen. Di qué observaste, no lo que esperabas: caso pasado, fallado o precondición rota. Si hubo publicación TestRail, abre el run recién creado y verifica que C9 tenga el mismo estado. Si no la hubo, usa R7 como evidencia histórica, sin presentarla como resultado de esta corrida.
+### Scene 1 — case identity and baseline run
 
-### Escena 2 — mutación real y fallback
+1. Open C9 in TestRail. Say: “This is the case identifier, not a dynamic instruction for code generation.”
+2. Find `@C9` in `checkout.feature`, show the Mexico row, and read Given, When, and Then. In `checkout.steps.ts`, show `CHECKOUT_SCENARIOS.Mexico` and `runCheckoutScenario`. In `AtomicScenario.ts`, show the three phases.
+3. Run one deterministic case without loading `.env` if you only want the Cypress result. To publish a real TestRail run, use the second variant; credentials are loaded in the Node process and the observer acts at `after:run`.
 
-1. Explica la hipótesis: «El registro de locators se queda igual; renombro en runtime el data-testid que muestra la app». Ejecuta la corrida roja:
+   ```powershell
+   pnpm cy:run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --config 'retries=0'
 
-       pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address' --config 'retries=0'
+   pnpm exec node --env-file=.env node_modules/cypress/bin/cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --config 'retries=0'
+   ```
 
-2. Espera a que termine. Muestra el error del locator en reporter o screenshot. Si el fallo fue de conexión o backend, no lo llames selector drift: revisa la URL y haz warmup antes de repetir.
-3. Ejecuta la misma mutación con fallback accesible:
+4. Wait for the summary. Report what you observed: passed case, failed case, or broken precondition. If TestRail publishing occurred, open the newly created run and verify C9 has the same status. Otherwise use R7 as historical evidence, without presenting it as this run’s result.
 
-       pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y' --config 'retries=0'
+### Scene 2 — real mutation and fallback
 
-4. Busca el selector alternativo único y el resultado final. Di: «La comparación controlada cambió únicamente HEAL_LOCATORS; el feature y la afirmación de negocio no cambiaron». Si falla por una causa distinta, detente en la evidencia y usa las capturas ensayadas.
+1. Explain the hypothesis: “The locator registry stays unchanged; I rename the `data-testid` in the app’s live DOM.” Run the expected failure:
 
-### Escena 3 — cy.prompt y Cloud
+   ```powershell
+   pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address' --config 'retries=0'
+   ```
 
-1. Enseña el switch UI_STRATEGY en cypress/support/e2e.ts y los pasos de checkout.prompt.md. Explica que cy.prompt se ejecuta dentro de Cypress, usa Cloud y está separado del asistente que mantiene el repositorio.
-2. Abre [Cloud run 8](https://cloud.cypress.io/projects/5v45hh/runs/8): enseña los cinco mercados, un test y su Replay. Este paso no consume cuota nueva.
-3. Si decides grabar una corrida nueva y tienes acceso a Cloud, ejecuta un solo mercado. Este comando crea una corrida Cloud y, con TestRail configurado en .env, también puede crear un run TestRail:
+2. Wait for completion. Show the locator error in the reporter or screenshot. If the failure was a connection or backend issue, do not label it selector drift. Check the URL and warm the backend before repeating.
+3. Run the same mutation with the accessible fallback:
 
-       node --env-file=.env node_modules/cypress/bin/cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --expose 'UI_STRATEGY=cyPrompt' --record --config 'retries=0'
+   ```powershell
+   pnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y' --config 'retries=0'
+   ```
 
-4. Espera el enlace de la nueva corrida y ábrelo. Si el servicio o la autenticación impiden grabar, vuelve a run 8. No presentes el run 8 como evidencia de healing de MUTATE_DOM: esa combinación concreta no se probó.
+4. Find the unique alternative selector and final result. Say: “The controlled comparison changed only `HEAL_LOCATORS`; the feature and business claim stayed the same.” If a different failure occurs, follow the evidence and use the prepared screenshots.
 
-### Escena 4 — TestRail, CLI y pipeline
+### Scene 3 — cy.prompt and Cloud
 
-1. En TestRail abre R7 o el nuevo run de la escena 1/3. Señala el case ID, resultado y cierre del run. En código, enseña after:run → TestRailObserver → add_run → add_results_for_cases → close_run.
-2. Ejecuta pnpm cloud:status. Sólo si está autenticado, ejecuta pnpm cloud:runs y abre un test o Replay con cy-cloud. Si no está autenticado, usa la pestaña web de Cloud; no confundas la Record Key con credenciales del CLI.
-3. En GitHub Actions muestra tests.yml y después ci-triage.yml. Di: «Este segundo workflow sólo parte de una falla de la suite determinista y su diagnóstico base sale de logs, no de un LLM». Puedes enseñar una clasificación local sin escribir en GitHub:
+1. Show the `UI_STRATEGY` switch in `cypress/support/e2e.ts` and the steps in `checkout.prompt.md`. Explain that `cy.prompt` runs inside Cypress, uses Cloud, and is separate from the assistant maintaining the repo.
+2. Open [Cloud run 8](https://cloud.cypress.io/projects/5v45hh/runs/8). Show the five markets, one test, and its Replay. This consumes no new `cy.prompt` calls.
+3. If you choose to record a new run and have Cloud access, run one market. This command creates a Cloud run and, with TestRail configured in `.env`, may also create a TestRail run:
 
-       pnpm triage:verdict src/core/triage/fixtures/checkout-broken-locator.log
+   ```powershell
+   pnpm exec node --env-file=.env node_modules/cypress/bin/cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature --env 'tags=@C9' --expose 'UI_STRATEGY=cyPrompt' --record --config 'retries=0'
+   ```
 
-4. Lee category, confidence y evidence del JSON. Un patrón aislado no demuestra una regresión de producto. El workflow actual puede comentar o abrir issues para otras categorías; el gate de bug confirmado sigue en propuesta.
+4. Wait for and open the new run link. If a service or authentication issue prevents recording, return to run 8. Do not present run 8 as evidence that `cy.prompt` heals `MUTATE_DOM`: that combination has not been tested.
 
-### Interludio opcional — guardrails, Graphify y cypress-tap
+### Scene 4 — TestRail, CLI, MCP, and CI
 
-Este interludio encaja después de las slides 19–23. Hazlo sólo si las herramientas ya están abiertas; no es requisito para completar el flujo principal.
+1. In TestRail, open R7 or the new run from scene 1 or 3. Show the case ID, result, and closed run. In code, trace `after:run` → `TestRailObserver` → `add_run` → `add_results_for_cases` → `close_run`.
+2. Run `pnpm cloud:status` and, if still authenticated, `pnpm cloud:runs`. Open a test or Replay with `cy-cloud`. If the session has expired, use Cloud in the browser. The Record Key, CLI PAT, and MCP authentication are different. If your agent host exposes Cypress Cloud MCP tools, ask it for the latest run in project `5v45hh` and name MCP as the source. If it does not, use the CLI and say so.
+3. In GitHub Actions, show `tests.yml`, then `ci-triage.yml`. Say: “The second workflow begins only after the deterministic suite fails. Its base diagnosis comes from logs, not an LLM.” You can show a local classification without writing to GitHub:
 
-1. Abre AGENTS.md y muestra que el contrato compartido protege los .feature y los métodos assert. Para enseñar el guard sin editar ningún archivo, envía una propuesta ficticia de Edit a su entrada estándar:
+   ```powershell
+   pnpm triage:verdict src/core/triage/fixtures/checkout-broken-locator.log
+   ```
 
-       '{"tool_name":"Edit","tool_input":{"file_path":"cypress/e2e/auth/auth.feature","old_string":"a","new_string":"b"}}' | pnpm exec tsx scripts/hooks/guard-oracle.ts
+4. Read `category`, `confidence`, and `evidence` in the JSON. One pattern does not prove a product regression. The current workflow may comment or create issues for other categories; the confirmed-bug gate remains proposed work.
 
-   Espera una denegación con código de salida 2. Di: «El script recibe una intención de edición y la rechaza; aquí no se modificó ningún test». Recuerda que sólo bloquea automáticamente a un agente si el host lo invoca como hook.
-2. Abre graphify-out/graph.html o ejecuta una consulta local:
+### Optional interlude — guardrails, Graphify, and cypress-tap
 
-       graphify query "CheckoutFacade TestRailObserver"
+This fits after slides 19–24 if the tools are already open. It is not required for the main demo.
 
-   Señala una dependencia que el mapa te ayude a encontrar. Si el CLI no está instalado en esa máquina, vuelve al mapa Archify de la slide 20 y explica que Graphify no participa en la ejecución de Cypress.
-3. Si quieres mostrar cypress-tap, inicia manualmente pnpm cy:open y elige E2E en Chrome. Después consulta pnpm tap:status. Sólo con la sesión conectada despacha pnpm tap:run cypress/e2e/checkout/checkout.feature; inspecciona reporter, pin y dom para el comando que falló. No inicies una segunda corrida mientras la primera está en curso y no uses este camino para reescribir el oráculo.
+1. Open `AGENTS.md` and show that the shared contract protects `.feature` files and `assert*` methods. To demonstrate the guard without editing a file, send a fictional Edit proposal to its standard input:
 
-## Rutas de rescate
+   ```powershell
+   '{"tool_name":"Edit","tool_input":{"file_path":"cypress/e2e/auth/auth.feature","old_string":"a","new_string":"b"}}' | pnpm exec tsx scripts/hooks/guard-oracle.ts
+   ```
 
-| Si sucede | Haz | Explica |
+   Expect a rejection with exit code 2. Say: “The script receives an intended edit and rejects it; no test was changed.” It only blocks an agent automatically when the host invokes it as a hook.
+2. Open `graphify-out/graph.html` or run a local query:
+
+   ```powershell
+   graphify query "CheckoutFacade TestRailObserver"
+   ```
+
+   Show one relationship the graph helps you find. If the CLI is unavailable on the presentation machine, use the Archify map from slide 20. Graphify does not run Cypress tests.
+3. For `cypress-tap`, start `pnpm cy:open` manually and select E2E in Chrome. Then check `pnpm tap:status`. Only when the session is connected, run `pnpm tap:run cypress/e2e/checkout/checkout.feature`; inspect the reporter, pin, and DOM for the failing command. Do not start another run before the first completes, and do not use this path to rewrite the oracle.
+
+## Recovery paths
+
+| If this happens | Do this | Explain this |
 | --- | --- | --- |
-| Render responde lento o con 5xx | Ejecuta pnpm warmup, muestra capturas y vuelve a la evidencia guardada | Es infraestructura; no relajes el claim ni agregues esperas fijas |
-| El caso C9 falla por una precondición | Identifica arrangeViaApi o el servicio inaccesible; no saltes directo al fallback | Un caso rojo todavía no identifica un bug de Checkout |
-| No aparece un run nuevo en TestRail | Comprueba si la corrida cargó la configuración; muestra R7 como histórico | El observer es opt-in y no decide el resultado de Cypress |
-| Cloud CLI no está autenticado | Abre run 8 en el navegador | La Record Key y la autenticación del CLI son distintas |
-| No conviene gastar una ejecución cy.prompt en vivo | Muestra checkout.prompt.md, la estrategia y run 8 | La evidencia grabada ya demuestra el flujo de cinco mercados |
-| Graphify o Archify no abre | Usa la imagen en la slide y sigue el camino verbal | Los diagramas apoyan la explicación; no ejecutan los tests |
+| Render is slow or returns 5xx | Run `pnpm warmup`, show screenshots, and return to saved evidence | This is infrastructure; do not weaken a claim or add fixed waits. |
+| C9 fails on a precondition | Inspect `arrangeViaApi` or the inaccessible service before trying a fallback | One red case does not identify a Checkout bug. |
+| No new TestRail run appears | Check whether the run loaded its configuration; show R7 as historical evidence | The observer is opt-in and does not determine the Cypress result. |
+| Cloud CLI session has expired | Open run 8 in the browser | The Record Key and CLI authentication are separate. |
+| Cypress Cloud MCP tools are absent | Use the authenticated CLI or Cloud UI and name the source | A declared MCP server does not prove this host is connected. |
+| A live `cy.prompt` run is not appropriate | Show `checkout.prompt.md`, the strategy, and run 8 | The recorded evidence already demonstrates the five-market flow. |
+| Graphify or Archify will not open | Use the slide image and continue verbally | Diagrams support the explanation; they do not run tests. |
 
-## Preguntas que probablemente llegarán
+## Likely questions
 
-- **«¿Puede ejecutarse con Codex, Copilot, DeepSeek o Claude Code?»** Sí: AGENTS.md, agent/roles y los comandos son compartidos. Cada host debe conectar los scripts de política si quiere bloqueo automático de operaciones.
-- **«¿Por qué no usar cy.prompt para todo?»** La ruta determinista sigue siendo la opción base del proyecto. cy.prompt aporta interacción semántica opcional y evidencia grabada; no sustituye el contrato Gherkin.
-- **«¿El agente puede arreglar un rojo cambiando el expected?»** Ese cambio toca el oráculo. El rol cy-fixer tiene permitido reparar la implementación del test, no suavizar la afirmación; guard-oracle lo bloquea cuando el host lo invoca.
-- **«¿Tres requests incluyen screenshots?»** No. Son las tres llamadas base de TestRail para crear run, enviar resultados en bulk y cerrarlo. Adjuntar screenshots hace llamadas adicionales.
-- **«¿El triage actual sólo crea issues para regresiones confirmadas?»** No. Ese gate es parte de la propuesta futura. Hoy el JSON y la evidencia ayudan a clasificar, pero el workflow todavía puede publicar otras categorías.
+- **“Can this run with Codex, Copilot, DeepSeek, or Claude Code?”** Yes. `AGENTS.md`, `agent/roles`, and the commands are shared. Each host must connect policy scripts for automatic blocking.
+- **“What is the difference between a skill and MCP?”** A skill guides how the assistant works. MCP exposes tools to retrieve external evidence. Neither changes the test oracle.
+- **“Why not use `cy.prompt` everywhere?”** The deterministic route is the project default. `cy.prompt` adds optional semantic interaction and recorded evidence; it does not replace the Gherkin contract.
+- **“Can an agent fix red by changing the expected value?”** That changes the oracle. `cy-fixer` may repair test implementation, not weaken the claim. `guard-oracle` blocks such edits when the host invokes it.
+- **“Do the three TestRail requests include screenshots?”** No. They create a run, submit results in bulk, and close it. Screenshot attachments require additional requests.
+- **“Does current triage create issues only for confirmed regressions?”** No. That gate is proposed. Today JSON and evidence help classify a failure, but the workflow can publish other categories.
 
-La fuente de verdad visual es [docs/index.html](index.html), generada desde presentation/deck/build.py y presentation/deck/deck-base.html. Este guion amplía sus notas; no modifica ni sustituye el contenido proyectado.
+The visual source of truth is [docs/index.html](index.html), generated from `presentation/deck/build.py` and `presentation/deck/deck-base.html`. This guide expands the slide notes; it does not change the projected content.

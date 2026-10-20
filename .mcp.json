@@ -2,7 +2,10 @@
   "mcpServers": {
     "cypress-cloud": {
       "type": "http",
-      "url": "https://mcp.cypress.io/mcp"
+      "url": "https://mcp.cypress.io/mcp",
+      "headers": {
+        "Authorization": "Bearer ${CYPRESS_MCP_TOKEN}"
+      }
     },
     "github": {
       "type": "http",

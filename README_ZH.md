@@ -61,6 +61,8 @@
 | **`guard-bash.ts`** | 命令网关 Hook | 阻止未经允许的 `--record`、`cyPrompt` 以及 `git push` 执行。 |
 | **`cypress-tap`** | 交互式实时反馈 | `cy-fixer` 角色 借助 `cypress open` 实时检查 DOM 快照。 |
 | **`cypress-cloud-cli`** | 云端观测排查 | `cy-triage` 角色 借助 `cy-cloud` 深度查询运行历史与重放时间线。 |
+| **Cypress Cloud MCP** | 智能体证据 | 已在 `.mcp.json` 中声明；MCP 客户端认证与 CLI 登录相互独立。 |
+| **GitHub MCP** | CI 证据 | 已配置只读 Actions 端点，用于查询日志和构件。 |
 | **Graphify** | 本地代码知识图谱 | 离线建立 630+ 符号与调用关系的图数据库，无需消耗 LLM API Token。 |
 
 ---
@@ -84,7 +86,10 @@
 
 ### Cypress Cloud CLI 与自动化 CI
 - **终端即时查询：** 运行 `pnpm cloud:runs` 和 `cy-cloud` 即可在本地命令行查看运行记录、失败截图与回放。
+- **已验证状态：** 2026 年 10 月 19 日，CLI 已认证并成功列出运行记录；这并不证明当前智能体主机已连接 MCP。
 - **自主 CI 分流（`ci-triage.yml`）：** 构建失败时智能体自动介入。若判定为偶发性 Flake 或免费容器冷启动（置信度 ≥ 0.7），将自动触发重跑，无需人工值守。
+
+[英文演讲者讲稿](docs/speaker-notes.md) 覆盖全部 38 张幻灯片，并包含演示操作步骤。
 
 ---
 

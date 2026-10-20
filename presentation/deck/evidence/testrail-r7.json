@@ -1,0 +1,34 @@
+{
+  "source": "TestRail API, historical run R7",
+  "run": {
+    "id": 7,
+    "name": "cypress-conf-2026 checkout 2026-10-19T18:47:39.012Z (chrome 155.0.8059.80) [apiUrl=https://omnipizza-backend.onrender.com, UI_STRATEGY=cyPrompt]",
+    "is_completed": true,
+    "passed_count": 5,
+    "failed_count": 0,
+    "blocked_count": 0,
+    "untested_count": 0
+  },
+  "results": [
+    {
+      "case_id": 12,
+      "status_id": 1
+    },
+    {
+      "case_id": 11,
+      "status_id": 1
+    },
+    {
+      "case_id": 10,
+      "status_id": 1
+    },
+    {
+      "case_id": 9,
+      "status_id": 1
+    },
+    {
+      "case_id": 8,
+      "status_id": 1
+    }
+  ]
+}

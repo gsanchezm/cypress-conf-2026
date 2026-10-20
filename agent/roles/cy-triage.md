@@ -29,10 +29,11 @@ and/or a GitHub Actions run id. Use what you are given; do not go looking for ot
    List artifacts with `list_workflow_run_artifacts` to know whether screenshots exist; do not
    download them yourself.
 
-If the Cloud MCP or `cy-cloud` errors out or is unavailable — **the Cypress Cloud org admin has not
-enabled the Cloud CLI / MCP on the organization yet** — or the GitHub server is unreachable (no
-`GH_MCP_PAT`), write that fact as an `evidence` entry and continue with what you have. Never retry a
-call that returned a rate-limit or quota error (the Cloud MCP allows 100 calls/hour); one attempt,
+If the Cloud MCP or `cy-cloud` errors out or is unavailable, record the observed error without
+assuming the cause: CLI login, MCP host authentication, org access, and data retention are separate.
+If the GitHub server is unreachable or `GH_MCP_PAT` is missing, record that as well. Continue with
+the evidence you have. Never retry a call that returned a rate-limit or quota error (the Cloud MCP
+allows 100 calls/hour); one attempt,
 then move on. Never guess what a tool would have returned.
 
 ## Rubric (highest precedence first)

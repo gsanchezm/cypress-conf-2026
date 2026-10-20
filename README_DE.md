@@ -61,6 +61,8 @@ Das Repository ist darauf ausgelegt, sicher von autonomen Agenten (Claude Code, 
 | **`guard-bash.ts`** | Befehls-Gatekeeper | Verhindert unbefugtes `--record`, `cyPrompt` und `git push`. |
 | **`cypress-tap`** | Live-Agent-Feedback | Die Rolle `cy-fixer` inspiziert echte DOM-Snapshots via `cypress open`. |
 | **`cypress-cloud-cli`** | Cloud-Inspektion | Die Rolle `cy-triage` analysiert Runs und Timelines via `cy-cloud`. |
+| **Cypress Cloud MCP** | Agenten-Evidenz | In `.mcp.json` konfiguriert; die MCP-Host-Authentifizierung ist unabhängig vom CLI-Login. |
+| **GitHub MCP** | CI-Evidenz | Als schreibgeschützter Actions-Endpunkt für Logs und Artefakte konfiguriert. |
 | **Graphify** | Lokaler Kontextgraph | Bildet über 630 Symbole und Abhängigkeiten in einem abfragbaren Graphen ohne LLM-API-Kosten ab. |
 
 ---
@@ -84,7 +86,10 @@ Wenn eine Anwendungsänderung das DOM modifiziert (demonstriert durch `MUTATE_DO
 
 ### Cypress Cloud CLI & Autonome CI
 - **Lokale Inspektion:** Prüfe Runs, Befehls-Timelines und Fehler-Screenshots via `pnpm cloud:runs` und `cy-cloud`.
+- **Verifizierter Status:** Das CLI war am 19. Oktober 2026 authentifiziert und konnte Runs auflisten; dies bestätigt keine MCP-Verbindung des Hosts.
 - **Autonome CI (`ci-triage.yml`):** Analysiert CI-Fehlschläge automatisch. Bei einer Konfidenz ≥ 0.7 für transiente `flake`- oder `cold_start`-Probleme wird automatisch ein Neustart ausgelöst.
+
+Der [englische Leitfaden für Vortragende](docs/speaker-notes.md) folgt allen 38 Folien und enthält das Demo-Runbook.
 
 ---
 

@@ -17,6 +17,16 @@ The five official `cypress-io/ai-toolkit` skill copies are versioned under `.cla
 
 Skills guide a coding agent as it inspects or edits tests. `cy.prompt` is different: it is an optional runtime UI strategy executed inside Cypress and backed by Cypress Cloud.
 
+## MCP tools and Cloud CLI
+
+`.mcp.json` declares the Cypress Cloud MCP server and a read-only GitHub Actions MCP endpoint. Cypress Cloud MCP gives an agent recorded run and test evidence; GitHub MCP can supply CI logs and artifacts. The shared `cy-triage` role uses these as evidence, while the `.feature` files and `assert*` methods remain the test contract. Claude Code audits calls to these two servers through `scripts/hooks/audit-mcp.ts`; other hosts need their own hook wiring.
+
+`pnpm cloud:status` and `pnpm cloud:runs` use the Cloud CLI. CLI login does not authenticate an MCP client. The checked-in Cypress MCP configuration expects `CYPRESS_MCP_TOKEN` in the agent host's environment, or the host can use OAuth with its own MCP configuration. Never put a token in `.mcp.json`. Check MCP availability in the agent host before claiming a live MCP demo.
+
+TestRail currently writes results through `TestRailObserver`; it is not an MCP integration. TestRail's official Cloud MCP is listed as a closed beta in its September 2026 support documentation. If available for this account later, a read-only TestRail tool could retrieve case C9 or run R7 for triage, but it must not redefine the versioned test oracle.
+
+The [English speaker guide](../docs/speaker-notes.md) shows how these tools fit into the 38-slide talk and the live demo.
+
 ## Policy and CI
 
 The shared checks are [`guard-oracle.ts`](../scripts/hooks/guard-oracle.ts) and [`guard-bash.ts`](../scripts/hooks/guard-bash.ts). A host must connect them to its edit/command lifecycle to get automatic blocking; reading this file alone cannot enforce them. Claude Code's wiring is in `.claude/settings.json`. The [deterministic suite](../.github/workflows/tests.yml) and [CI triage](../.github/workflows/ci-triage.yml) do not call a model provider.

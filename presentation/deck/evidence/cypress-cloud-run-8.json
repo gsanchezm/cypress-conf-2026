@@ -1,0 +1,43 @@
+{
+  "source": "Cypress Cloud CLI, historical project 5v45hh run 8",
+  "url": "https://cloud.cypress.io/projects/5v45hh/runs/8",
+  "run": {
+    "runNumber": 8,
+    "branch": "main",
+    "createdAt": "2026-10-19T18:52:26.996Z",
+    "completedAt": "2026-10-19T18:54:53.000Z",
+    "status": "passed",
+    "passedCount": 5,
+    "failedCount": 0,
+    "pendingCount": 0,
+    "skippedCount": 0,
+    "flakyCount": 0
+  },
+  "tests": [
+    {
+      "name": "A standard customer completes an order in United States (example #1)",
+      "status": "passed",
+      "browser": "Chrome"
+    },
+    {
+      "name": "A standard customer completes an order in Mexico (example #2)",
+      "status": "passed",
+      "browser": "Chrome"
+    },
+    {
+      "name": "A standard customer completes an order in Switzerland (example #3)",
+      "status": "passed",
+      "browser": "Chrome"
+    },
+    {
+      "name": "A standard customer completes an order in Japan (example #4)",
+      "status": "passed",
+      "browser": "Chrome"
+    },
+    {
+      "name": "A standard customer completes an order in Saudi Arabia (example #5)",
+      "status": "passed",
+      "browser": "Chrome"
+    }
+  ]
+}

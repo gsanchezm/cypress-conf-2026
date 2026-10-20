@@ -61,6 +61,8 @@ El repositorio está diseñado para ser operado con seguridad por agentes autón
 | **`guard-bash.ts`** | Control de Comandos | Deniega ejecuciones no autorizadas de `--record`, `cyPrompt` y `git push`. |
 | **`cypress-tap`** | Feedback en Vivo del Agente | El rol `cy-fixer` inspecciona snapshots del DOM real vía `cypress open`. |
 | **`cypress-cloud-cli`** | Inspección Cloud | El rol `cy-triage` analiza corridas y líneas de tiempo vía `cy-cloud`. |
+| **Cypress Cloud MCP** | Evidencia para agentes | Declarado en `.mcp.json`; la autenticación del host MCP es independiente del inicio de sesión del CLI. |
+| **GitHub MCP** | Evidencia de CI | Declarado como endpoint de Actions de solo lectura para logs y artefactos. |
 | **Graphify** | Grafo de Contexto Local | Mapea más de 630 símbolos y dependencias en un grafo consultable sin costo de API de LLM. |
 
 ---
@@ -84,7 +86,10 @@ Cuando un cambio en la aplicación altera el DOM (demostrado con `MUTATE_DOM=che
 
 ### Cypress Cloud CLI y CI determinista
 - **Inspección Local:** Consulta corridas, líneas de tiempo y capturas de fallos vía `pnpm cloud:runs` y `cy-cloud`.
+- **Estado verificado:** El CLI estaba autenticado y listó corridas el 19 de octubre de 2026; esto no verifica la conexión MCP del host.
 - **CI Autónomo (`ci-triage.yml`):** Analiza automáticamente fallos en CI. Si la confianza en un `flake` o `cold_start` supera 0.7, despacha un reintento sin intervención humana.
+
+El [guion del ponente en inglés](docs/speaker-notes.md) sigue las 38 diapositivas e incluye el runbook del demo.
 
 ---
 

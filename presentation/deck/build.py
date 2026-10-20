@@ -16,8 +16,12 @@ ROOT = Path(__file__).resolve().parents[2]
 BASE = Path(__file__).with_name("deck-base.html")
 INDEX = ROOT / "docs" / "index.html"
 ARCH = ROOT / "presentation" / "architecture"
+EVIDENCE = ROOT / "presentation" / "deck" / "evidence"
+SPEAKER_NOTES = ROOT / "docs" / "speaker-notes.md"
 SECTION = re.compile(r'<section data-label="([^"]+)"[^>]*>.*?</section>', re.S)
 TEMPLATE = re.compile(r'(<script type="__bundler/template">\s*)(.*?)(\s*</script>)', re.S)
+SPEAKER_SECTION = re.compile(r'^### \d{2} · ([^\n]+)\n(.*?)(?=^### |^## |\Z)', re.M | re.S)
+SPEAKER_LINE = re.compile(r'^\*\*Say:\*\* “([^\n]+)”$', re.M)
 
 
 def text(value):
@@ -48,6 +52,15 @@ def diagram(name):
     encoded = base64.b64encode(raw).decode("ascii")
     mime = "image/png" if name.lower().endswith(".png") else "image/svg+xml"
     return f'<img alt="{text(name)}" src="data:{mime};base64,{encoded}" style="display: block; width: 100%; height: 100%; object-fit: contain;"/>'
+
+
+def evidence_image(name, alt):
+    encoded = base64.b64encode((EVIDENCE / name).read_bytes()).decode("ascii")
+    return f'<img alt="{text(alt)}" src="data:image/png;base64,{encoded}" style="display: block; width: 100%; height: 100%; object-fit: contain;"/>'
+
+
+def evidence_panel(name, alt, caption):
+    return f'<figure style="margin: 0; background: #101713; border: 2px solid #31583B; padding: 12px; display: flex; flex-direction: column; min-width: 0; min-height: 0;"><div style="flex: 1; min-height: 0;">{evidence_image(name, alt)}</div><figcaption style="padding: 8px 12px 2px; color: #B8D2BE; font: 20px JetBrains Mono,monospace;">{text(caption)}</figcaption></figure>'
 
 
 CODE_TOKEN = re.compile(
@@ -102,7 +115,7 @@ def make_new_slides():
     agenda = grid([
         card("01 · World premiere", ["OmniPizza: five markets, Web, Mobile, and OpenAPI"], small=True),
         card("02 · Atomic foundations", ["API arrange, UI hydrate, two-claim budget"], small=True),
-        card("03 · Guarded agents", ["Six-rung case ladder, hooks, skills, Graphify"], small=True),
+        card("03 · Guarded agents", ["Case ladder, hooks, skills, MCP, Graphify"], small=True),
         card("04 · Live demo", ["TestRail, selector healing, cy.prompt, Cloud, triage"], small=True),
     ])
     slides["Agenda"] = shell("Agenda", "The story", "Cuatro actos: OmniPizza, fundamentos atómicos, agentes con límites y demo en vivo. cy.prompt vive dentro del demo.", agenda, "A real system first; then the test architecture; then the agent at work.")
@@ -142,6 +155,12 @@ def make_new_slides():
         card("cypress-docs", ["When: an API or feature is uncertain", "Output: official Cypress references", "Action: verify before changing code"], small=True),
     ], 3, 20), "A skill changes how the assistant works; it is not a Cypress test command.")
 
+    slides["MCP Evidence"] = shell("MCP Evidence", "Evidence through MCP tools", "MCP ofrece herramientas al asistente. En .mcp.json están declarados Cypress Cloud y GitHub Actions en modo de solo lectura. La autenticación PAT de cy-cloud se comprobó con pnpm cloud:status y se consultaron runs; eso no prueba que el host MCP haya conectado. El token CYPRESS_MCP_TOKEN se configura por separado. El auditor PostToolUse registra llamadas MCP en Claude Code. TestRail hoy publica por HTTP; su MCP oficial para Cloud figura en beta cerrada y aún no es una integración de este repo.", grid([
+        card("Cypress Cloud MCP · configured", ["Runs, failed tests, flakes, Replay links", "Remote evidence for cy-triage", "PAT via CYPRESS_MCP_TOKEN or host OAuth"], small=True),
+        card("GitHub MCP · configured", ["Actions read-only endpoint", "CI jobs, logs, artifacts", "No issue or workflow writes in this setup"], small=True),
+        card("TestRail MCP · candidate", ["Official Cloud server: closed beta", "Potential read-only C9 and R7 lookup", "Keep .feature and assert* as oracle"], small=True),
+    ], 3, 24), "MCP gives the agent tools; the versioned tests and CI still decide pass or fail.")
+
     slides["Skills vs cy.prompt"] = shell("Skills vs cy.prompt", "Two different instruction layers", "Contrasta tiempos y destinatarios. Los skills de cypress-io/ai-toolkit guían al asistente cuando escribe, explica o diagnostica. checkout.prompt.md contiene pasos de UI del test; preparePrompt valida y rellena placeholders; cy.prompt consume esos pasos durante la corrida grabada y usa Cypress Cloud. El contrato Gherkin y las aserciones permanecen versionados.", grid([
         card("Agent skill", ["Audience: coding assistant", "Time: authoring or diagnosis", "Input: SKILL.md + tools", "Result: inspect, explain, or edit code"], small=True),
         card("checkout.prompt.md", ["Audience: Cypress strategy", "Time: test execution", "Input: UI steps + {{placeholders}}", "Result: prepared runtime instructions"], small=True),
@@ -154,45 +173,35 @@ def make_new_slides():
         card("Graphify local graph", ["634 nodes · 1,368 edges · 24 communities", "Hubs: SelectorSource, CountryCode, TestResult"], small=True),
     ], 3, 28), "The agent can navigate dependencies without scanning every file or paying for graph extraction.")
 
-    slides["Live Demo Route"] = shell("Live Demo Route", "Four scenes, one flow", "El demo tiene cuatro escenas. 1: C9 y su tag. 2: mutación real del DOM y fallback determinista. 3: Checkout con cy.prompt y corrida grabada. 4: TestRail, Cloud, pipeline y diagnóstico. get_case y el issue gate estricto se muestran como futuro, no como algo ya funcionando.", grid([
+    slides["Live Demo Route"] = shell("Live Demo Route", "Four scenes, one flow", "El demo tiene cuatro escenas. 1: C9 y su tag. 2: mutación real del DOM y fallback determinista. 3: Checkout con cy.prompt y corrida grabada. 4: TestRail, Cloud, pipeline y diagnóstico. Cypress Cloud MCP se muestra sólo si el host tiene la conexión activa; el CLI autenticado sirve de ruta reproducible. get_case y el issue gate estricto se muestran como futuro.", grid([
         card("1 · Case identity", ["Show TestRail C9 and @C9 in Gherkin", "Run the versioned Checkout scenario"], small=True),
         card("2 · UI change", ["MUTATE_DOM breaks a real data-testid", "HEAL_LOCATORS=a11y selects a unique fallback"], small=True),
         card("3 · AI Checkout", ["Switch to CyPromptCheckoutUiStrategy", "Open recorded Cloud run 8: 5/5 passed"], small=True),
-        card("4 · Evidence", ["Inspect TestRail R7 and CI artifacts", "Explain deterministic triage and agent roles"], small=True),
-    ]), "All live claims refer to behavior already verified; optional CLI access needs separate login.")
+        card("4 · Evidence", ["Inspect TestRail R7 and CI artifacts", "Query Cloud with MCP or authenticated CLI"], small=True),
+    ]), "CLI run listing is verified; an MCP query needs an active host connection.")
 
     slides["Two Strategies"] = shell("Two Strategies", "Same case, two UI engines", "La estrategia se elige en cypress/support/e2e.ts mediante UI_STRATEGY. El step definition y el oráculo no cambian. El fallback determinista y el self-healing de cy.prompt son mecanismos distintos.", grid([
         card("Deterministic", ["LocatorProxy → cy.get()", "Optional harvested a11y fallback", "No AI call"], small=True),
         card("cy.prompt", ["Natural-language steps against rendered UI", "Cypress Cloud recording", "Two calls per Checkout scenario"], small=True),
     ]), "createCheckoutFacade() selects the CheckoutUiStrategy; the .feature stays the same.")
 
-    slides["cy.prompt Basics"] = shell("cy.prompt Basics", "AI Checkout, inside the demo", "El prompt no reemplaza el contrato Gherkin. Drive de catálogo a confirmación: dos llamadas por escenario. Una corrida de cinco mercados usa hasta diez ejecuciones cy.prompt antes de retries. La corrida grabada 8 pasó 5/5.", grid([
-        card("One business action per call", ["Complete Checkout: one batched call", "Verify confirmation: one batched call"], small=True),
-        card("Recorded evidence", ["Cypress Cloud project 5v45hh", "Run 8: five markets passed", "Cloud caches generated commands"], small=True),
-    ]), "Dynamic values use {{placeholders}}; element targets must be explicit.")
+    slides["cy.prompt Basics"] = shell("cy.prompt Basics", "AI Checkout, inside the demo", "El prompt no reemplaza el contrato Gherkin. Dos llamadas por escenario, hasta diez para cinco mercados. La imagen muestra los cinco resultados reales de Cloud run 8, consultados con cy-cloud y presentados como captura de datos de la CLI.", f'<div style="display: grid; grid-template-columns: 1fr 1.55fr; gap: 28px; height: 100%;">{grid([card("Two calls per market", ["Complete Checkout", "Verify confirmation", "Up to 10 calls for five markets"], small=True)], 1)}{evidence_panel("cypress-cloud-run-8.png", "Cypress Cloud CLI run 8 with five Checkout tests passed", "Cypress Cloud CLI · run 8 · 5 passed")}</div>', "Cloud run 8: cloud.cypress.io/projects/5v45hh/runs/8")
 
     slides["Prompts as Markdown"] = shell("Prompts as Markdown", "Prompt text is versioned", "Corrige el relato anterior: Cypress requiere {{token}} y no permite placeholders en targets. El campo del país usa una frase estática específica por mercado; preparePrompt detecta tokens faltantes antes de llamar a cy.prompt. Los tests Node de presupuesto fueron retirados a petición del dueño.", code("checkout.prompt.md · excerpt\n\n## completeCheckout\n- Add the Margherita pizza to the cart from the catalog page\n- Enter {{address}} into the address field\n- [requiredField]\n- Click the cash payment option\n- Confirm the order\n\n## requiredFieldMX\n- Enter {{requiredFieldValue}} into the colonia (neighborhood) field", "markdown"), "Country-specific target, runtime-only value; preparePrompt checks placeholder names.")
 
     slides["Demo Backup: Commands"] = shell("Demo Backup: Commands", "Rehearsed locator mutation", "Estos son comandos PowerShell de respaldo para un caso, C9. La mutación cambia el data-testid real en el DOM; el registro sigue intacto. El primer comando falla con retries 0 y el segundo pasa usando el fallback cosechado. No correr ambos en paralelo contra la app compartida.", code("# Fail: app DOM changes; registry keeps the old selector\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address' --config 'retries=0'\n\n# Pass: same mutation, harvested a11y fallback enabled\npnpm exec cypress run --browser chrome --spec cypress/e2e/checkout/checkout.feature `\n  --env 'tags=@C9' --expose 'MUTATE_DOM=checkout.address,HEAL_LOCATORS=a11y' `\n  --config 'retries=0'", "powershell"), "Deterministic healing is live-verified; cy.prompt's response to this mutation is untested.")
 
-    slides["TestRail Bulk Reporting"] = shell("TestRail Bulk Reporting", "One run, three bulk requests", "TestRailObserver es RunObserver opcional, suscrito a after:run cuando TESTRAIL_URL existe. Lee @C del feature, mapea resultados, usa add_run, add_results_for_cases y close_run. Adjuntar screenshots es opcional y agregaría peticiones. Si TestRail falla, lo registra pero el exit code de Cypress no cambia.", grid([
-        card("after:spec", ["Normalize Cypress results", "Collect cases and attempts"], small=True),
-        card("after:run", ["Map @C tags to TestRail IDs", "Submit passed/failed only"], small=True),
-        card("3 bulk calls", ["add_run → add_results_for_cases → close_run", "Optional screenshot uploads add calls"], small=True),
-    ], 3, 28), "Reporting never changes the test code or turns a passing Cypress run red.")
+    slides["TestRail Bulk Reporting"] = shell("TestRail Bulk Reporting", "One run, three bulk requests", "TestRailObserver publica en after:run. Esta imagen muestra una vista generada con datos reales de la API de TestRail: R7 cerrado, C8–C12 passed. No es una captura de la interfaz web. El flujo usa add_run, add_results_for_cases y close_run; adjuntar screenshots agregaría peticiones.", f'<div style="display: grid; grid-template-columns: 1.55fr 1fr; gap: 28px; height: 100%;">{evidence_panel("testrail-r7-api.png", "TestRail API run R7 closed with cases C8 to C12 passed", "Historical R7 · API snapshot · 5 passed")}{grid([card("after:spec", ["Collect case results"], small=True), card("after:run", ["Map @C tags to IDs"], small=True), card("3 bulk calls", ["Create → submit → close"], small=True)], 1, 14)}</div>', "TestRail reporting does not change the Cypress result.")
 
-    slides["Cloud CLI"] = shell("Cloud CLI", "A lens into the recorded run", "Muestra el run 8 en Cloud. cy-cloud ofrece runs, tests, screenshots y timeline de Test Replay. La Record Key solo graba; la CLI requiere OAuth/PAT aparte y quizá activación por admin. pnpm cloud:status está instalado, pero autenticación sigue pendiente; usa la UI si no se activa antes de la charla.", grid([
-        card("Human + agent", ["pnpm cloud:status", "pnpm cloud:runs", "cy-cloud replay timeline …"], small=True),
-        card("Authentication boundary", ["CYPRESS_RECORD_KEY records tests", "CYPRESS_CLOUD_TOKEN or login authorizes CLI", "Organization integration may need enabling"], small=True),
-    ]), "Cloud run 8 passed; live CLI queries still require separate authentication.")
+    slides["Cloud CLI"] = f'''<section data-label="Cloud CLI" data-speaker-notes="Captura real de la interfaz de Cypress Cloud facilitada por el dueño. Señala el run 8 en la primera fila: cinco tests pasaron y cero fallaron. Luego abre el run para enseñar tests y Replay. pnpm cloud:status confirmó autenticación por PAT y pnpm cloud:runs listó las corridas el 19 de octubre de 2026. La captura es de la interfaz web; esa comprobación no valida la conexión MCP." style="background: var(--bg); color: var(--ink); font-family: Archivo,sans-serif; display: flex; flex-direction: column; box-sizing: border-box; padding: 48px 58px; gap: 18px;">
+  <div><span style="color: var(--green); font: 700 22px JetBrains Mono,monospace; letter-spacing: 2px;">CYPRESS CLOUD · RECORDED EXECUTIONS</span><h2 style="font-size: 56px; line-height: 1.05; margin: 10px 0 0;">Run 8: five Checkout tests passed</h2></div>
+  <div style="flex: 1; min-height: 0; border: 2px solid #31583B; background: #101713; padding: 8px;">{evidence_image("cypress-cloud-runs-ui.png", "Cypress Cloud Runs page showing run 8 with five passed tests")}</div>
+  <div style="color: var(--mut); font: 21px JetBrains Mono,monospace;">Cypress Cloud UI · project 5v45hh · historical run 8 · 5 passed / 0 failed</div>
+</section>'''
 
     slides["CI and Reporting"] = shell("CI and Reporting", "Pipeline and evidence paths", "El push activa tests.yml; el prompt suite es manual. Sólo una falla del pipeline determinista dispara ci-triage.yml. Ese workflow reúne logs y screenshots, genera un veredicto JSON sin LLM; puede rerun o comentar/crear issue. El issue gate estricto todavía está pendiente.", diagram("04-ci-and-triage.svg"), "The default suite and failure diagnosis run without a model secret.")
 
-    slides["Demo Backup: Results"] = shell("Demo Backup: Results", "Rehearsal evidence", "Respaldo real, no placeholders: local Cloud run 7 aprobó 5/5 y TestRail R7 cerró con 5 passed; GitHub Actions cy.prompt suite pasó 5/5 en Cloud run 8. La suite determinista del mismo commit pasó en CI. Abre los links si el demo en vivo falla.", grid([
-        card("Cloud run 7", ["Local recorded Checkout: 5 / 5", "TestRail R7: 5 passed, 0 failed"], small=True),
-        card("Cloud run 8", ["GitHub Actions cy.prompt: 5 / 5", "Run 39306077680: success"], small=True),
-        card("Deterministic CI", ["Run 39306055926: success", "Auth, Catalog, Checkout matrix"], small=True),
-    ], 3, 28), "cloud.cypress.io/projects/5v45hh/runs/8 · GitHub Actions 39306077680")
+    slides["Demo Backup: Results"] = shell("Demo Backup: Results", "Rehearsal evidence", "Evidencia histórica: R7 cerró con cinco casos passed según la API de TestRail; Cloud run 8 contiene cinco pruebas Checkout passed según la CLI. Ambas imágenes son capturas de datos consultados, no de las interfaces web.", f'<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; height: 100%;">{evidence_panel("testrail-r7-api.png", "TestRail API results for historical run R7", "TestRail API · R7 · five passed")}{evidence_panel("cypress-cloud-run-8.png", "Cypress Cloud CLI results for historical run 8", "Cypress Cloud CLI · run 8 · five passed")}</div>', "Historical evidence · Cloud run 8: cloud.cypress.io/projects/5v45hh/runs/8")
 
     slides["What the Demo Proves"] = shell("What the Demo Proves", "Evidence, without overclaiming", "Separa hechos: un data-testid cambiado en la app fue tolerado por el fallback determinista; cy.prompt completó los cinco mercados con la app actual; el self-healing de cy.prompt para esa mutación concreta aún no se ensayó. Romper el registro de locators no es cambiar la app.", grid([
         card("Proven", ["Atomic API + UI Checkout works", "Deterministic fallback survives tested DOM mutation", "cy.prompt recorded run 8 passed five markets"], small=True),
@@ -273,13 +282,30 @@ def main():
         "OmniPizza", "OmniPizza Desktop", "OmniPizza Mobile + API",
         "System Architecture", "Anatomy", "AtomicScenario", "Code: AtomicScenario",
         "Assertion Budget", "Claims vs Guards", "Hydration", "Checkout Hydration",
-        "Limits of Injection", "Six-Level Case Ladder", "Guardrails", "Agent Architecture", "Official Skills", "Skills vs cy.prompt",
+        "Limits of Injection", "Six-Level Case Ladder", "Guardrails", "Agent Architecture", "Official Skills", "MCP Evidence", "Skills vs cy.prompt",
         "Subagents and Graphify", "Demo Time", "Live Demo Route", "Two Strategies",
         "cy.prompt Basics", "Prompts as Markdown", "Demo Backup: Commands",
         "TestRail Bulk Reporting", "Cloud CLI", "CI and Reporting", "Demo Backup: Results",
         "What the Demo Proves", "Agentic Boundaries", "Takeaways", "Thank You",
     ]
     resolved = {**preserved, **slides}
+    guide = SPEAKER_NOTES.read_text(encoding="utf-8-sig")
+    spoken = {}
+    for label, body in SPEAKER_SECTION.findall(guide):
+        line = SPEAKER_LINE.search(body)
+        assert line, f"Missing Say line for {label}"
+        assert label not in spoken, f"Duplicate speaker notes for {label}"
+        spoken[label] = line.group(1)
+    assert set(spoken) == set(order), "Speaker guide must cover exactly the slides in the deck"
+    for label in order:
+        section = resolved[label]
+        assert 'data-speaker-notes="' in section, f"Missing speaker note attribute in {label}"
+        resolved[label] = re.sub(
+            r'data-speaker-notes="[^"]*"',
+            lambda _: f'data-speaker-notes="{text(spoken[label])}"',
+            section,
+            count=1,
+        )
     missing = [label for label in order if label not in resolved]
     assert not missing, f"Missing slides: {missing}"
     assert len(order) == len(set(order)), "Duplicate slide labels in order"

@@ -62,6 +62,8 @@ The repository can be operated by any coding agent with repository and shell acc
 | **`guard-bash.ts`** | Command Gatekeeper Hook | Denies unauthorized `--record`, `cyPrompt`, and `git push`. |
 | **`cypress-tap`** | Live Agent Feedback | The `cy-fixer` role inspects real DOM snapshots via `cypress open`. |
 | **`cypress-cloud-cli`** | Cloud Inspection | The `cy-triage` role investigates runs and timelines via `cy-cloud`. |
+| **Cypress Cloud MCP** | Agent evidence | Configured in `.mcp.json` for recorded runs and failures; MCP host authentication is separate from CLI login. |
+| **GitHub MCP** | CI evidence | Configured with a read-only Actions endpoint for logs and artifacts. |
 | **Graphify** | Local Context Graph | Maps 630+ symbols and dependencies into a queryable graph without LLM API costs. |
 
 ---
@@ -84,12 +86,14 @@ When an application change alters the DOM (demonstrated via `MUTATE_DOM=checkout
 - TestRail outages never cause passing test suites to exit with a non-zero code.
 
 ### Cypress Cloud CLI & Autonomous CI
-- **Local Inspection:** Inspect runs, replay timelines, and failure screenshots via `pnpm cloud:runs` and `cy-cloud`.
+- **Local Inspection:** Inspect runs, replay timelines, and failure screenshots via `pnpm cloud:runs` and `cy-cloud`. The CLI was authenticated and run listing verified on October 19, 2026; this does not verify MCP host connectivity.
 - **Autonomous CI (`ci-triage.yml`):** Classifies failed CI runs from logs without an LLM. If confidence in a transient `flake` or `cold_start` reaches 0.7, it triggers a rerun without human intervention.
 
 For host-specific setup, skill links, and the difference between agent skills and runtime `cy.prompt`, see [the agent guide](agent/README.md). Claude Code's `CLAUDE.md` and `.claude/` files are compatibility adapters; `AGENTS.md` and `agent/` are the shared source of instructions. Automatic edit/command hooks require integration with each host.
 
 The [interactive agent architecture](docs/agent-architecture.html) and [architecture diagrams](presentation/architecture/README.md) show the shared roles, CI, Cypress, TestRail, and Cloud paths.
+
+The [English speaker guide](docs/speaker-notes.md) follows all 38 slides and includes the demo runbook, MCP talking points, evidence boundaries, and recovery paths.
 
 ---
 
