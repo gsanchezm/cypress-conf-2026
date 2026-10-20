@@ -56,11 +56,11 @@
 
 | 组件 | 职责 | 实现机制 |
 |---|---|---|
-| **`AGENTS.md`** | 仓库开发宪法 | 规范代码风格、强制 pnpm 以及严禁操作列表。 |
+| **`AGENTS.md`** | 共享仓库契约 | 规范代码风格、强制 pnpm 以及严禁操作列表。 |
 | **`guard-oracle.ts`** | 测试基准守护 Hook | 拦截并禁止智能体修改 `.feature` 文件与 `assert*` 方法（Exit 2）。 |
 | **`guard-bash.ts`** | 命令网关 Hook | 阻止未经允许的 `--record`、`cyPrompt` 以及 `git push` 执行。 |
-| **`cypress-tap`** | 交互式实时反馈 | 子智能体 `cy-fixer` 借助 `cypress open` 实时检查 DOM 快照。 |
-| **`cypress-cloud-cli`** | 云端观测排查 | 子智能体 `cy-triage` 借助 `cy-cloud` 深度查询运行历史与重放时间线。 |
+| **`cypress-tap`** | 交互式实时反馈 | `cy-fixer` 角色 借助 `cypress open` 实时检查 DOM 快照。 |
+| **`cypress-cloud-cli`** | 云端观测排查 | `cy-triage` 角色 借助 `cy-cloud` 深度查询运行历史与重放时间线。 |
 | **Graphify** | 本地代码知识图谱 | 离线建立 630+ 符号与调用关系的图数据库，无需消耗 LLM API Token。 |
 
 ---

@@ -67,4 +67,3 @@ never add waits, never skip or retry the scenario.
 
 Delete `.tap-reporter.json` and `.tap-test.json` before printing the verdict (they are git-ignored
 but must not linger). Print nothing after the JSON line.
-

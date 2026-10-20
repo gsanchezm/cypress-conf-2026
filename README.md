@@ -89,6 +89,8 @@ When an application change alters the DOM (demonstrated via `MUTATE_DOM=checkout
 
 For host-specific setup, skill links, and the difference between agent skills and runtime `cy.prompt`, see [the agent guide](agent/README.md). Claude Code's `CLAUDE.md` and `.claude/` files are compatibility adapters; `AGENTS.md` and `agent/` are the shared source of instructions. Automatic edit/command hooks require integration with each host.
 
+The [interactive agent architecture](docs/agent-architecture.html) and [architecture diagrams](presentation/architecture/README.md) show the shared roles, CI, Cypress, TestRail, and Cloud paths.
+
 ---
 
 ## 🚀 Quickstart & Commands

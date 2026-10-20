@@ -56,11 +56,11 @@ Das Repository ist darauf ausgelegt, sicher von autonomen Agenten (Claude Code, 
 
 | Komponente | Rolle | Mechanismus |
 |---|---|---|
-| **`AGENTS.md`** | Repository-Verfassung | Strenger Codestil, reine pnpm-Regel und verbotene Aktionen. |
+| **`AGENTS.md`** | Gemeinsamer Vertrag | Strenger Codestil, reine pnpm-Regel und verbotene Aktionen. |
 | **`guard-oracle.ts`** | Orakelschutz-Hook | Blockiert Änderungen an `.feature`-Dateien und `assert*`-Methoden (Exit 2). |
 | **`guard-bash.ts`** | Befehls-Gatekeeper | Verhindert unbefugtes `--record`, `cyPrompt` und `git push`. |
-| **`cypress-tap`** | Live-Agent-Feedback | Subagent `cy-fixer` inspiziert echte DOM-Snapshots via `cypress open`. |
-| **`cypress-cloud-cli`** | Cloud-Inspektion | Subagent `cy-triage` analysiert Runs und Timelines via `cy-cloud`. |
+| **`cypress-tap`** | Live-Agent-Feedback | Die Rolle `cy-fixer` inspiziert echte DOM-Snapshots via `cypress open`. |
+| **`cypress-cloud-cli`** | Cloud-Inspektion | Die Rolle `cy-triage` analysiert Runs und Timelines via `cy-cloud`. |
 | **Graphify** | Lokaler Kontextgraph | Bildet über 630 Symbole und Abhängigkeiten in einem abfragbaren Graphen ohne LLM-API-Kosten ab. |
 
 ---

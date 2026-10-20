@@ -48,5 +48,5 @@
 <rect x="70" y="718" width="1450" height="95" rx="24" fill="#142018" stroke="#35513B" stroke-width="2"/>
 <rect x="70" y="718" width="8" height="95" rx="4" fill="#FF7B85" stroke="#FF7B85" stroke-width="2"/>
 <text x="97" y="760" fill="#F3F7F3" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="700" text-anchor="start">Separate failure path</text>
-<text x="97" y="797" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" text-anchor="start">Failed Actions run → logs/screenshots → deterministic verdict → optional Claude enrichment → rerun, comment, or issue</text>
+<text x="97" y="797" fill="#BACABA" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" text-anchor="start">Failed Actions run → logs/screenshots → deterministic verdict → rerun, comment, or issue</text>
 </svg>

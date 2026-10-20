@@ -61,4 +61,3 @@ ones you saw.
 - `evidence` entries name their source (`triage:signals`, `cy-cloud test list`, `get_job_logs`,
   `cypress/screenshots/...`) and quote the line, trimmed.
 - Print nothing after the JSON line.
-

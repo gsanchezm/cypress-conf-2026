@@ -9,18 +9,18 @@
     "repository": {
       "url": "https://github.com/gsanchezm/cypress-conf-2026",
       "provider": "github",
-      "revision": "f10777c07dff767020ae7b9b74cb16cc3fbfde81"
+      "revision": "b3a8f387ce9edf32129dd0bb2403068804b48e1d"
     }
   },
   "components": [
     {"id":"human","type":"external","label":"Human","sublabel":"requests diagnosis or repair","pos":[40,270],"size":[130,70],"sources":[{"path":"AGENTS.md","line":9,"end_line":16}]},
-    {"id":"agent","type":"frontend","label":"Coding agent","sublabel":"Claude · Codex · Copilot","pos":[270,270],"size":[170,70],"sources":[{"path":"AGENTS.md","line":19,"end_line":25}]},
+    {"id":"agent","type":"frontend","label":"Coding agent","sublabel":"any repo + shell assistant","pos":[270,270],"size":[170,70],"sources":[{"path":"AGENTS.md","line":19,"end_line":23}]},
     {"id":"contract","type":"security","label":"Repository rules","sublabel":"AGENTS.md + oracle policy","pos":[540,270],"size":[170,70],"sources":[{"path":"AGENTS.md","line":7,"end_line":17}]},
     {"id":"harness","type":"backend","label":"Cypress harness","sublabel":"AtomicScenario + pnpm","pos":[810,270],"size":[170,70],"sources":[{"path":"src/core/ui/AtomicScenario.ts","line":19,"end_line":34},{"path":"package.json","line":6,"end_line":21}]},
     {"id":"app","type":"external","label":"OmniPizza","sublabel":"live API + Web UI","pos":[1080,270],"size":[150,70],"sources":[{"path":"cypress.config.ts","line":25,"end_line":28}]},
-    {"id":"skills","type":"backend","label":"Five Cypress skills","sublabel":"instructions for the agent","pos":[270,70],"size":[170,70],"sources":[{"path":"CLAUDE.md","line":59,"end_line":67}]},
-    {"id":"subagents","type":"backend","label":"Triage + fixer","sublabel":"Claude-specific roles","pos":[270,470],"size":[170,70],"sources":[{"path":".claude/agents/cy-triage.md","line":1,"end_line":12},{"path":".claude/agents/cy-fixer.md","line":1,"end_line":13}]},
-    {"id":"hooks","type":"security","label":"Guard hooks","sublabel":"oracle + shell checks","pos":[540,470],"size":[170,70],"sources":[{"path":".claude/settings.json","line":2,"end_line":16}]},
+    {"id":"skills","type":"backend","label":"Five Cypress skills","sublabel":"shared Markdown guidance","pos":[270,70],"size":[170,70],"sources":[{"path":"agent/README.md","line":14,"end_line":18}]},
+    {"id":"subagents","type":"backend","label":"Triage + fixer","sublabel":"shared task roles","pos":[270,470],"size":[170,70],"sources":[{"path":"agent/roles/cy-triage.md","line":1,"end_line":12},{"path":"agent/roles/cy-fixer.md","line":1,"end_line":12}]},
+    {"id":"hooks","type":"security","label":"Guard scripts","sublabel":"wire to host hooks","pos":[540,470],"size":[170,70],"sources":[{"path":"AGENTS.md","line":13,"end_line":17}]},
     {"id":"prompt","type":"backend","label":"cy.prompt strategy","sublabel":"runtime UI instructions","pos":[810,470],"size":[170,70],"sources":[{"path":"src/features/checkout/strategies/CyPromptCheckoutUiStrategy.ts","line":8,"end_line":35}]},
     {"id":"cloud","type":"cloud","label":"Cypress Cloud","sublabel":"optional AI + recording","pos":[1080,470],"size":[150,70],"sources":[{"path":".github/workflows/cy-prompt-suite.yml","line":37,"end_line":43}]}
   ],
@@ -30,8 +30,8 @@
     {"from":"contract","to":"harness","label":"runs allowed tools","variant":"emphasis"},
     {"from":"harness","to":"app","label":"API + browser","variant":"emphasis"},
     {"from":"agent","to":"skills","label":"reads guidance"},
-    {"from":"agent","to":"subagents","label":"delegates in Claude","variant":"dashed"},
-    {"from":"contract","to":"hooks","label":"enforced in Claude","variant":"dashed"},
+    {"from":"agent","to":"subagents","label":"uses shared roles","variant":"dashed"},
+    {"from":"contract","to":"hooks","label":"host wiring","variant":"dashed"},
     {"from":"harness","to":"prompt","label":"opt-in strategy","variant":"dashed"},
     {"from":"prompt","to":"cloud","label":"executes AI steps","variant":"dashed"}
   ],

@@ -56,11 +56,11 @@ El repositorio está diseñado para ser operado con seguridad por agentes autón
 
 | Componente | Rol | Mecanismo |
 |---|---|---|
-| **`AGENTS.md`** | Constitución del Repositorio | Estilo estricto, regla pnpm-only y acciones prohibidas. |
+| **`AGENTS.md`** | Contrato compartido | Estilo estricto, regla pnpm-only y acciones prohibidas. |
 | **`guard-oracle.ts`** | Protección del Oráculo | Bloquea ediciones a archivos `.feature` y métodos `assert*` (Exit 2). |
 | **`guard-bash.ts`** | Control de Comandos | Deniega ejecuciones no autorizadas de `--record`, `cyPrompt` y `git push`. |
-| **`cypress-tap`** | Feedback en Vivo del Agente | El subagente `cy-fixer` inspecciona snapshots del DOM real vía `cypress open`. |
-| **`cypress-cloud-cli`** | Inspección Cloud | El subagente `cy-triage` analiza corridas y líneas de tiempo vía `cy-cloud`. |
+| **`cypress-tap`** | Feedback en Vivo del Agente | El rol `cy-fixer` inspecciona snapshots del DOM real vía `cypress open`. |
+| **`cypress-cloud-cli`** | Inspección Cloud | El rol `cy-triage` analiza corridas y líneas de tiempo vía `cy-cloud`. |
 | **Graphify** | Grafo de Contexto Local | Mapea más de 630 símbolos y dependencias en un grafo consultable sin costo de API de LLM. |
 
 ---
@@ -82,7 +82,7 @@ Cuando un cambio en la aplicación altera el DOM (demostrado con `MUTATE_DOM=che
 - Reporta corridas completas en solo **tres peticiones HTTP en bulk** (respetando el límite de 180 req/min de Cloud).
 - Caídas o fallos en TestRail nunca alteran el código de salida de pruebas que pasaron exitosamente.
 
-### Cypress Cloud CLI y CI Autónomo
+### Cypress Cloud CLI y CI determinista
 - **Inspección Local:** Consulta corridas, líneas de tiempo y capturas de fallos vía `pnpm cloud:runs` y `cy-cloud`.
 - **CI Autónomo (`ci-triage.yml`):** Analiza automáticamente fallos en CI. Si la confianza en un `flake` o `cold_start` supera 0.7, despacha un reintento sin intervención humana.
 

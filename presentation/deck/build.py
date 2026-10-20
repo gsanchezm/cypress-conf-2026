@@ -121,12 +121,12 @@ def make_new_slides():
 
     slides["Code: AtomicScenario"] = shell("Code: AtomicScenario", "The Template Method in code", "Fragmento abreviado de checkout.steps.ts. AtomicScenario fija el orden arrangeViaApi, hydrateUi y assertUi; el step definition conecta datos y fachadas. El claim API ocurre dentro de arrangeViaApi y el claim UI en assertUi.", code("// checkout.steps.ts · abridged\nAtomicScenario.for('checkout').run({\n  arrangeViaApi: () => {\n    // seedCartViaApi → checkoutViaApi\n    checkoutFacade.assertOrderCreated(order);\n  },\n  hydrateUi: () => {\n    authFacade.loginViaUiWithMarket('standard', market);\n    checkoutFacade.completeCheckoutViaUi(checkoutData);\n  },\n  assertUi: () =>\n    checkoutFacade.assertOrderConfirmation(expectedOrder),\n});"), "The class fixes the phase order; the facade and strategy own the behavior.")
 
-    slides["Guardrails"] = shell("Guardrails", "The agent has a fence", "AGENTS.md define el contrato. guard-oracle bloquea editar feature files y claims; guard-bash bloquea comandos reservados como record y push dentro del agente. La autorización explícita del dueño prevalece en esta sesión.", grid([
+    slides["Guardrails"] = shell("Guardrails", "The agent has a fence", "AGENTS.md define el contrato. Los scripts guard-oracle y guard-bash bloquean operaciones cuando el host los conecta a sus hooks. En Claude Code esto ya está configurado; otros hosts necesitan su propia integración. La autorización explícita del dueño prevalece en esta sesión.", grid([
         card("AGENTS.md", ["Assertion budget, ownership, and allowed edits", "One spec at a time; pnpm-only workflow"], small=True),
         card("guard-oracle", ["Denies edits to .feature contracts", "Denies changes to assert* claims and assertions"], small=True),
         card("guard-bash", ["Denies agent-issued --record / cy.prompt", "Denies git push and protected commands"], small=True),
         card("Human-owned boundary", ["The owner authorizes Cloud and external writes", "A denied oracle edit is not a repair"], small=True),
-    ]), "Deterministic hooks enforce the boundary before a model decides.")
+    ]), "Connect the policy scripts to your agent host for automatic blocking.")
 
     slides["Agent Architecture"] = f'''<section data-label="Agent Architecture" data-speaker-notes="Este mapa de Archify separa al asistente del runner: Cualquier agente con acceso al repositorio sigue AGENTS.md; los skills guían al asistente; los roles compartidos describen triage y reparación; los hooks se conectan según el host; Cypress ejecuta las pruebas y cy.prompt es una estrategia opcional de runtime." style="position: relative; background: #080e1d; color: #F1F8EF; font-family: Archivo,sans-serif; overflow: hidden;">
   {diagram("06-agent-workflow-archify.png")}
