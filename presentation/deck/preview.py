@@ -29,7 +29,7 @@ def main(labels):
             + variables
             + "body{margin:0;background:var(--bg)}section{width:1920px;height:1080px;overflow:hidden}"
             + "</style></head><body>"
-            + sections[label]
+            + sections[label].replace('src="media/', 'src="../../../docs/media/')
             + "</body></html>",
             encoding="utf-8",
         )

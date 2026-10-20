@@ -17,11 +17,14 @@ BASE = Path(__file__).with_name("deck-base.html")
 INDEX = ROOT / "docs" / "index.html"
 ARCH = ROOT / "presentation" / "architecture"
 EVIDENCE = ROOT / "presentation" / "deck" / "evidence"
+OPENING_VIDEO_SCRIPT = Path(__file__).with_name("opening-video.js")
 SPEAKER_NOTES = ROOT / "docs" / "speaker-notes.md"
 SECTION = re.compile(r'<section data-label="([^"]+)"[^>]*>.*?</section>', re.S)
 TEMPLATE = re.compile(r'(<script type="__bundler/template">\s*)(.*?)(\s*</script>)', re.S)
 SPEAKER_SECTION = re.compile(r'^### \d{2} · ([^\n]+)\n(.*?)(?=^### |^## |\Z)', re.M | re.S)
 SPEAKER_LINE = re.compile(r'^\*\*Say:\*\* “([^\n]+)”$', re.M)
+SPEAKER_DO = re.compile(r'^\*\*Do:\*\* ([^\n]+)$', re.M)
+STAGE_CUE_SLIDES = {"Opening Video", "Demo Time", "Live Demo Route", "Demo Backup: Commands", "Cloud CLI"}
 
 
 def load_spoken_notes():
@@ -32,7 +35,12 @@ def load_spoken_notes():
             line = SPEAKER_LINE.search(body)
             assert line, f"Missing Say line for {label}"
             assert label not in spoken, f"Duplicate speaker notes for {label}"
-            spoken[label] = line.group(1)
+            note = line.group(1)
+            if label in STAGE_CUE_SLIDES:
+                cue = SPEAKER_DO.search(body)
+                assert cue, f"Missing Do line for {label}"
+                note += f" Stage cue: {cue.group(1)}"
+            spoken[label] = note
         return spoken
 
     # The private guide is optional. A clean checkout keeps the English notes
@@ -118,6 +126,12 @@ def highlighted_line(line, language):
         parts.append(text(line[cursor:match.start()]))
         kind = match.lastgroup
         token = match.group()
+        if kind == "placeholder":
+            inner = token[2:-2]
+            color = CODE_COLORS.get("placeholder")
+            parts.append(f'<span style="color: {color};"><span>&#123;</span><span>&#123;</span>{text(inner)}<span>&#125;</span><span>&#125;</span></span>')
+            cursor = match.end()
+            continue
         if language == "markdown" and kind == "comment":
             kind = "keyword" if token == "#" else None
         if kind == "word":
@@ -130,12 +144,26 @@ def highlighted_line(line, language):
 
 
 def code(lines, language="typescript"):
-    highlighted = "\n".join(highlighted_line(line, language) for line in lines.split("\n"))
-    return f'<pre style="margin: 0; background: #060B07; border: 1px solid #31583B; border-left: 9px solid #38F443; box-shadow: inset 0 0 0 1px #102A16, 0 18px 44px #0009; padding: 34px 44px; color: #F1F8EF; font: 26px/1.46 JetBrains Mono,monospace; white-space: pre-wrap; overflow: hidden;">{highlighted}</pre>'
+    formatted_lines = []
+    for line in lines.split("\n"):
+        if not line:
+            formatted_lines.append('<div style="min-height: 1.46em;"><br/></div>')
+        else:
+            formatted_lines.append(f'<div style="min-height: 1.46em;">{highlighted_line(line, language)}</div>')
+    body = "".join(formatted_lines)
+    return f'<pre style="margin: 0; background: #060B07; border: 1px solid #31583B; border-left: 9px solid #38F443; box-shadow: inset 0 0 0 1px #102A16, 0 18px 44px #0009; padding: 34px 44px; color: #F1F8EF; font: 26px/1.46 JetBrains Mono,monospace; white-space: pre-wrap; overflow: hidden;">{body}</pre>'
 
 
 def make_new_slides():
     slides = {}
+
+    slides["Opening Video"] = '''<section data-label="Opening Video" data-speaker-notes="Play the opening video from 00:36, then advance to the title." style="background: #000; color: #fff; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+  <video data-start-time="36" src="media/opening.mp4#t=36" type="video/mp4" controls playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: contain; background: #000;">Your browser does not support MP4 video.</video>
+  <div style="position: absolute; right: 36px; top: 30px; z-index: 10; display: flex; gap: 12px;">
+    <button type="button" data-video-action="toggle" style="background: #0a2316ee; color: #fff; border: 2px solid #77ff8c; border-radius: 12px; padding: 15px 22px; font: 700 22px JetBrains Mono,monospace; cursor: pointer;">Play with sound</button>
+    <button type="button" data-video-action="restart" style="background: #0a2316ee; color: #fff; border: 2px solid #77ff8c; border-radius: 12px; padding: 15px 22px; font: 700 22px JetBrains Mono,monospace; cursor: pointer;">Restart at 00:36</button>
+  </div>
+</section>'''
 
     agenda = grid([
         card("01 · World premiere", ["OmniPizza: five markets, Web, Mobile, and OpenAPI"], small=True),
@@ -303,7 +331,7 @@ def main():
     preserved["Thank You"] = preserved["Thank You"].replace(contact_old, contact_new)
 
     order = [
-        "Title", "Speaker", "Agenda", "The Problem", "The Oath",
+        "Opening Video", "Title", "Speaker", "Agenda", "The Problem", "The Oath",
         "OmniPizza", "OmniPizza Desktop", "OmniPizza Mobile + API",
         "System Architecture", "Anatomy", "AtomicScenario", "Code: AtomicScenario",
         "Assertion Budget", "Claims vs Guards", "Hydration", "Checkout Hydration",
@@ -329,6 +357,9 @@ def main():
     assert not missing, f"Missing slides: {missing}"
     assert len(order) == len(set(order)), "Duplicate slide labels in order"
     assembled = original[:matches[0].start()] + "\n\n".join(resolved[label] for label in order) + original[matches[-1].end():]
+    assert assembled.count("</head>") == 1
+    video_script = OPENING_VIDEO_SCRIPT.read_text(encoding="utf-8")
+    assembled = assembled.replace("</head>", f"<script>{video_script}</script>\n</head>", 1)
     assert assembled.count("<section ") == len(order)
     assert "PART TWO" not in assembled
     assert "100-prompt/hour" not in assembled

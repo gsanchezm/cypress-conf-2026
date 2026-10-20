@@ -8,6 +8,8 @@ graphify-out/
 docs/*
 !docs/index.html
 !docs/agent-architecture.html
+!docs/media/
+!docs/media/opening.mp4
 .worktrees/
 .claude/audit.jsonl
 .claude/settings.local.json

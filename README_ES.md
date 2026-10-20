@@ -89,7 +89,7 @@ Cuando un cambio en la aplicación altera el DOM (demostrado con `MUTATE_DOM=che
 - **Estado verificado:** El CLI estaba autenticado y listó corridas el 19 de octubre de 2026; esto no verifica la conexión MCP del host.
 - **CI Autónomo (`ci-triage.yml`):** Analiza automáticamente fallos en CI. Si la confianza en un `flake` o `cold_start` supera 0.7, despacha un reintento sin intervención humana.
 
-La [presentación](docs/index.html) incluye notas en inglés para las 38 diapositivas. Los guiones ampliados en español e inglés se conservan localmente y están excluidos del repositorio.
+La [presentación](docs/index.html) incluye notas en inglés para las 39 diapositivas y un video inicial que empieza en 00:36. Los guiones ampliados en español e inglés se conservan localmente y están excluidos del repositorio.
 
 ---
 
