@@ -7,7 +7,6 @@ dist/
 graphify-out/
 docs/*
 !docs/index.html
-!docs/speaker-notes.md
 !docs/agent-architecture.html
 !docs/media/
 !docs/media/opening.mp4

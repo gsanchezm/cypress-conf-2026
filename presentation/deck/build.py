@@ -18,33 +18,13 @@ INDEX = ROOT / "docs" / "index.html"
 ARCH = ROOT / "presentation" / "architecture"
 EVIDENCE = ROOT / "presentation" / "deck" / "evidence"
 OPENING_VIDEO_SCRIPT = Path(__file__).with_name("opening-video.js")
-SPEAKER_NOTES = ROOT / "docs" / "speaker-notes.md"
 SECTION = re.compile(r'<section data-label="([^"]+)"[^>]*>.*?</section>', re.S)
 TEMPLATE = re.compile(r'(<script type="__bundler/template">\s*)(.*?)(\s*</script>)', re.S)
-SPEAKER_SECTION = re.compile(r'^### \d{2} · ([^\n]+)\n(.*?)(?=^### |^## |\Z)', re.M | re.S)
-SPEAKER_LINE = re.compile(r'^\*\*Say:\*\* “([^\n]+)”$', re.M)
-SPEAKER_DO = re.compile(r'^\*\*Do:\*\* ([^\n]+)$', re.M)
-STAGE_CUE_SLIDES = {"Opening Video", "Demo Time", "Live Demo Route", "Demo Backup: Commands", "Cloud CLI"}
 
 
 def load_spoken_notes():
-    if SPEAKER_NOTES.exists():
-        guide = SPEAKER_NOTES.read_text(encoding="utf-8-sig")
-        spoken = {}
-        for label, body in SPEAKER_SECTION.findall(guide):
-            line = SPEAKER_LINE.search(body)
-            assert line, f"Missing Say line for {label}"
-            assert label not in spoken, f"Duplicate speaker notes for {label}"
-            note = line.group(1)
-            if label in STAGE_CUE_SLIDES:
-                cue = SPEAKER_DO.search(body)
-                assert cue, f"Missing Do line for {label}"
-                note += f" Stage cue: {cue.group(1)}"
-            spoken[label] = note
-        return spoken
-
-    # The private guide is optional. A clean checkout keeps the English notes
-    # embedded in the published deck, so rebuilding does not need that file.
+    # Local speaker guides are ignored by Git. Keep the existing public deck
+    # notes when rebuilding; never import text from a private guide.
     bundle = INDEX.read_text(encoding="utf-8")
     match = TEMPLATE.search(bundle)
     assert match, "Bundled template script missing"
