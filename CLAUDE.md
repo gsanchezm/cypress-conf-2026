@@ -1,7 +1,6 @@
 # Agent harness rules — cypress-conf-2026
 
-The provider-neutral contract is in `AGENTS.md`. The README explains the framework. This file explains how an agent (Claude Code, a subagent, or
-`claude-code-action` in CI) is allowed to work inside it. Every rule here is the repo owner's.
+The shared contract is in `AGENTS.md`; task roles are in `agent/roles/`. This file configures the Claude Code adapter. The default Cypress and CI paths do not call a model provider.
 
 ## Commands
 

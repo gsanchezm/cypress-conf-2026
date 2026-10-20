@@ -101,7 +101,7 @@ def current_architecture():
     d.arrow([(990, 295), (1030, 295), (1030, 248), (1070, 248)], GREEN)
     d.arrow([(990, 390), (1030, 390), (1030, 426), (1070, 426)], ORANGE)
     d.arrow([(990, 449), (1010, 449), (1010, 605), (1070, 605)], VIOLET)
-    d.card(70, 718, 1450, 95, "Separate failure path", ["Failed Actions run → logs/screenshots → deterministic verdict → optional Claude enrichment → rerun, comment, or issue"], RED, size=21)
+    d.card(70, 718, 1450, 95, "Separate failure path", ["Failed Actions run → logs/screenshots → deterministic verdict → rerun, comment, or issue"], RED, size=21)
     d.save("01-current-architecture.svg")
 
 
@@ -145,7 +145,7 @@ def pipelines():
     d.card(1050, 182, 470, 155, "Success", ["Pipeline is green", "Triage job is skipped"], GREEN)
     d.arrow([(410, 259), (508, 259)])
     d.arrow([(948, 259), (1050, 259)], GREEN)
-    d.card(508, 385, 440, 173, "Failure evidence", ["Failed job logs + screenshots", "Deterministic JSON verdict", "Optional Claude enrichment"], RED)
+    d.card(508, 385, 440, 173, "Failure evidence", ["Failed job logs + screenshots", "Deterministic JSON verdict", "Read-only agent review (optional)"], RED)
     d.card(1050, 385, 470, 173, "Current triage actions", ["Flake / cold start: capped rerun", "Other: PR comment or GitHub Issue", "No strict product-bug gate yet"], RED)
     d.arrow([(729, 337), (729, 385)], RED)
     d.arrow([(948, 471), (1050, 471)], RED)

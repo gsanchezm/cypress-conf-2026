@@ -52,15 +52,16 @@ Instead of slow, fragile multi-screen UI journeys (Login ➔ Catalog ➔ Cart �
 
 ## 🤖 Agentic Ecosystem & Safety Hooks
 
-The repository is built to be operated safely by autonomous agents (Claude Code, Codex, Antigravity) without loosening the testing oracle:
+The repository can be operated by any coding agent with repository and shell access, including Claude Code, Codex, Copilot, and DeepSeek. The tests and CI do not depend on a model provider:
 
 | Component | Role | Mechanism |
 |---|---|---|
-| **`CLAUDE.md`** | Repository Constitution | Strict style, pnpm-only rule, and forbidden actions. |
+| **`AGENTS.md`** | Shared contract | Assertion budget, oracle ownership, pnpm commands, and boundaries. |
+| **`agent/roles/`** | Shared task prompts | Read-only triage and bounded repair for any assistant. |
 | **`guard-oracle.ts`** | Oracle Protection Hook | Blocks edits to `.feature` files and `assert*` methods (Exit 2). |
 | **`guard-bash.ts`** | Command Gatekeeper Hook | Denies unauthorized `--record`, `cyPrompt`, and `git push`. |
-| **`cypress-tap`** | Live Agent Feedback | Subagent `@agent-cy-fixer` inspects real DOM snapshots via `cypress open`. |
-| **`cypress-cloud-cli`** | Cloud Inspection | Subagent `@agent-cy-triage` investigates runs and timelines via `cy-cloud`. |
+| **`cypress-tap`** | Live Agent Feedback | The `cy-fixer` role inspects real DOM snapshots via `cypress open`. |
+| **`cypress-cloud-cli`** | Cloud Inspection | The `cy-triage` role investigates runs and timelines via `cy-cloud`. |
 | **Graphify** | Local Context Graph | Maps 630+ symbols and dependencies into a queryable graph without LLM API costs. |
 
 ---
@@ -70,7 +71,7 @@ The repository is built to be operated safely by autonomous agents (Claude Code,
 When an application change alters the DOM (demonstrated via `MUTATE_DOM=checkout.address` which renames `data-testid`), the framework offers three recovery tiers:
 
 1. **A11y Fallbacks (`HEAL_LOCATORS=a11y`):** Instant, $0 cost, zero LLM. Heals via harvested fallback tiers (`id` ➔ `name` ➔ `aria-label` ➔ `placeholder`). Works even for RTL Arabic.
-2. **AI Agent Repair (`@agent-cy-fixer`):** Inspects the failing DOM via `cypress tap` and autonomously patches `locators/*.json` within 5 iterations.
+2. **AI Agent Repair (`cy-fixer` role):** Inspects the failing DOM via `cypress tap` and patches `locators/*.json` within 5 iterations.
 3. **AI Semantic Testing (`UI_STRATEGY=cyPrompt`):** Evaluates human-readable Markdown steps (`checkout.prompt.md`) directly against rendered UI semantics, bypassing selector registries entirely.
 
 ---
@@ -84,7 +85,9 @@ When an application change alters the DOM (demonstrated via `MUTATE_DOM=checkout
 
 ### Cypress Cloud CLI & Autonomous CI
 - **Local Inspection:** Inspect runs, replay timelines, and failure screenshots via `pnpm cloud:runs` and `cy-cloud`.
-- **Autonomous CI (`claude-ci-triage.yml`):** Automatically analyzes failed CI runs. If confidence in a transient `flake` or `cold_start` exceeds 0.7, it triggers a rerun without human intervention.
+- **Autonomous CI (`ci-triage.yml`):** Classifies failed CI runs from logs without an LLM. If confidence in a transient `flake` or `cold_start` reaches 0.7, it triggers a rerun without human intervention.
+
+For host-specific setup, skill links, and the difference between agent skills and runtime `cy.prompt`, see [the agent guide](agent/README.md). Claude Code's `CLAUDE.md` and `.claude/` files are compatibility adapters; `AGENTS.md` and `agent/` are the shared source of instructions. Automatic edit/command hooks require integration with each host.
 
 ---
 

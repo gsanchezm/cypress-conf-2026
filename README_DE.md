@@ -52,15 +52,15 @@ Statt langsamer und fragiler UI-Klickpfade (Login ➔ Katalog ➔ Warenkorb ➔ 
 
 ## 🤖 Agenten-Ökosystem & Sicherheits-Hooks
 
-Das Repository ist darauf ausgelegt, sicher von autonomen Agenten (Claude Code, Codex, Antigravity) bedient zu werden, ohne das Testorakel zu verändern:
+Das Repository ist darauf ausgelegt, sicher von autonomen Agenten (Claude Code, Codex, Copilot, DeepSeek) bedient zu werden, ohne das Testorakel zu verändern:
 
 | Komponente | Rolle | Mechanismus |
 |---|---|---|
-| **`CLAUDE.md`** | Repository-Verfassung | Strenger Codestil, reine pnpm-Regel und verbotene Aktionen. |
+| **`AGENTS.md`** | Repository-Verfassung | Strenger Codestil, reine pnpm-Regel und verbotene Aktionen. |
 | **`guard-oracle.ts`** | Orakelschutz-Hook | Blockiert Änderungen an `.feature`-Dateien und `assert*`-Methoden (Exit 2). |
 | **`guard-bash.ts`** | Befehls-Gatekeeper | Verhindert unbefugtes `--record`, `cyPrompt` und `git push`. |
-| **`cypress-tap`** | Live-Agent-Feedback | Subagent `@agent-cy-fixer` inspiziert echte DOM-Snapshots via `cypress open`. |
-| **`cypress-cloud-cli`** | Cloud-Inspektion | Subagent `@agent-cy-triage` analysiert Runs und Timelines via `cy-cloud`. |
+| **`cypress-tap`** | Live-Agent-Feedback | Subagent `cy-fixer` inspiziert echte DOM-Snapshots via `cypress open`. |
+| **`cypress-cloud-cli`** | Cloud-Inspektion | Subagent `cy-triage` analysiert Runs und Timelines via `cy-cloud`. |
 | **Graphify** | Lokaler Kontextgraph | Bildet über 630 Symbole und Abhängigkeiten in einem abfragbaren Graphen ohne LLM-API-Kosten ab. |
 
 ---
@@ -70,7 +70,7 @@ Das Repository ist darauf ausgelegt, sicher von autonomen Agenten (Claude Code, 
 Wenn eine Anwendungsänderung das DOM modifiziert (demonstriert durch `MUTATE_DOM=checkout.address`, welches `data-testid` umbenennt), bietet das Framework drei Reparaturstufen:
 
 1. **A11y-Fallbacks (`HEAL_LOCATORS=a11y`):** Sofort, $0 Kosten, ohne LLM. Heilt über gesammelte Fallback-Ebenen (`id` ➔ `name` ➔ `aria-label` ➔ `placeholder`). Funktioniert auch bei RTL-Arabisch.
-2. **KI-Agenten-Reparatur (`@agent-cy-fixer`):** Inspiziert das fehlerhafte DOM via `cypress tap` und patcht `locators/*.json` autonom in maximal 5 Schritten.
+2. **KI-Agenten-Reparatur (`cy-fixer`):** Inspiziert das fehlerhafte DOM via `cypress tap` und patcht `locators/*.json` autonom in maximal 5 Schritten.
 3. **Semantische KI-Tests (`UI_STRATEGY=cyPrompt`):** Evaluiert menschenlesbare Markdown-Schritte (`checkout.prompt.md`) direkt gegen die gerenderte UI-Semantik ohne Selektor-Registry.
 
 ---
@@ -84,7 +84,7 @@ Wenn eine Anwendungsänderung das DOM modifiziert (demonstriert durch `MUTATE_DO
 
 ### Cypress Cloud CLI & Autonome CI
 - **Lokale Inspektion:** Prüfe Runs, Befehls-Timelines und Fehler-Screenshots via `pnpm cloud:runs` und `cy-cloud`.
-- **Autonome CI (`claude-ci-triage.yml`):** Analysiert CI-Fehlschläge automatisch. Bei einer Konfidenz ≥ 0.7 für transiente `flake`- oder `cold_start`-Probleme wird automatisch ein Neustart ausgelöst.
+- **Autonome CI (`ci-triage.yml`):** Analysiert CI-Fehlschläge automatisch. Bei einer Konfidenz ≥ 0.7 für transiente `flake`- oder `cold_start`-Probleme wird automatisch ein Neustart ausgelöst.
 
 ---
 

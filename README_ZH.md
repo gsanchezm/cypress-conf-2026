@@ -52,15 +52,15 @@
 
 ## 🤖 智能体生态与安全防线（Hooks）
 
-代码库设计支持全自动智能体（Claude Code、Codex、Antigravity）协同操作，同时保证测试基准坚不可摧：
+代码库设计支持全自动智能体（Claude Code、Codex、Copilot、DeepSeek）协同操作，同时保证测试基准坚不可摧：
 
 | 组件 | 职责 | 实现机制 |
 |---|---|---|
-| **`CLAUDE.md`** | 仓库开发宪法 | 规范代码风格、强制 pnpm 以及严禁操作列表。 |
+| **`AGENTS.md`** | 仓库开发宪法 | 规范代码风格、强制 pnpm 以及严禁操作列表。 |
 | **`guard-oracle.ts`** | 测试基准守护 Hook | 拦截并禁止智能体修改 `.feature` 文件与 `assert*` 方法（Exit 2）。 |
 | **`guard-bash.ts`** | 命令网关 Hook | 阻止未经允许的 `--record`、`cyPrompt` 以及 `git push` 执行。 |
-| **`cypress-tap`** | 交互式实时反馈 | 子智能体 `@agent-cy-fixer` 借助 `cypress open` 实时检查 DOM 快照。 |
-| **`cypress-cloud-cli`** | 云端观测排查 | 子智能体 `@agent-cy-triage` 借助 `cy-cloud` 深度查询运行历史与重放时间线。 |
+| **`cypress-tap`** | 交互式实时反馈 | 子智能体 `cy-fixer` 借助 `cypress open` 实时检查 DOM 快照。 |
+| **`cypress-cloud-cli`** | 云端观测排查 | 子智能体 `cy-triage` 借助 `cy-cloud` 深度查询运行历史与重放时间线。 |
 | **Graphify** | 本地代码知识图谱 | 离线建立 630+ 符号与调用关系的图数据库，无需消耗 LLM API Token。 |
 
 ---
@@ -70,7 +70,7 @@
 当页面发生实际变动导致选择器失效时（在演示中通过 `MUTATE_DOM=checkout.address` 动态重命名 `data-testid` 模拟）：
 
 1. **A11y 无障碍属性自愈（`HEAL_LOCATORS=a11y`）：** 毫秒级恢复，零成本，无需调用大模型。依次通过后备层级匹配（`id` ➔ `name` ➔ `aria-label` ➔ `placeholder`），对 RTL 阿拉伯语界面同样完美自愈。
-2. **AI 智能体排查与修补（`@agent-cy-fixer`）：** 通过 `cypress tap` 查看报错快照，在 5 轮迭代内自动修改 `locators/*.json` 配置文件。
+2. **AI 智能体排查与修补（`cy-fixer`）：** 通过 `cypress tap` 查看报错快照，在 5 轮迭代内自动修改 `locators/*.json` 配置文件。
 3. **AI 语义化测试（`UI_STRATEGY=cyPrompt`）：** 直接在 Markdown（`checkout.prompt.md`）中书写自然语言步骤，由 Cypress 官方 AI 模型直接对屏幕语义进行解析，完全摆脱选择器维护。
 
 ---
@@ -84,7 +84,7 @@
 
 ### Cypress Cloud CLI 与自动化 CI
 - **终端即时查询：** 运行 `pnpm cloud:runs` 和 `cy-cloud` 即可在本地命令行查看运行记录、失败截图与回放。
-- **自主 CI 分流（`claude-ci-triage.yml`）：** 构建失败时智能体自动介入。若判定为偶发性 Flake 或免费容器冷启动（置信度 ≥ 0.7），将自动触发重跑，无需人工值守。
+- **自主 CI 分流（`ci-triage.yml`）：** 构建失败时智能体自动介入。若判定为偶发性 Flake 或免费容器冷启动（置信度 ≥ 0.7），将自动触发重跑，无需人工值守。
 
 ---
 

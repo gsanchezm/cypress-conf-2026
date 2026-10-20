@@ -107,7 +107,7 @@ def make_new_slides():
     ])
     slides["Agenda"] = shell("Agenda", "The 40-minute story", "Cuatro actos: OmniPizza 6 min, fundamentos 9 min, agentes con límites 5 min y demo en vivo 20 min. cy.prompt vive dentro del demo.", agenda, "A real system first; then the test architecture; then the agent at work.")
 
-    slides["System Architecture"] = shell("System Architecture", "The system under the test system", "Muestra el mapa actual: GitHub Actions ejecuta Cypress sin LLM; OmniPizza es el sistema bajo prueba; TestRail y Cloud son salidas opcionales. El triage determinista funciona sin clave de modelo y Claude puede enriquecerlo.", diagram("01-current-architecture.svg"), "The executable core runs without an LLM; agent adapters are optional.")
+    slides["System Architecture"] = shell("System Architecture", "The system under the test system", "Muestra el mapa actual: GitHub Actions ejecuta Cypress sin LLM; OmniPizza es el sistema bajo prueba; TestRail y Cloud son salidas opcionales. El triage determinista funciona sin clave de modelo.", diagram("01-current-architecture.svg"), "The executable core runs without an LLM; agent adapters are optional.")
 
     rungs = [
         card("1 · Gherkin", ["checkout.feature", "@C9 tags the Mexico Examples row"], small=True),
@@ -121,14 +121,14 @@ def make_new_slides():
 
     slides["Code: AtomicScenario"] = shell("Code: AtomicScenario", "The Template Method in code", "Fragmento abreviado de checkout.steps.ts. AtomicScenario fija el orden arrangeViaApi, hydrateUi y assertUi; el step definition conecta datos y fachadas. El claim API ocurre dentro de arrangeViaApi y el claim UI en assertUi.", code("// checkout.steps.ts · abridged\nAtomicScenario.for('checkout').run({\n  arrangeViaApi: () => {\n    // seedCartViaApi → checkoutViaApi\n    checkoutFacade.assertOrderCreated(order);\n  },\n  hydrateUi: () => {\n    authFacade.loginViaUiWithMarket('standard', market);\n    checkoutFacade.completeCheckoutViaUi(checkoutData);\n  },\n  assertUi: () =>\n    checkoutFacade.assertOrderConfirmation(expectedOrder),\n});"), "The class fixes the phase order; the facade and strategy own the behavior.")
 
-    slides["Guardrails"] = shell("Guardrails", "The agent has a fence", "CLAUDE.md define el contrato. guard-oracle bloquea editar feature files y claims; guard-bash bloquea comandos reservados como record y push dentro del agente. La autorización explícita del dueño prevalece en esta sesión.", grid([
-        card("CLAUDE.md", ["Assertion budget, ownership, and allowed edits", "One spec at a time; pnpm-only workflow"], small=True),
+    slides["Guardrails"] = shell("Guardrails", "The agent has a fence", "AGENTS.md define el contrato. guard-oracle bloquea editar feature files y claims; guard-bash bloquea comandos reservados como record y push dentro del agente. La autorización explícita del dueño prevalece en esta sesión.", grid([
+        card("AGENTS.md", ["Assertion budget, ownership, and allowed edits", "One spec at a time; pnpm-only workflow"], small=True),
         card("guard-oracle", ["Denies edits to .feature contracts", "Denies changes to assert* claims and assertions"], small=True),
         card("guard-bash", ["Denies agent-issued --record / cy.prompt", "Denies git push and protected commands"], small=True),
         card("Human-owned boundary", ["The owner authorizes Cloud and external writes", "A denied oracle edit is not a repair"], small=True),
     ]), "Deterministic hooks enforce the boundary before a model decides.")
 
-    slides["Agent Architecture"] = f'''<section data-label="Agent Architecture" data-speaker-notes="Este mapa de Archify separa al asistente del runner: Claude, Codex y Copilot siguen AGENTS.md; skills guían al asistente; hooks y subagentes son adaptadores de Claude; Cypress ejecuta las pruebas y cy.prompt es una estrategia opcional de runtime." style="position: relative; background: #080e1d; color: #F1F8EF; font-family: Archivo,sans-serif; overflow: hidden;">
+    slides["Agent Architecture"] = f'''<section data-label="Agent Architecture" data-speaker-notes="Este mapa de Archify separa al asistente del runner: Cualquier agente con acceso al repositorio sigue AGENTS.md; los skills guían al asistente; los roles compartidos describen triage y reparación; los hooks se conectan según el host; Cypress ejecuta las pruebas y cy.prompt es una estrategia opcional de runtime." style="position: relative; background: #080e1d; color: #F1F8EF; font-family: Archivo,sans-serif; overflow: hidden;">
   {diagram("06-agent-workflow-archify.png")}
   <div style="position: absolute; left: 65px; top: 40px; background: #080e1de8; padding: 10px 24px 14px 0;"><span style="color: #38F443; font: 700 22px JetBrains Mono,monospace; letter-spacing: 2px;">AGENT ARCHITECTURE</span><h2 style="margin: 6px 0 0; font-size: 52px; line-height: 1;">One harness, optional assistants</h2></div>
   <a href="agent-architecture.html" target="_blank" rel="noopener" style="position: absolute; right: 78px; bottom: 42px; color: #9BF9B0; font: 700 22px JetBrains Mono,monospace; text-decoration: underline; background: #080e1de8; padding: 10px 14px;">Explore the interactive map ↗</a>
@@ -149,8 +149,8 @@ def make_new_slides():
     ], 3, 24), "Skills guide the builder. cy.prompt drives the browser during an opted-in test run.")
 
     slides["Subagents and Graphify"] = shell("Subagents and Graphify", "Diagnose, repair, understand", "Distingue subagentes de la ruta CI: cy-triage y cy-fixer son herramientas locales con permisos distintos. Graphify es un mapa estático local, snapshot de 634 nodos, 1,368 aristas y 24 comunidades; no llama a una API de pago para esta extracción.", grid([
-        card("@agent-cy-triage", ["Read-only evidence review", "JSON verdict: cause, confidence, evidence"], small=True),
-        card("@agent-cy-fixer", ["Fix steps, strategies, or selectors", "At most five red → green iterations"], small=True),
+        card("cy-triage role", ["Read-only evidence review", "JSON verdict: cause, confidence, evidence"], small=True),
+        card("cy-fixer role", ["Fix steps, strategies, or selectors", "At most five red → green iterations"], small=True),
         card("Graphify local graph", ["634 nodes · 1,368 edges · 24 communities", "Hubs: SelectorSource, CountryCode, TestResult"], small=True),
     ], 3, 28), "The agent can navigate dependencies without scanning every file or paying for graph extraction.")
 
@@ -158,7 +158,7 @@ def make_new_slides():
         card("1 · Case identity · 4 min", ["Show TestRail C9 and @C9 in Gherkin", "Run the versioned Checkout scenario"], small=True),
         card("2 · UI change · 6 min", ["MUTATE_DOM breaks a real data-testid", "HEAL_LOCATORS=a11y selects a unique fallback"], small=True),
         card("3 · AI Checkout · 6 min", ["Switch to CyPromptCheckoutUiStrategy", "Open recorded Cloud run 8: 5/5 passed"], small=True),
-        card("4 · Evidence · 4 min", ["Inspect TestRail R7 and CI artifacts", "Explain model-free triage + optional Claude"], small=True),
+        card("4 · Evidence · 4 min", ["Inspect TestRail R7 and CI artifacts", "Explain deterministic triage and agent roles"], small=True),
     ]), "All live claims refer to behavior already verified; optional CLI access needs separate login.")
 
     slides["Two Strategies"] = shell("Two Strategies", "Same case, two UI engines", "La estrategia se elige en cypress/support/e2e.ts mediante UI_STRATEGY. El step definition y el oráculo no cambian. El fallback determinista y el self-healing de cy.prompt son mecanismos distintos.", grid([
@@ -186,7 +186,7 @@ def make_new_slides():
         card("Authentication boundary", ["CYPRESS_RECORD_KEY records tests", "CYPRESS_CLOUD_TOKEN or login authorizes CLI", "Organization integration may need enabling"], small=True),
     ]), "Cloud run 8 passed; live CLI queries still require separate authentication.")
 
-    slides["CI and Reporting"] = shell("CI and Reporting", "Pipeline and evidence paths", "El push activa tests.yml; el prompt suite es manual. Sólo una falla del pipeline determinista dispara claude-ci-triage.yml. Ese workflow reúne logs y screenshots, genera un veredicto JSON sin LLM y opcionalmente lo enriquece con Claude; puede rerun o comentar/crear issue. El issue gate estricto todavía está pendiente.", diagram("04-ci-and-triage.svg"), "The default suite and failure diagnosis run without a model secret.")
+    slides["CI and Reporting"] = shell("CI and Reporting", "Pipeline and evidence paths", "El push activa tests.yml; el prompt suite es manual. Sólo una falla del pipeline determinista dispara ci-triage.yml. Ese workflow reúne logs y screenshots, genera un veredicto JSON sin LLM; puede rerun o comentar/crear issue. El issue gate estricto todavía está pendiente.", diagram("04-ci-and-triage.svg"), "The default suite and failure diagnosis run without a model secret.")
 
     slides["Demo Backup: Results"] = shell("Demo Backup: Results", "Rehearsal evidence", "Respaldo real, no placeholders: local Cloud run 7 aprobó 5/5 y TestRail R7 cerró con 5 passed; GitHub Actions cy.prompt suite pasó 5/5 en Cloud run 8. La suite determinista del mismo commit pasó en CI. Abre los links si el demo en vivo falla.", grid([
         card("Cloud run 7", ["Local recorded Checkout: 5 / 5", "TestRail R7: 5 passed, 0 failed"], small=True),
@@ -199,8 +199,8 @@ def make_new_slides():
         card("Not yet proven", ["cy.prompt self-heals this specific mutation", "Pre-run TestRail case reader", "Strict product-bug issue gate"], accent="#E5B867", small=True),
     ]), "The talk distinguishes selector fallback, AI generation, and AI self-healing.")
 
-    slides["Agentic Boundaries"] = shell("Agentic Boundaries", "What remains to build", "El plan local propone un lector get_case y un solo escenario permitido, luego un gate para publicar únicamente regresiones de producto reproducidas. El workflow actual genera diagnóstico determinista y Claude es opcional; aún puede crear issues para categorías no regresión. AGENTS.md y copilot-instructions.md amplían la guía a Codex y Copilot.", grid([
-        card("Current", ["Model-free CI verdict; optional Claude enrichment", "AGENTS.md for Codex + Copilot adapter", "Case IDs and TestRail result writer"], small=True),
+    slides["Agentic Boundaries"] = shell("Agentic Boundaries", "What remains to build", "El plan local propone un lector get_case y un solo escenario permitido, luego un gate para publicar únicamente regresiones de producto reproducidas. El workflow actual genera diagnóstico determinista; aún puede crear issues para categorías no regresión. AGENTS.md y agent/roles son instrucciones comunes para cualquier asistente.", grid([
+        card("Current", ["Deterministic CI verdict; no model secret", "AGENTS.md + shared agent roles", "Case IDs and TestRail result writer"], small=True),
         card("Proposed", ["get_case preflight + allowlisted dispatch", "Repeat business failure before issue", "Deduplicate by case + signature"], accent="#E5B867", small=True),
     ]), "The bounded model diagnosis does not own the oracle or the final publication policy.")
 

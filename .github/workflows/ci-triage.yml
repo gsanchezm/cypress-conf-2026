@@ -2,9 +2,8 @@ name: CI triage
 
 # Fires after the deterministic suite fails on main (workflow_run only
 # triggers from the default branch) and classifies the failure from logs.
-# Claude may enrich the verdict when ANTHROPIC_API_KEY exists. Flake or cold start with
-# confidence >= 0.7 -> rerun the failed jobs; anything else -> PR comment or
-# issue with the evidence. No model secret is required.
+# Flake or cold start with confidence >= 0.7 -> rerun the failed jobs;
+# anything else -> PR comment or issue with the evidence. No model secret is required.
 # Never records to Cypress Cloud and never touches the cy.prompt suite.
 
 on:
@@ -35,7 +34,6 @@ jobs:
     timeout-minutes: 30
     env:
       RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,13 +85,6 @@ jobs:
             core.setOutput('failed_jobs', failed.map((job) => job.name).join(', ') || '(none)');
             core.setOutput('pr_number', run.data.pull_requests?.[0]?.number ?? '');
 
-      - name: Deterministic pre-classification
-        run: |
-          shopt -s nullglob
-          logs=(ci-artifacts/logs/*.log)
-          if [ ${#logs[@]} -eq 0 ]; then echo '{"suggested":null,"signals":[]}' > ci-artifacts/signals.json; else pnpm triage:signals "${logs[@]}" > ci-artifacts/signals.json; fi
-          cat ci-artifacts/signals.json
-
       - name: Deterministic verdict
         run: |
           shopt -s nullglob
@@ -101,47 +92,10 @@ jobs:
           if [ ${#logs[@]} -eq 0 ]; then printf '' | pnpm triage:verdict > ci-artifacts/deterministic-verdict.json; else pnpm triage:verdict "${logs[@]}" > ci-artifacts/deterministic-verdict.json; fi
           cat ci-artifacts/deterministic-verdict.json
 
-      - name: Optional Claude enrichment
-        id: triage
-        if: env.ANTHROPIC_API_KEY != ''
-        continue-on-error: true
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ env.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          prompt: |
-            A run of the "Deterministic suite" Cypress workflow failed.
-            Run: ${{ steps.failure_details.outputs.run_url }}
-            Failed jobs: ${{ steps.failure_details.outputs.failed_jobs }}
-            Branch: ${{ steps.failure_details.outputs.head_branch }}
-
-            Read every file under ci-artifacts/logs/ (failed job logs), look at ci-artifacts/screenshots/ (file names carry the failing test title),
-            and read ci-artifacts/signals.json - a deterministic pre-classification produced by src/core/triage/classifyFailureSignals.ts.
-            Read CLAUDE.md for the harness rules and src/core/testing/precondition.ts for the claim/precondition/guard distinction.
-
-            Classify the failure into exactly one category, highest precedence first:
-            - selector_drift: data-cy-broken-locator, "Expected to find element ... but never found it", LocatorProxy: no selector registered
-            - cold_start: ETIMEDOUT / ECONNRESET / ECONNREFUSED / socket hang up / 502-504 from onrender.com / cy.request() timed out (the backend is a Render free-tier service)
-            - env: PreconditionError / "Precondition not met", BREAK_LOCATOR: no slice registers, missing --expose values
-            - flake: passed on a later attempt, "(N retries)", verdicts that differ between attempts
-            - regression: an AssertionError raised inside an assert* method with the app reachable
-            Agree with signals.json's "suggested" value or explain in the evidence why you disagree.
-            Confidence >= 0.7 only when at least two independent pieces of evidence agree.
-          claude_args: |
-            --json-schema '{"type":"object","properties":{"category":{"type":"string","enum":["regression","flake","selector_drift","env","cold_start"]},"confidence":{"type":"number","minimum":0,"maximum":1},"evidence":{"type":"array","items":{"type":"string"}},"summary":{"type":"string"}},"required":["category","confidence","evidence","summary"]}'
-            --allowedTools 'Read,Glob,Grep,Bash(ls:*),Bash(cat:*)'
-            --max-turns 25
-
       - name: Select verdict
         id: verdict
-        env:
-          MODEL_VERDICT: ${{ steps.triage.outputs.structured_output }}
         run: |
-          if [ -n "$MODEL_VERDICT" ] && printf '%s\n' "$MODEL_VERDICT" | jq -e '.category and (.confidence | type == "number") and (.evidence | type == "array") and (.summary | type == "string")' > /dev/null; then
-            printf '%s\n' "$MODEL_VERDICT" > ci-artifacts/verdict.json
-          else
-            cp ci-artifacts/deterministic-verdict.json ci-artifacts/verdict.json
-          fi
+          cp ci-artifacts/deterministic-verdict.json ci-artifacts/verdict.json
           echo "json=$(jq -c . ci-artifacts/verdict.json)" >> "$GITHUB_OUTPUT"
 
       # workflow_run "completed" fires again for every rerun attempt, so the rerun is capped at run_attempt < 3.
